@@ -1,0 +1,131 @@
+# backend/app/routers/user.py
+from fastapi import APIRouter, Depends, HTTPException,status,Query
+from typing import List
+from sqlalchemy.orm import Session
+from fastapi.security import OAuth2PasswordRequestForm
+from app.schemas.rbac.user import UserCreate, UserResponse,Token
+from app.curd.rbac.user_curd import UserCURD
+from app import auth,curd
+from app.core.deps import get_db_dep,get_current_user
+
+from app.models.rbac.user import User
+from app.schemas.rbac import UserWithRoles
+from app.core.deps import get_db, PermissionChecker
+
+router = APIRouter(prefix="/users", tags=["Users"])
+
+
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+def register(user_in: UserCreate, db: Session = Depends(get_db_dep)):
+    # check existing
+    if UserCURD.get_user_by_username(db, user_in.username):
+        raise HTTPException(status_code=400, detail="Username already registered")
+    if UserCURD.get_user_by_email(db, user_in.email):
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    hashed = auth.hash_password(user_in.password)
+    try:
+        user = UserCURD.create_user(db, username=user_in.username, email=user_in.email, hashed_password=hashed)
+    except ValueError as ve:
+        # Duplicate checks surfaced from CURD layer
+        detail = str(ve)
+        # Username/Email duplication -> 409 Conflict 更贴切
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
+    return user
+
+@router.post("/login", response_model=Token)
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db_dep)):
+    user = UserCURD.get_user_by_username(db, form_data.username)
+    if not user:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    if not auth.verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+
+    token = auth.create_access_token(subject=str(user.id))
+    return {"access_token": token, "token_type": "bearer"}
+
+@router.get("/me", response_model=UserResponse)
+def read_current_user(current_user = Depends(get_current_user)):
+    # current_user 来自 deps.get_current_user（SQLAlchemy User 实例）
+    return current_user
+
+
+
+
+# 新增：获取所有用户（需要权限）
+@router.get("/", response_model=List[UserWithRoles])
+async def get_users(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    active_only: bool = Query(True),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(PermissionChecker(["user.read"]))
+):
+    """获取用户列表（需要权限：user.read）"""
+    users = UserCURD.get_users(db, skip=skip, limit=limit)
+    if active_only:
+        users = [user for user in users if user.is_active]
+    return users
+
+@router.get("/{user_id}", response_model=UserResponse)
+def read_user(user_id: int, db: Session = Depends(get_db_dep)):
+    db_user = UserCURD.get_user(db, user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
+
+
+# 新增：更新用户状态（需要权限）
+@router.patch("/{user_id}/status")
+async def update_user_status(
+    user_id: int,
+    is_active: bool,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(PermissionChecker(["user.update"]))
+):
+    """更新用户状态（需要权限：user.update）"""
+    # 不能禁用自己
+    if user_id == current_user.id and not is_active:
+        raise HTTPException(status_code=400, detail="不能禁用自己")
+    
+    user = UserCURD.get_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    
+    # 不能修改超级管理员
+    if user.is_superuser and not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="不能修改超级管理员")
+    
+    user.is_active = is_active
+    db.commit()
+    db.refresh(user)
+    
+    action = "启用" if is_active else "禁用"
+    return {"message": f"用户{action}成功"}
+
+# 新增：设置超级管理员（需要超级管理员权限）
+@router.patch("/{user_id}/superuser")
+async def set_superuser(
+    user_id: int,
+    is_superuser: bool,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(lambda: get_current_user)
+):
+    """设置用户为超级管理员（需要自己是超级管理员）"""
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="需要超级管理员权限")
+    
+    user = UserCURD.get_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    
+    # 不能取消自己的超级管理员权限
+    if user_id == current_user.id and not is_superuser:
+        raise HTTPException(status_code=400, detail="不能取消自己的超级管理员权限")
+    
+    user.is_superuser = is_superuser
+    db.commit()
+    db.refresh(user)
+    
+    action = "设置为" if is_superuser else "取消"
+    return {"message": f"用户{action}超级管理员成功"}

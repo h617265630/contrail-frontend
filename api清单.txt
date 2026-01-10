@@ -1,0 +1,57 @@
+Auth:
+
+post /auth/register
+post /auth/login
+post /auth/refresh
+post /auth/logout
+
+users:
+
+get /users/me
+put   /users/me
+post /users/me/avatar
+post /users/me/change-password
+
+sourcevideo:
+
+post /videos/source/upload
+get /videos/source/{id}
+get /videso/source   公开列表 + 搜索
+post /videos/source/{id}/split
+post /videos/source/{id}/auto-split-ai
+
+videoclip:
+
+get /clips/{id}
+get /clips/{id}/play
+post /clips/{id}/watch 进度
+
+learningpath:
+
+post /paths/
+get  /paths/mine
+get /paths/public
+get /paths/{id}
+put /paths/{id}
+delete /paths/{id}
+post /paths/{id}nodes
+
+put /paths/{id}/nodes/reorder 排序
+
+get /paths/{id}/progess  进度管理
+
+wathch/recommend:
+
+post ai/chat
+
+admin:
+get    /admin/users/
+post   /admin/users/{id}/ban
+delete /admin/videos/{id}
+put   /admin/crewler/tasks
+
+crawler 爬虫管理
+
+post /crawler/collections
+get /crawler/collections{id}
+post /crawler/collections/{id}start

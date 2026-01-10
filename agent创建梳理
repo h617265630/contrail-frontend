@@ -1,0 +1,31 @@
+
+
+
+
+
+后端: 分系统
+
+model,curb , 表关系，api，schema
+
+前端：分系统,分页面
+
+user :login ,signup 
+user - resources
+user - learningpaths
+user - info 更换密码,修改信息等
+user - plan
+user - notifications
+user - 
+
+Admin: 
+
+
+创建页面,创建布局和样式, 
+构建页面逻辑
+创建axios请求
+pinia 状态管理
+路由管理
+表单验证
+组件封装
+UI 框架使用
+
