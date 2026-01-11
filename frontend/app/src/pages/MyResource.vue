@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+  <div class="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-6">
     <div class="max-w-7xl mx-auto">
       <div class="mb-8 flex items-start justify-between gap-4">
         <div>
@@ -59,7 +59,7 @@
           <div
             v-for="resource in filteredResources"
             :key="resource.id"
-            class="bg-white rounded-xl shadow-lg overflow-hidden transition-all cursor-pointer hover:shadow-xl h-[360px] flex flex-col"
+            class="bg-white rounded-xl shadow-lg overflow-hidden transition-all cursor-pointer hover:shadow-xl h-90 flex flex-col"
             @click="viewResource(resource)"
           >
             <div class="relative h-32">
@@ -92,8 +92,6 @@
                   <Tag class="w-3 h-3" />
                   {{ resource.category }}
                 </div>
-                <div v-if="resource.duration">{{ resource.duration }}</div>
-                <div v-if="resource.pages">{{ resource.pages }} pages</div>
               </div>
 
               <div class="mt-auto pt-4">
@@ -116,7 +114,7 @@
             @click="viewResource(resource)"
           >
             <div class="flex gap-4">
-              <img :src="resource.thumbnail" :alt="resource.title" class="w-32 h-28 object-cover rounded-lg flex-shrink-0" />
+              <img :src="resource.thumbnail" :alt="resource.title" class="w-32 h-28 object-cover rounded-lg shrink-0" />
 
               <div class="flex-1 min-w-0">
                 <div class="flex items-start justify-between gap-4 mb-2">
@@ -124,7 +122,7 @@
                     <h3 class="text-gray-900 mb-1">{{ resource.title }}</h3>
                     <p class="text-gray-600 text-sm line-clamp-2">{{ resource.description }}</p>
                   </div>
-                  <div :class="['px-2 py-1 rounded-full flex items-center gap-1', getTypeColor(resource.type), 'flex-shrink-0']">
+                  <div :class="['px-2 py-1 rounded-full flex items-center gap-1', getTypeColor(resource.type), 'shrink-0']">
                     <component :is="typeIcon(resource.type)" class="w-4 h-4" />
                     <span class="text-xs capitalize">{{ resource.type }}</span>
                   </div>
@@ -139,13 +137,11 @@
                     <LinkIcon class="w-3 h-3" />
                     {{ resource.source }}
                   </div>
-                  <div v-if="resource.duration">{{ resource.duration }}</div>
-                  <div v-if="resource.pages">{{ resource.pages }} pages</div>
                   <div>Added {{ resource.addedDate }}</div>
                 </div>
               </div>
 
-              <div class="flex-shrink-0">
+              <div class="shrink-0">
                 <button
                   @click.stop="viewResource(resource)"
                   class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
@@ -165,17 +161,51 @@
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { BookOpen, FileText, Grid3x3, Link as LinkIcon, List, Plus, Search, Tag, Video } from 'lucide-vue-next'
-import { listCustomResources } from '../data/resourcesStore'
-import type { Resource } from '../data/resources'
+import { listMyResources, type DbResource } from '../api/resource'
 
 const router = useRouter()
 
-const resources = ref<Resource[]>([])
+type UiResource = {
+  id: number
+  title: string
+  description: string
+  category: string
+  source: string
+  thumbnail: string
+  type: 'video'
+  addedDate?: string
+}
+
+const resources = ref<UiResource[]>([])
 const searchQuery = ref('')
 const viewMode = ref<'grid' | 'list'>('grid')
 
-function load() {
-  resources.value = listCustomResources()
+const fallbackThumb = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=225&fit=crop'
+
+function formatDate(iso?: string | null) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleDateString()
+}
+
+function mapDbToUi(r: DbResource): UiResource {
+  const source = (r.source || '').trim() || 'youtube'
+  return {
+    id: r.id,
+    title: r.title,
+    description: (r.description || '').trim(),
+    category: (r.category || '').trim() || 'Other',
+    source,
+    thumbnail: (r.thumbnail_url || '').trim() || fallbackThumb,
+    type: 'video',
+    addedDate: formatDate(r.created_at),
+  }
+}
+
+async function load() {
+  const data = await listMyResources()
+  resources.value = (data || []).map(mapDbToUi)
 }
 
 onMounted(() => {
@@ -226,15 +256,7 @@ function getTypeColor(type: string) {
   }
 }
 
-function viewResource(resource: Resource) {
-  if (resource.type === 'video') {
-    router.push({ name: 'resource-video', params: { id: resource.id } })
-    return
-  }
-  if (resource.type === 'document') {
-    router.push({ name: 'resource-document', params: { id: resource.id } })
-    return
-  }
-  window.open(resource.url, '_blank')
+function viewResource(resource: UiResource) {
+  router.push({ name: 'resource-video', params: { id: resource.id } })
 }
 </script>

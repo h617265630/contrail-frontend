@@ -18,7 +18,11 @@ import app.models.rbac.permission
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.database import SessionLocal
 from app.core.initial_data import init_default_data
-from app.routers.resources import clip, doc, product, video
+from app.routers.resources import clip, doc, product, video, resource
+
+# Ensure generic resource models are imported before create_all
+import app.models.user_resource
+import app.models.resources.link
 Base.metadata.create_all(bind=engine)
 
 """
@@ -53,6 +57,7 @@ app.include_router(clip.router)
 app.include_router(learning_path.router)
 app.include_router(product.router)
 app.include_router(doc.router)
+app.include_router(resource.router)
 app.include_router(role.router)
 app.include_router(permission.router)   
 

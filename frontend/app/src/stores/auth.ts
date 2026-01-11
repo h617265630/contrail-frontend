@@ -3,8 +3,8 @@ import { defineStore } from 'pinia'
 import type { UserProfile } from '../api/user'
 import { getCurrentUser } from '../api/user'
 
-// 轻量登录态：存 token + 用户信息，保证 NavBar 等任意组件都能读取共享状态
-// 使用 globalThis.localStorage，避免在 TS 没有 DOM lib 时编译报错
+// Lightweight auth state: store token + user profile so any component (e.g. NavBar) can read shared state.
+// Use globalThis.localStorage to avoid TS build errors when DOM lib types are not available.
 const TOKEN_KEY = 'learnsmart_token'
 const USER_KEY = 'learnsmart_user'
 

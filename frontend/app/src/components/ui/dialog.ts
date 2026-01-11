@@ -49,7 +49,7 @@ export const DialogPortal = defineComponent({
   name: 'UiDialogPortal',
   setup(_, { slots }) {
     const { open } = useDialogContext()
-    return () => (open.value ? h(Teleport, { to: 'body' }, slots.default?.()) : null)
+    return () => (open.value ? h(Teleport as any, { to: 'body' }, slots.default?.()) : null)
   },
 })
 

@@ -1,13 +1,16 @@
 # backend/app/routers/user.py
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from typing import List
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
-from app.schemas.rbac.user import UserCreate, UserResponse,Token
+from app.schemas.rbac.user import AvatarUploadResponse, ChangePasswordRequest, UserCreate, UserMeUpdate, UserResponse, Token
 from app.curd.rbac.user_curd import UserCURD
 from app import auth,curd
 from app.core.deps import get_db_dep,get_current_user
 from app.core.validators import normalize_email, validate_password, validate_username
+from pathlib import Path
+from datetime import datetime
+import os
 
 from app.models.rbac.user import User
 from app.schemas.rbac import UserWithRoles
@@ -73,6 +76,69 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 def read_current_user(current_user = Depends(get_current_user)):
     # current_user 来自 deps.get_current_user（SQLAlchemy User 实例）
     return current_user
+
+
+@router.patch("/me", response_model=UserResponse)
+def update_current_user(payload: UserMeUpdate, db: Session = Depends(get_db_dep), current_user=Depends(get_current_user)):
+    # Only allow editing non-sensitive profile fields here.
+    if payload.display_name is not None:
+        current_user.display_name = payload.display_name
+    if payload.bio is not None:
+        current_user.bio = payload.bio
+    if payload.avatar_url is not None:
+        current_user.avatar_url = payload.avatar_url
+
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+@router.post("/me/password", status_code=status.HTTP_204_NO_CONTENT)
+def change_my_password(payload: ChangePasswordRequest, db: Session = Depends(get_db_dep), current_user=Depends(get_current_user)):
+    # Validate new password using shared validator (also enforces non-empty)
+    validate_password(payload.new_password)
+
+    if not auth.verify_password(payload.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Incorrect current password")
+
+    current_user.hashed_password = auth.hash_password(payload.new_password)
+    db.add(current_user)
+    db.commit()
+    return None
+
+
+@router.post("/me/avatar", response_model=AvatarUploadResponse)
+async def upload_my_avatar(file: UploadFile = File(...), db: Session = Depends(get_db_dep), current_user=Depends(get_current_user)):
+    # Basic validation
+    content_type = (file.content_type or "").lower()
+    if not content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Only image uploads are supported")
+
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in {".png", ".jpg", ".jpeg", ".webp", ".gif"}:
+        # fall back by content-type
+        ext = ".png" if content_type.endswith("png") else ".jpg" if content_type.endswith("jpeg") else ".webp" if content_type.endswith("webp") else ".png"
+
+    avatars_dir = Path("static") / "avatars"
+    avatars_dir.mkdir(parents=True, exist_ok=True)
+
+    ts = int(datetime.now().timestamp())
+    filename = f"u_{current_user.id}_{ts}{ext}"
+    dest_path = avatars_dir / filename
+
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="Empty file")
+    dest_path.write_bytes(data)
+
+    avatar_url = f"http://localhost:8000/static/avatars/{filename}"
+    current_user.avatar_url = avatar_url
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+
+    return AvatarUploadResponse(avatar_url=avatar_url)
 
 
 

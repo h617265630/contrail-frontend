@@ -8,7 +8,7 @@
 
       <form @submit.prevent="handleSubmit" class="space-y-6">
         <div>
-          <label for="email" class="block text-gray-700 mb-2">用户名或邮箱</label>
+          <label for="email" class="block text-gray-700 mb-2">Username or Email</label>
           <div class="relative">
             <Mail class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -21,7 +21,7 @@
                 'w-full pl-11 pr-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                 errors.email ? 'border-red-500 pt-2 pb-6' : 'border-gray-300 py-3',
               ]"
-              placeholder="请输入用户名或邮箱"
+              placeholder="Enter your username or email"
             />
 
             <span v-if="errors.email" class="absolute left-11 bottom-1 text-xs text-red-500 pointer-events-none">
@@ -103,7 +103,7 @@ const authStore = useAuthStore()
 
 
 
-// 后端 /users/login 使用 OAuth2PasswordRequestForm：字段名是 username/password
+// Backend /users/login uses OAuth2PasswordRequestForm: username/password
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
@@ -121,21 +121,21 @@ function buildLoginErrors() {
   const identifier = email.value.trim()
 
   if (!identifier) {
-    newErrors.email = '用户名或邮箱不能为空'
+    newErrors.email = 'Username or email is required'
   } else if (identifier.includes('@')) {
     if (!EMAIL_REGEX.test(identifier)) {
-      newErrors.email = '请输入合法邮箱地址'
+      newErrors.email = 'Please enter a valid email address'
     }
   } else if (identifier.length < USERNAME_MIN || identifier.length > USERNAME_MAX) {
-    newErrors.email = `用户名需为 ${USERNAME_MIN}-${USERNAME_MAX} 位`
+    newErrors.email = `Username must be ${USERNAME_MIN}-${USERNAME_MAX} characters`
   }
 
   if (!password.value || !password.value.trim()) {
-    newErrors.password = '密码不能为空'
+    newErrors.password = 'Password is required'
   } else if (password.value.length < PASSWORD_MIN) {
-    newErrors.password = `密码至少 ${PASSWORD_MIN} 位`
+    newErrors.password = `Password must be at least ${PASSWORD_MIN} characters`
   } else if (!/[A-Za-z]/.test(password.value) || !/\d/.test(password.value)) {
-    newErrors.password = '密码需同时包含字母和数字'
+    newErrors.password = 'Password must include both letters and numbers'
   }
 
   return newErrors
@@ -182,21 +182,21 @@ async function handleSubmit() {
     const res = await login({ username: email.value.trim(), password: password.value })
     const token = (res as any)?.access_token
     if (!token) {
-      throw new Error('登录接口未返回 access_token')
+      throw new Error('Login response did not include access_token')
     }
 
     authStore.setToken(token)
     try {
       await authStore.fetchProfile(true)
     } catch (profileError) {
-      console.warn('同步用户信息失败：', profileError)
+      console.warn('Failed to sync user profile:', profileError)
     }
 
-    // 登录成功后跳转：优先回到来源页，否则去 /my-paths
+    // Redirect after login
     router.push({ name: 'my-paths' })
   } catch (e: any) {
     // 后端 err.response?.data 会被 request.ts 里拦截器直接 reject(data)
-    formError.value = '用户名或密码错误，请稍后再试'
+    formError.value = 'Invalid username/email or password. Please try again.'
   } finally {
     loading.value = false
   }

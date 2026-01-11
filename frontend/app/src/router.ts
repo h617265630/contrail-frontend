@@ -18,6 +18,12 @@ const LearningPoolCategory = () => import('./pages/LearningPoolCategory.vue')
 const CreatePath = () => import('./pages/CreatePath.vue')
 const LearningPathEdit = () => import('./pages/LearningPathEdit.vue')
 
+const Account = () => import('./pages/Account.vue')
+const AccountMyResources = () => import('./pages/AccountMyResources.vue')
+const AccountMyPaths = () => import('./pages/AccountMyPaths.vue')
+const AccountUserInfo = () => import('./pages/AccountUserInfo.vue')
+const AccountChangePassword = () => import('./pages/AccountChangePassword.vue')
+
 const About = () => import('./pages/About.vue')
 const Plan = () => import('./pages/Plan.vue')
 
@@ -41,6 +47,18 @@ const routes: RouteRecordRaw[] = [
   { path: '/resources/video/:id', name: 'resource-video', component: ResourceVideo },
   { path: '/resources/document/:id', name: 'resource-document', component: ResourceDocument },
   { path: '/resources/:type/:id/add-to-path', name: 'resource-add-to-path', component: AddResourceToPath },
+
+  {
+    path: '/account',
+    component: Account,
+    children: [
+      { path: '', redirect: { name: 'account-user-info' } },
+      { path: 'my-resources', name: 'account-my-resources', component: AccountMyResources },
+      { path: 'my-paths', name: 'account-my-paths', component: AccountMyPaths },
+      { path: 'user-info', name: 'account-user-info', component: AccountUserInfo },
+      { path: 'change-password', name: 'account-change-password', component: AccountChangePassword },
+    ],
+  },
 
 
   { path: '/learningpath/:id/edit', name: 'learningpath-edit', component: LearningPathEdit },

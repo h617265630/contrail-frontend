@@ -18,7 +18,7 @@ export interface LoginParams {
 }   
 
 export function login(data: LoginParams){
-    // /users/login 使用 OAuth2PasswordRequestForm，需 x-www-form-urlencoded
+    // /users/login uses OAuth2PasswordRequestForm, requires x-www-form-urlencoded
     // Use globalThis to avoid TS compile errors in environments where DOM lib isn't available
     const form = new (globalThis as any).URLSearchParams()
     form.set('username', data.username)

@@ -6,23 +6,25 @@
       <section class="rounded-2xl bg-white shadow-lg p-8 md:p-12 flex flex-col gap-6">
         <div class="space-y-3 max-w-3xl">
           <p class="text-sm uppercase tracking-wide text-blue-600 font-semibold">About</p>
-          <h1 class="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">Learning Path Platform 简介</h1>
+          <h1 class="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">What is Contrail?</h1>
           <p class="text-gray-700 text-base leading-relaxed">
-            这是一个基于 Vue + Tailwind 的学习路径展示与资源管理前端。涵盖首页、Learning Path 列表、路径详情、资源库、登录注册等页面，支持横向滚动查看路径节点、卡片化展示笔记与进度，并提供统一的导航栏与页脚。
+            Contrail is a Learning Path Platform built with Vue + Tailwind. It includes a home page, learning path listings,
+            path detail views, a resource library, and auth pages. You can browse steps in a horizontally scrollable layout,
+            view progress and notes in cards, and navigate through a consistent global header and footer.
           </p>
         </div>
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div class="rounded-xl bg-blue-50/50 shadow-sm p-4">
-            <h3 class="font-semibold text-gray-900">技术栈</h3>
-            <p class="text-sm text-gray-700 mt-1">Vue 3 + Vite + TypeScript，样式使用 TailwindCSS，图标使用 lucide-vue-next。</p>
+            <h3 class="font-semibold text-gray-900">Tech Stack</h3>
+            <p class="text-sm text-gray-700 mt-1">Vue 3 + Vite + TypeScript, styled with TailwindCSS, icons via lucide-vue-next.</p>
           </div>
           <div class="rounded-xl bg-purple-50/40 shadow-sm p-4">
-            <h3 class="font-semibold text-gray-900">页面与路由</h3>
-            <p class="text-sm text-gray-700 mt-1">Home（首页 Banner + 精选路径）、Learning Paths 列表（横向滚动节点卡片）、LearningPath 详情、Resources 资源库、Login/Register、About、Footer/NavBar 统一布局。</p>
+            <h3 class="font-semibold text-gray-900">Pages & Routes</h3>
+            <p class="text-sm text-gray-700 mt-1">Home (hero + featured paths), LearningPool, path details, Resources, Login/Register, About, and a shared NavBar/Footer layout.</p>
           </div>
           <div class="rounded-xl bg-green-50/40 shadow-sm p-4">
-            <h3 class="font-semibold text-gray-900">学习路径展示</h3>
-            <p class="text-sm text-gray-700 mt-1">单行 5 卡片精选展示；列表页支持多条路径，每条路径下的节点可横向滚动，长文本自动省略。</p>
+            <h3 class="font-semibold text-gray-900">Path Experience</h3>
+            <p class="text-sm text-gray-700 mt-1">Featured paths in a 5-card row; multiple paths in lists; steps scroll horizontally; long text is clamped for readability.</p>
           </div>
         </div>
       </section>
@@ -30,22 +32,22 @@
       <!-- Sections -->
       <section class="grid gap-6 md:grid-cols-2">
         <div class="rounded-2xl bg-white shadow-lg p-6 space-y-3">
-          <h2 class="text-xl font-semibold text-gray-900">核心功能</h2>
+          <h2 class="text-xl font-semibold text-gray-900">Core Features</h2>
           <ul class="space-y-2 text-gray-700 text-sm leading-relaxed list-disc list-inside">
-            <li>学习路径列表：横向滚动的节点卡片，支持快速浏览。</li>
-            <li>路径详情页：时间轴 + 进度条 + 笔记编辑交互。</li>
-            <li>资源库：网格/列表双模式、筛选搜索、增删改资源模态框。</li>
-            <li>登录/注册：表单校验与密码显隐切换。</li>
-            <li>统一导航与页脚：全局路由入口、登录注册入口、资源与路径入口。</li>
+            <li>Learning path lists: horizontally scrollable step cards for quick browsing.</li>
+            <li>Path details: timeline, progress, and note editing.</li>
+            <li>Resource library: grid/list view, search, add/remove resources.</li>
+            <li>Login/Register: client-side validation and password visibility toggle.</li>
+            <li>Unified layout: global navigation and consistent footer.</li>
           </ul>
         </div>
         <div class="rounded-2xl bg-white shadow-lg p-6 space-y-3">
-          <h2 class="text-xl font-semibold text-gray-900">体验亮点</h2>
+          <h2 class="text-xl font-semibold text-gray-900">Highlights</h2>
           <ul class="space-y-2 text-gray-700 text-sm leading-relaxed list-disc list-inside">
-            <li>卡片化与渐变 Banner，突出重点路径。</li>
-            <li>line-clamp 处理长文案，保持整洁排版。</li>
-            <li>Tailwind 公用布局：max-w-7xl 居中、柔和阴影和圆角。</li>
-            <li>可扩展：可接入真实后端 API，替换 mock 数据。</li>
+            <li>Card-based UI with a bold hero section to spotlight featured paths.</li>
+            <li>Line-clamp for long text to keep layouts clean.</li>
+            <li>Tailwind layout primitives: centered max width, soft shadows, and rounded corners.</li>
+            <li>Extensible: connect a real backend API to replace mock data.</li>
           </ul>
         </div>
       </section>

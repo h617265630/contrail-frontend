@@ -20,6 +20,8 @@ class User(Base):
     
     #relationships
     videos = relationship("Video",secondary="user_video",back_populates="users")
+
+    user_resources = relationship("UserResource", back_populates="user", cascade="all, delete-orphan")
    
     user_videos = relationship("UserVideo", back_populates="user", cascade="all, delete-orphan")
     learning_paths = relationship("LearningPath", back_populates="users", secondary="user_learning_paths")

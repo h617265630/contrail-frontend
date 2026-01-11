@@ -187,31 +187,31 @@ function buildFieldErrors() {
 
   const trimmedUsername = form.username.trim()
   if (!trimmedUsername) {
-    errors.username = '用户名不能为空'
+    errors.username = 'Username is required'
   } else if (trimmedUsername.length < USERNAME_MIN || trimmedUsername.length > USERNAME_MAX) {
-    errors.username = `用户名需为 ${USERNAME_MIN}-${USERNAME_MAX} 位`
+    errors.username = `Username must be ${USERNAME_MIN}-${USERNAME_MAX} characters`
   }
 
   const trimmedEmail = form.email.trim()
   if (!trimmedEmail) {
-    errors.email = '邮箱不能为空'
+    errors.email = 'Email is required'
   } else if (!EMAIL_REGEX.test(trimmedEmail)) {
-    errors.email = '不是有效的邮箱'
+    errors.email = 'Please enter a valid email address'
   }
 
   const passwordValue = form.password
   if (!passwordValue || !passwordValue.trim()) {
-    errors.password = '密码不能为空'
+    errors.password = 'Password is required'
   } else if (passwordValue.length < PASSWORD_MIN) {
-    errors.password = `密码至少 ${PASSWORD_MIN} 位`
+    errors.password = `Password must be at least ${PASSWORD_MIN} characters`
   } else if (!/[A-Za-z]/.test(passwordValue) || !/\d/.test(passwordValue)) {
-    errors.password = '密码需同时包含字母和数字'
+    errors.password = 'Password must include both letters and numbers'
   }
 
   if (!form.confirm_password) {
-    errors.confirm_password = '请再次输入密码'
+    errors.confirm_password = 'Please confirm your password'
   } else if (form.confirm_password !== form.password) {
-    errors.confirm_password = '两次密码不一致'
+    errors.confirm_password = 'Passwords do not match'
   }
 
   return errors
@@ -277,7 +277,7 @@ const submit = async () => {
     successMessage.value = 'Registration successful! Redirecting to sign in...'
     setTimeout(() => router.push('/login'), 1200)
   } catch (err: any) {
-    console.error('注册失败:', err)
+    console.error('Registration failed:', err)
     formError.value = err?.detail || err?.message || 'Registration failed, please try again'
   } finally {
     loading.value = false

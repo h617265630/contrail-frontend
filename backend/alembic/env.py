@@ -1,13 +1,40 @@
 from logging.config import fileConfig
-from app.models.user import user
+
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+
+from app.core.config import settings
+from app.db.database import Base
+
+# Import model modules so SQLAlchemy registers all tables on Base.metadata.
+# Keep this list explicit to avoid accidental side effects.
+import app.models.category  # noqa: F401
+import app.models.learning_path  # noqa: F401
+import app.models.path_item  # noqa: F401
+import app.models.progress  # noqa: F401
+import app.models.relations  # noqa: F401
+import app.models.resource  # noqa: F401
+import app.models.user_learning_path  # noqa: F401
+import app.models.user_video  # noqa: F401
+import app.models.video_category  # noqa: F401
+import app.models.watch_history  # noqa: F401
+import app.models.rbac.associations  # noqa: F401
+import app.models.rbac.permission  # noqa: F401
+import app.models.rbac.role  # noqa: F401
+import app.models.rbac.user  # noqa: F401
+import app.models.resources.clip  # noqa: F401
+import app.models.resources.doc  # noqa: F401
+import app.models.resources.product  # noqa: F401
+import app.models.resources.video  # noqa: F401
 # sys.path.append(os.path.dirname(os.path.abspath(__file__)) +"/..")
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Override alembic.ini sqlalchemy.url with runtime settings/env var.
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -18,7 +45,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -44,6 +71,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        compare_type=True,
     )
 
     with context.begin_transaction():
@@ -65,7 +93,9 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata,
+            compare_type=True,
         )
 
         with context.begin_transaction():

@@ -54,6 +54,35 @@ class UserUpdate(BaseModel):
     avatar_url: Optional[str] = None
     bio: Optional[str] = None
     is_active: Optional[bool] = None
+
+
+class UserMeUpdate(BaseModel):
+    display_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    bio: Optional[str] = None
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+    @validator("current_password", pre=True)
+    def _validate_current_password(cls, v: str) -> str:
+        if v is None or not str(v).strip():
+            raise ValueError("Current password is required")
+        return str(v)
+
+    @validator("new_password", pre=True)
+    def _validate_new_password(cls, v: str) -> str:
+        if v is None or not str(v).strip():
+            raise ValueError("New password is required")
+        if len(v) < PASSWORD_MIN_LEN:
+            raise ValueError(f"Password length must be >= {PASSWORD_MIN_LEN}")
+        return str(v)
+
+
+class AvatarUploadResponse(BaseModel):
+    avatar_url: str
  
 
 # 返还给 前端的用户信息,一般只返回简单信息

@@ -1,15 +1,43 @@
 from typing import List
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+
+from pytube import YouTube
 
 from app.core.deps import get_current_user, get_db_dep
 from app.curd.resources.video_curd import VideoCURD
 from app.curd.watch_history_curd import WatchHistoryCURD
 from app.schemas.resources.video import VideoCategoryAssign, VideoCreate, VideoResponse
+from app.schemas.resources.extract import UrlExtractRequest, UrlExtractResponse
 from app.schemas.watch_history import WatchHistoryCreate, WatchHistoryResponse
 
 router = APIRouter(prefix="/videos", tags=["Videos"])
+
+
+@router.post("/extract", response_model=UrlExtractResponse)
+def extract_video_metadata(payload: UrlExtractRequest):
+    """Extract title/description from a YouTube URL.
+
+    Note: pytube only supports YouTube links. For non-YouTube URLs, return 400.
+    """
+    url = str(payload.url)
+    host = (urlparse(url).hostname or "").lower()
+    if not (host.endswith("youtube.com") or host.endswith("youtu.be")):
+        raise HTTPException(status_code=400, detail="目前仅支持 YouTube 链接解析")
+
+    try:
+        yt = YouTube(url)
+        title = (yt.title or "").strip()
+        description = (yt.description or "").strip() or None
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"解析失败: {e}")
+
+    if not title:
+        raise HTTPException(status_code=400, detail="解析失败: 未获取到标题")
+
+    return UrlExtractResponse(title=title, description=description)
 
 @router.post("/", response_model=VideoResponse, status_code=status.HTTP_201_CREATED)
 def create_video(video_in: VideoCreate, db: Session = Depends(get_db_dep), current_user = Depends(get_current_user)):

@@ -19,6 +19,6 @@ const authStore = useAuthStore()
 onMounted(() => {
   authStore
     .fetchProfile()
-    .catch((error) => console.warn('初始化用户信息失败：', error))
+    .catch((error) => console.warn('Failed to initialize user profile:', error))
 })
 </script>
