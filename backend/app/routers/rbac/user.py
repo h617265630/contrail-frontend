@@ -1,5 +1,5 @@
 # backend/app/routers/user.py
-from fastapi import APIRouter, Depends, HTTPException,status,Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
@@ -7,6 +7,7 @@ from app.schemas.rbac.user import UserCreate, UserResponse,Token
 from app.curd.rbac.user_curd import UserCURD
 from app import auth,curd
 from app.core.deps import get_db_dep,get_current_user
+from app.core.validators import normalize_email, validate_password, validate_username
 
 from app.models.rbac.user import User
 from app.schemas.rbac import UserWithRoles
@@ -17,15 +18,20 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register(user_in: UserCreate, db: Session = Depends(get_db_dep)):
+    # Pydantic 已完成基础校验；这里再次确保“先校验/规范化、后查库”
+    username_norm = validate_username(user_in.username)
+    email_norm = normalize_email(str(user_in.email))
+    _ = validate_password(user_in.password)
+
     # check existing
-    if UserCURD.get_user_by_username(db, user_in.username):
+    if UserCURD.get_user_by_username(db, username_norm):
         raise HTTPException(status_code=400, detail="Username already registered")
-    if UserCURD.get_user_by_email(db, user_in.email):
+    if UserCURD.get_user_by_email(db, email_norm):
         raise HTTPException(status_code=400, detail="Email already registered")
 
     hashed = auth.hash_password(user_in.password)
     try:
-        user = UserCURD.create_user(db, username=user_in.username, email=user_in.email, hashed_password=hashed)
+        user = UserCURD.create_user(db, username=username_norm, email=email_norm, hashed_password=hashed)
     except ValueError as ve:
         # Duplicate checks surfaced from CURD layer
         detail = str(ve)
@@ -35,7 +41,26 @@ def register(user_in: UserCreate, db: Session = Depends(get_db_dep)):
 
 @router.post("/login", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db_dep)):
-    user = UserCURD.get_user_by_username(db, form_data.username)
+    identifier = (form_data.username or "").strip()
+    try:
+        if not identifier:
+            raise ValueError("Username is required")
+        validate_password(form_data.password)
+    except ValueError:
+        # 避免泄露细节：统一提示
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+
+    # 支持 username 或 email 登录；精确匹配但大小写无关
+    if "@" in identifier:
+        try:
+            email_norm = normalize_email(identifier)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Incorrect username or password")
+        user = UserCURD.get_user_by_email(db, email_norm)
+    else:
+        username_norm = validate_username(identifier)
+        user = UserCURD.get_user_by_username(db, username_norm)
+
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect username or password")
     if not auth.verify_password(form_data.password, user.hashed_password):

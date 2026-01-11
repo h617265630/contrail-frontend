@@ -1,6 +1,14 @@
 from typing import Optional
-from pydantic import BaseModel,EmailStr
+from pydantic import BaseModel, EmailStr, validator
 from datetime import datetime
+
+from app.core.validators import (
+    PASSWORD_MIN_LEN,
+    USERNAME_MAX_LEN,
+    USERNAME_MIN_LEN,
+    normalize_email,
+    normalize_username,
+)
 
 class UserBase(BaseModel):
     username: str
@@ -14,8 +22,32 @@ class UserBase(BaseModel):
         "from_attributes": True
     }
 
+    @validator("username", pre=True)
+    def _validate_username(cls, v: str) -> str:
+        normalized = normalize_username(v)
+        if not normalized:
+            raise ValueError("Username is required")
+        if not (USERNAME_MIN_LEN <= len(normalized) <= USERNAME_MAX_LEN):
+            raise ValueError(f"Username length must be {USERNAME_MIN_LEN}-{USERNAME_MAX_LEN}")
+        return normalized
+
+    @validator("email", pre=True)
+    def _validate_email(cls, v: str) -> str:
+        normalized = normalize_email(v)
+        if not normalized:
+            raise ValueError("Email is required")
+        return normalized
+
 class UserCreate(UserBase):
     password: str
+
+    @validator("password", pre=True)
+    def _validate_password(cls, v: str) -> str:
+        if v is None or not str(v).strip():
+            raise ValueError("Password is required")
+        if len(v) < PASSWORD_MIN_LEN:
+            raise ValueError(f"Password length must be >= {PASSWORD_MIN_LEN}")
+        return v
 
 class UserUpdate(BaseModel):
     display_name: Optional[str] = None

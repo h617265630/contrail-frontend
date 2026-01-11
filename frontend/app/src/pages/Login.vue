@@ -8,18 +8,26 @@
 
       <form @submit.prevent="handleSubmit" class="space-y-6">
         <div>
-          <label for="email" class="block text-gray-700 mb-2">Username</label>
+          <label for="email" class="block text-gray-700 mb-2">用户名或邮箱</label>
           <div class="relative">
             <Mail class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               id="email"
               type="text"
               v-model="email"
-              :class="['w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent', errors.email ? 'border-red-500' : 'border-gray-300']"
-              placeholder="your username"
+              @blur="onBlur('email')"
+              @input="onInput('email')"
+              :class="[
+                'w-full pl-11 pr-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                errors.email ? 'border-red-500 pt-2 pb-6' : 'border-gray-300 py-3',
+              ]"
+              placeholder="请输入用户名或邮箱"
             />
+
+            <span v-if="errors.email" class="absolute left-11 bottom-1 text-xs text-red-500 pointer-events-none">
+              {{ errors.email }}
+            </span>
           </div>
-          <p v-if="errors.email" class="text-red-500 text-sm mt-1">{{ errors.email }}</p>
         </div>
 
         <div>
@@ -30,15 +38,23 @@
               id="password"
               :type="showPassword ? 'text' : 'password'"
               v-model="password"
-              :class="['w-full pl-11 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent', errors.password ? 'border-red-500' : 'border-gray-300']"
+              @blur="onBlur('password')"
+              @input="onInput('password')"
+              :class="[
+                'w-full pl-11 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                errors.password ? 'border-red-500 pt-2 pb-6' : 'border-gray-300 py-3',
+              ]"
               placeholder="Enter your password"
             />
             <button type="button" @click="showPassword = !showPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
               <EyeOff v-if="showPassword" class="w-5 h-5" />
               <Eye v-else class="w-5 h-5" />
             </button>
+
+            <span v-if="errors.password" class="absolute left-11 bottom-1 text-xs text-red-500 pointer-events-none">
+              {{ errors.password }}
+            </span>
           </div>
-          <p v-if="errors.password" class="text-red-500 text-sm mt-1">{{ errors.password }}</p>
         </div>
 
         <div class="flex items-center justify-between">
@@ -93,6 +109,8 @@ const password = ref('')
 const showPassword = ref(false)
 const errors = reactive({ email: '', password: '' })
 
+const touched = reactive({ email: false, password: false })
+
 const USERNAME_MIN = 3
 const USERNAME_MAX = 32
 const PASSWORD_MIN = 8
@@ -116,8 +134,8 @@ function buildLoginErrors() {
     newErrors.password = '密码不能为空'
   } else if (password.value.length < PASSWORD_MIN) {
     newErrors.password = `密码至少 ${PASSWORD_MIN} 位`
-  } else if (!/[A-Za-z0-9]/.test(password.value)) {
-    newErrors.password = '密码需包含字母或数字'
+  } else if (!/[A-Za-z]/.test(password.value) || !/\d/.test(password.value)) {
+    newErrors.password = '密码需同时包含字母和数字'
   }
 
   return newErrors
@@ -136,9 +154,27 @@ function validateForm() {
   return !newErrors.email && !newErrors.password
 }
 
+function syncTouchedErrors() {
+  const newErrors = buildLoginErrors()
+  errors.email = touched.email ? newErrors.email : ''
+  errors.password = touched.password ? newErrors.password : ''
+}
+
+function onBlur(field: keyof typeof touched) {
+  touched[field] = true
+  syncTouchedErrors()
+}
+
+function onInput(field: keyof typeof touched) {
+  if (!touched[field]) return
+  syncTouchedErrors()
+}
+
 // 提交表单后的操作
 async function handleSubmit() {
   formError.value = ''
+  touched.email = true
+  touched.password = true
   if (!validateForm()) return
 
   loading.value = true

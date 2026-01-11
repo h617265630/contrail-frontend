@@ -1,5 +1,6 @@
 # backend/app/crud/user.py
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.models.rbac.user import User
 # from app.auth import hash_password
 # from app.schemas.user import UserCreate
@@ -13,11 +14,17 @@ class UserCURD:
     
     @staticmethod
     def get_user_by_username(db: Session, username: str)->Optional[User]:
-        return db.query(User).filter(User.username == username).first()
+        normalized = (username or "").strip().lower()
+        if not normalized:
+            return None
+        return db.query(User).filter(func.lower(User.username) == normalized).first()
 
     @staticmethod
     def get_user_by_email(db: Session, email: str)->Optional[User]:
-        return db.query(User).filter(User.email == email).first()
+        normalized = (email or "").strip().lower()
+        if not normalized:
+            return None
+        return db.query(User).filter(func.lower(User.email) == normalized).first()
 
 
     @staticmethod
@@ -36,17 +43,20 @@ class UserCURD:
         """
 
         # Defensive duplicate checks (router also checks, but keep CURD robust)
-        existing_by_username = db.query(User).filter(User.username == username).first()
+        username_norm = (username or "").strip().lower()
+        email_norm = (email or "").strip().lower()
+
+        existing_by_username = db.query(User).filter(func.lower(User.username) == username_norm).first()
         if existing_by_username:
             raise ValueError("Username already registered")
 
-        existing_by_email = db.query(User).filter(User.email == email).first()
+        existing_by_email = db.query(User).filter(func.lower(User.email) == email_norm).first()
         if existing_by_email:
             raise ValueError("Email already registered")
 
         user = User(
-            username=username,
-            email=email,
+            username=username_norm,
+            email=email_norm,
             hashed_password=hashed_password,
         )
         db.add(user)

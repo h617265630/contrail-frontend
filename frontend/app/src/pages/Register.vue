@@ -15,11 +15,19 @@
               id="name"
               type="text"
               v-model="form.username"
-              :class="['w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent', fieldErrors.username ? 'border-red-500' : 'border-gray-300']"
+              @blur="onBlur('username')"
+              @input="onInput('username')"
+              :class="[
+                'w-full pl-11 pr-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                fieldErrors.username ? 'border-red-500 pt-2 pb-6' : 'border-gray-300 py-3',
+              ]"
               placeholder="your username"
             />
+
+            <span v-if="fieldErrors.username" class="absolute left-11 bottom-1 text-xs text-red-500 pointer-events-none">
+              {{ fieldErrors.username }}
+            </span>
           </div>
-          <p v-if="fieldErrors.username" class="text-red-500 text-sm mt-1">{{ fieldErrors.username }}</p>
         </div>
 
         <div>
@@ -30,11 +38,19 @@
               id="email"
               type="email"
               v-model="form.email"
-              :class="['w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent', fieldErrors.email ? 'border-red-500' : 'border-gray-300']"
+              @blur="onBlur('email')"
+              @input="onInput('email')"
+              :class="[
+                'w-full pl-11 pr-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                fieldErrors.email ? 'border-red-500 pt-2 pb-6' : 'border-gray-300 py-3',
+              ]"
               placeholder="you@example.com"
             />
+
+            <span v-if="fieldErrors.email" class="absolute left-11 bottom-1 text-xs text-red-500 pointer-events-none">
+              {{ fieldErrors.email }}
+            </span>
           </div>
-          <p v-if="fieldErrors.email" class="text-red-500 text-sm mt-1">{{ fieldErrors.email }}</p>
         </div>
 
         <div>
@@ -45,15 +61,23 @@
               id="password"
               :type="showPassword ? 'text' : 'password'"
               v-model="form.password"
-              :class="['w-full pl-11 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent', fieldErrors.password ? 'border-red-500' : 'border-gray-300']"
+              @blur="onBlur('password')"
+              @input="onInput('password')"
+              :class="[
+                'w-full pl-11 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                fieldErrors.password ? 'border-red-500 pt-2 pb-6' : 'border-gray-300 py-3',
+              ]"
               placeholder="Create a password"
             />
             <button type="button" @click="showPassword = !showPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
               <EyeOff v-if="showPassword" class="w-5 h-5" />
               <Eye v-else class="w-5 h-5" />
             </button>
+
+            <span v-if="fieldErrors.password" class="absolute left-11 bottom-1 text-xs text-red-500 pointer-events-none">
+              {{ fieldErrors.password }}
+            </span>
           </div>
-          <p v-if="fieldErrors.password" class="text-red-500 text-sm mt-1">{{ fieldErrors.password }}</p>
         </div>
 
         <div>
@@ -64,15 +88,23 @@
               id="confirmPassword"
               :type="showConfirmPassword ? 'text' : 'password'"
               v-model="form.confirm_password"
-              :class="['w-full pl-11 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent', fieldErrors.confirm_password ? 'border-red-500' : 'border-gray-300']"
+              @blur="onBlur('confirm_password')"
+              @input="onInput('confirm_password')"
+              :class="[
+                'w-full pl-11 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                fieldErrors.confirm_password ? 'border-red-500 pt-2 pb-6' : 'border-gray-300 py-3',
+              ]"
               placeholder="Confirm your password"
             />
             <button type="button" @click="showConfirmPassword = !showConfirmPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
               <EyeOff v-if="showConfirmPassword" class="w-5 h-5" />
               <Eye v-else class="w-5 h-5" />
             </button>
+
+            <span v-if="fieldErrors.confirm_password" class="absolute left-11 bottom-1 text-xs text-red-500 pointer-events-none">
+              {{ fieldErrors.confirm_password }}
+            </span>
           </div>
-          <p v-if="fieldErrors.confirm_password" class="text-red-500 text-sm mt-1">{{ fieldErrors.confirm_password }}</p>
         </div>
 
         <div class="flex items-start">
@@ -105,7 +137,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { Eye, EyeOff, Lock, Mail, User } from 'lucide-vue-next'
 import { register } from '../api/auth'
 import { useRouter, RouterLink } from 'vue-router'
@@ -133,6 +165,13 @@ const formError = ref('')
 const successMessage = ref('')
 const router = useRouter()
 
+const touched = reactive({
+  username: false,
+  email: false,
+  password: false,
+  confirm_password: false,
+})
+
 const USERNAME_MIN = 3
 const USERNAME_MAX = 32
 const PASSWORD_MIN = 8
@@ -148,31 +187,31 @@ function buildFieldErrors() {
 
   const trimmedUsername = form.username.trim()
   if (!trimmedUsername) {
-    errors.username = 'Username is required'
+    errors.username = '用户名不能为空'
   } else if (trimmedUsername.length < USERNAME_MIN || trimmedUsername.length > USERNAME_MAX) {
-    errors.username = `Username must be ${USERNAME_MIN}-${USERNAME_MAX} characters`
+    errors.username = `用户名需为 ${USERNAME_MIN}-${USERNAME_MAX} 位`
   }
 
   const trimmedEmail = form.email.trim()
   if (!trimmedEmail) {
-    errors.email = 'Email is required'
+    errors.email = '邮箱不能为空'
   } else if (!EMAIL_REGEX.test(trimmedEmail)) {
-    errors.email = 'Please enter a valid email address'
+    errors.email = '不是有效的邮箱'
   }
 
   const passwordValue = form.password
   if (!passwordValue || !passwordValue.trim()) {
-    errors.password = 'Password is required'
+    errors.password = '密码不能为空'
   } else if (passwordValue.length < PASSWORD_MIN) {
-    errors.password = `Password must be at least ${PASSWORD_MIN} characters`
-  } else if (!/[A-Za-z0-9]/.test(passwordValue)) {
-    errors.password = 'Password must contain letters or numbers'
+    errors.password = `密码至少 ${PASSWORD_MIN} 位`
+  } else if (!/[A-Za-z]/.test(passwordValue) || !/\d/.test(passwordValue)) {
+    errors.password = '密码需同时包含字母和数字'
   }
 
   if (!form.confirm_password) {
-    errors.confirm_password = 'Please confirm your password'
+    errors.confirm_password = '请再次输入密码'
   } else if (form.confirm_password !== form.password) {
-    errors.confirm_password = 'Passwords do not match'
+    errors.confirm_password = '两次密码不一致'
   }
 
   return errors
@@ -183,6 +222,14 @@ const isFormValid = computed(() => {
   return Object.values(errors).every((message) => !message)
 })
 
+function syncTouchedErrors() {
+  const errors = buildFieldErrors()
+  fieldErrors.username = touched.username ? errors.username : ''
+  fieldErrors.email = touched.email ? errors.email : ''
+  fieldErrors.password = touched.password ? errors.password : ''
+  fieldErrors.confirm_password = touched.confirm_password ? errors.confirm_password : ''
+}
+
 function validateForm() {
   const errors = buildFieldErrors()
   fieldErrors.username = errors.username
@@ -192,9 +239,32 @@ function validateForm() {
   return Object.values(errors).every((message) => !message)
 }
 
+function onBlur(field: keyof typeof touched) {
+  touched[field] = true
+  syncTouchedErrors()
+}
+
+function onInput(field: keyof typeof touched) {
+  if (!touched[field]) return
+  syncTouchedErrors()
+}
+
+watch(
+  () => [form.username, form.email, form.password, form.confirm_password],
+  () => {
+    if (touched.username || touched.email || touched.password || touched.confirm_password) {
+      syncTouchedErrors()
+    }
+  }
+)
+
 const submit = async () => {
   formError.value = ''
   successMessage.value = ''
+  touched.username = true
+  touched.email = true
+  touched.password = true
+  touched.confirm_password = true
   if (!validateForm()) return
 
   loading.value = true
