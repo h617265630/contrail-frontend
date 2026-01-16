@@ -7,7 +7,8 @@
       </RouterLink>
       <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-700">
         <RouterLink class="hover:text-blue-600" to="/learningpool">LearningPool</RouterLink>
-        <RouterLink class="hover:text-blue-600" to="/">Notification</RouterLink>
+        <RouterLink class="hover:text-blue-600" to="/notification">Notification</RouterLink>
+        <RouterLink class="hover:text-blue-600" to="/partical">Partical</RouterLink>
         <RouterLink class="hover:text-blue-600" to="/about">About</RouterLink>
         <RouterLink class="hover:text-blue-600" to="/plan">Plan</RouterLink>
         <RouterLink
@@ -101,7 +102,7 @@
            
 
               <RouterLink
-                to="/partical"
+                to="/my-partical"
                 class="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50"
               >
                 <span>Partical</span>
@@ -116,7 +117,7 @@
                 <span class="text-xs text-gray-400">Hot</span>
               </RouterLink>
               <RouterLink
-                to="/plan"
+                to="/creator"
                 class="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50"
               >
                 <span>{{ t('Creator Center') }}</span>
@@ -174,6 +175,7 @@
       <div class="px-4 py-3 flex flex-col gap-3 text-sm text-gray-700">
         <RouterLink class="hover:text-blue-600" to="/home" @click="open = false">Home</RouterLink>
         <RouterLink class="hover:text-blue-600" to="/learningpool" @click="open = false">LearningPool</RouterLink>
+        <RouterLink class="hover:text-blue-600" to="/notification" @click="open = false">Notification</RouterLink>
         <RouterLink class="hover:text-blue-600" to="/my-paths" @click="open = false">My Paths</RouterLink>
         <RouterLink class="hover:text-blue-600" to="/createpath" @click="open = false">CreatePath</RouterLink>
         <RouterLink class="hover:text-blue-600" to="/partical" @click="open = false">Partical</RouterLink>

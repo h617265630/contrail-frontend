@@ -3,6 +3,11 @@ import request from '../utils/request'
 export interface UrlExtractResponse {
   title: string
   description?: string | null
+  thumbnail_url?: string | null
+  author?: string | null
+  publish_date?: string | null
+  video_id?: string | null
+  chapters?: ChapterItem[]
 }
 
 export function extractVideoMetadata(url: string) {
@@ -45,6 +50,13 @@ export function createMyResourceFromUrl(url: string, category?: string) {
 
 export function deleteMyResource(resourceId: number) {
   return request.delete(`/resources/me/${resourceId}`)
+}
+
+export function updateMyResource(
+  resourceId: number,
+  payload: { url?: string; title?: string; description?: string },
+) {
+  return request.patch<DbResource, DbResource>(`/resources/me/${resourceId}`, payload)
 }
 
 export function getMyResourceDetail(resourceId: number) {

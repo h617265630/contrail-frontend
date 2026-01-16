@@ -181,7 +181,7 @@ onMounted(() => {
 })
 
 function openDetail(id: string) {
-  router.push({ name: 'learningpathdetail', params: { id } })
+  router.push({ name: 'learningpath', params: { id } })
 }
 
 function handleDelete(id: string) {

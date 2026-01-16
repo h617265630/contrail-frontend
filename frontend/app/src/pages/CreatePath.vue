@@ -210,6 +210,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ChevronDown, Plus, Search, X } from 'lucide-vue-next'
 import { resourceSeed, type Resource } from '../data/resources'
 import { addMyLearningPath } from '../data/myPaths'
@@ -219,6 +220,8 @@ type PathMeta = {
   title: string
   description: string
 }
+
+const router = useRouter()
 
 const allResources = ref<Resource[]>(listAllResources())
 const searchQuery = ref('')
@@ -459,11 +462,14 @@ function onSelectedDragEnd() {
 
 function createLearningPath() {
   if (!pathMeta.title.trim()) return
-  addMyLearningPath({
+  const created = addMyLearningPath({
     title: pathMeta.title,
     description: pathMeta.description,
     resources: selected.value,
   })
+
+  alert('创建成功')
+  router.push({ name: 'learningpath', params: { id: created.id } })
 
   pathMeta.title = ''
   pathMeta.description = ''

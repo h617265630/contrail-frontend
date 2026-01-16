@@ -22,11 +22,6 @@
               <div v-else class="absolute inset-0 flex items-center justify-center text-white/80">
                 Video preview is unavailable
               </div>
-
-              <div class="absolute left-4 bottom-4 inline-flex items-center gap-2 rounded-full bg-black/70 px-3 py-1 text-xs text-white">
-                <Play class="h-4 w-4" />
-                HD 1080p
-              </div>
             </div>
           </div>
 
@@ -127,6 +122,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Calendar, Clock, Download, Link as LinkIcon, Play, UserRound } from 'lucide-vue-next'
 import { getMyResourceDetail, type DbResourceDetail } from '../api/resource'
+import { getResourceById } from '../data/resourcesStore'
 
 const route = useRoute()
 const router = useRouter()
@@ -152,11 +148,61 @@ const resource = ref<DbResourceDetail>({
 
 const startSeconds = ref(0)
 
-const resourceId = computed(() => {
-  const raw = String(route.params.id || '').trim()
+const resourceIdRaw = computed(() => String(route.params.id || '').trim())
+
+const resourceIdNumber = computed(() => {
+  const raw = resourceIdRaw.value
+  if (!raw) return null
+  // Only treat as DB id when it is purely numeric.
+  if (!/^\d+$/.test(raw)) return null
   const n = Number(raw)
-  return Number.isFinite(n) ? n : 0
+  return Number.isFinite(n) ? n : null
 })
+
+function extractYouTubeId(url: string): string {
+  const raw = String(url || '').trim()
+  if (!raw) return ''
+  try {
+    const u = new URL(raw)
+    const host = u.hostname.replace(/^www\./, '')
+    if (host === 'youtu.be') {
+      return u.pathname.replace(/^\//, '').split('/')[0] || ''
+    }
+    if (host === 'youtube.com' || host === 'm.youtube.com') {
+      const v = u.searchParams.get('v')
+      if (v) return v
+      const parts = u.pathname.split('/').filter(Boolean)
+      // /embed/<id>
+      if (parts[0] === 'embed' && parts[1]) return parts[1]
+    }
+  } catch {
+    // ignore
+  }
+  return ''
+}
+
+function mapLocalToDbDetail(idRaw: string): DbResourceDetail {
+  const local = getResourceById(idRaw)
+  if (!local) {
+    throw new Error('Resource not found')
+  }
+
+  return {
+    id: 0,
+    title: local.title,
+    description: local.description,
+    resource_type: local.type,
+    url: local.url,
+    source: local.source,
+    category: local.category,
+    thumbnail_url: local.thumbnail,
+    created_at: local.addedDate || null,
+    author: null,
+    publish_date: null,
+    video_id: local.type === 'video' ? extractYouTubeId(local.url) : null,
+    chapters: [],
+  }
+}
 
 function formatDate(iso?: string | null) {
   if (!iso) return ''
@@ -168,7 +214,10 @@ function formatDate(iso?: string | null) {
 const publishedText = computed(() => formatDate(resource.value.publish_date || null))
 const addedText = computed(() => formatDate(resource.value.created_at || null))
 
+const canEmbedPreview = computed(() => true)
+
 const embedUrl = computed(() => {
+  if (!canEmbedPreview.value) return ''
   const vid = (resource.value.video_id || '').trim()
   if (!vid) return ''
   const params = new URLSearchParams({
@@ -185,13 +234,25 @@ async function load() {
   error.value = ''
   loading.value = true
   try {
-    if (!resourceId.value) {
-      throw new Error('Invalid resource id')
-    }
-    const data = await getMyResourceDetail(resourceId.value)
-    resource.value = {
-      ...data,
-      chapters: Array.isArray(data.chapters) ? data.chapters : [],
+    const raw = resourceIdRaw.value
+    if (!raw) throw new Error('Invalid resource id')
+
+    const dbId = resourceIdNumber.value
+    if (dbId != null) {
+      try {
+        const data = await getMyResourceDetail(dbId)
+        resource.value = {
+          ...data,
+          chapters: Array.isArray(data.chapters) ? data.chapters : [],
+        }
+      } catch (e: any) {
+        // If backend is unavailable / unauthorized / not found, but we have a local seed/custom
+        // resource with the same id, render it as a fallback.
+        resource.value = mapLocalToDbDetail(raw)
+      }
+    } else {
+      // Local-only resource (e.g. created in CreatePath and stored in localStorage)
+      resource.value = mapLocalToDbDetail(raw)
     }
     startSeconds.value = 0
   } catch (e: any) {
@@ -211,8 +272,8 @@ function openSource() {
 }
 
 function goSaveToPath() {
-  if (!resourceId.value) return
-  router.push({ name: 'resource-add-to-path', params: { type: 'video', id: String(resourceId.value) } })
+  if (!resourceIdRaw.value) return
+  router.push({ name: 'resource-add-to-path', params: { type: 'video', id: resourceIdRaw.value } })
 }
 
 watch(

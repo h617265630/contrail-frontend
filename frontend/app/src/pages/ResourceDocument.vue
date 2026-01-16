@@ -31,7 +31,7 @@
               </button>
             </div>
           </div>
-          <div class="aspect-[4/3] bg-slate-900">
+          <div class="aspect-4/3 bg-slate-900">
             <iframe :src="resource.previewUrl" class="w-full h-full" title="Document preview"></iframe>
           </div>
           <div class="p-6 space-y-4">
@@ -106,7 +106,7 @@
               <MessagesSquare class="w-4 h-4 text-green-500" />
               <h3 class="font-semibold text-slate-900">Notes</h3>
             </div>
-            <textarea class="w-full min-h-[140px] p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-slate-800" placeholder="Capture learnings or next steps" />
+            <textarea class="w-full min-h-35 p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-slate-800" placeholder="Capture learnings or next steps" />
             <button class="w-full px-3 py-2 rounded-lg bg-slate-900 text-white font-semibold hover:bg-black">Save note</button>
           </div>
 

@@ -11,18 +11,26 @@ const ResourceVideo = () => import('./pages/ResourceVideo.vue')
 const ResourceDocument = () => import('./pages/ResourceDocument.vue')
 const AddResourceToPath = () => import('./pages/AddResourceToPath.vue')
 const MyResource = () => import('./pages/MyResource.vue')
+const MyResourceEdit = () => import('./pages/MyResourceEdit.vue')
 const Partical = () => import('./pages/Partical.vue')
+const ParticalImage = () => import('./pages/ParticalImage.vue')
+const ParticalFlashedIdeas = () => import('./pages/ParticalFlashedIdeas.vue')
+const MyPartical = () => import('./pages/MyPartical.vue')
+const MyParticalHome = () => import('./pages/MyParticalHome.vue')
 const LearningPathDetail = () => import('./pages/LearningPathDetail.vue')
 const LearningPathLinear = () => import('./pages/LearningPathLinear.vue')
 const LearningPoolCategory = () => import('./pages/LearningPoolCategory.vue')
 const CreatePath = () => import('./pages/CreatePath.vue')
 const LearningPathEdit = () => import('./pages/LearningPathEdit.vue')
+const Notification = () => import('./pages/Notification.vue')
+const Creator = () => import('./pages/Creator.vue')
 
 const Account = () => import('./pages/Account.vue')
 const AccountMyResources = () => import('./pages/AccountMyResources.vue')
 const AccountMyPaths = () => import('./pages/AccountMyPaths.vue')
 const AccountUserInfo = () => import('./pages/AccountUserInfo.vue')
 const AccountChangePassword = () => import('./pages/AccountChangePassword.vue')
+const AccountPlan = () => import('./pages/AccountPlan.vue')
 
 const About = () => import('./pages/About.vue')
 const Plan = () => import('./pages/Plan.vue')
@@ -31,6 +39,8 @@ const routes: RouteRecordRaw[] = [
   // Canonical routes
   { path: '/', redirect: { name: 'home' } },
   { path: '/home', name: 'home', component: Home },
+  { path: '/notification', name: 'notification', component: Notification },
+  { path: '/creator', name: 'creator', component: Creator },
   { path: '/learningpool', name: 'learningpool', component: LearningPath },
   { path: '/learningpool/category/:category', name: 'learningpool-category', component: LearningPoolCategory },
   { path: '/my-paths', name: 'my-paths', component: LearningPathsList },
@@ -44,6 +54,8 @@ const routes: RouteRecordRaw[] = [
   { path: '/register', name: 'register', component: Register },
   { path: '/resources', name: 'resources', component: ResourceLibrary },
   { path: '/my-resources', name: 'my-resources', component: MyResource },
+  { path: '/my-resources/:id', name: 'my-resource-detail', component: ResourceVideo },
+  { path: '/my-resources/:id/edit', name: 'my-resource-edit', component: MyResourceEdit },
   { path: '/resources/video/:id', name: 'resource-video', component: ResourceVideo },
   { path: '/resources/document/:id', name: 'resource-document', component: ResourceDocument },
   { path: '/resources/:type/:id/add-to-path', name: 'resource-add-to-path', component: AddResourceToPath },
@@ -56,6 +68,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'my-resources', name: 'account-my-resources', component: AccountMyResources },
       { path: 'my-paths', name: 'account-my-paths', component: AccountMyPaths },
       { path: 'user-info', name: 'account-user-info', component: AccountUserInfo },
+      { path: 'plan', name: 'account-plan', component: AccountPlan },
       { path: 'change-password', name: 'account-change-password', component: AccountChangePassword },
     ],
   },
@@ -66,7 +79,26 @@ const routes: RouteRecordRaw[] = [
   { path: '/learningpath/:id/linear', name: 'learningpath-linear', component: LearningPathLinear },
   { path: '/learningpath/:id', name: 'learningpath', component: LearningPathDetail },
 
-  { path: '/partical', name: 'partical', component: Partical },
+  {
+    path: '/partical',
+    component: Partical,
+    children: [
+      { path: '', redirect: { name: 'partical-image' } },
+      { path: 'image', name: 'partical-image', component: ParticalImage },
+      { path: 'flashed-ideas', name: 'partical-flashed-ideas', component: ParticalFlashedIdeas },
+    ],
+  },
+
+  {
+    path: '/my-partical',
+    component: MyPartical,
+    children: [
+      { path: '', redirect: { name: 'my-partical-home' } },
+      { path: 'home', name: 'my-partical-home', component: MyParticalHome },
+      { path: 'image', name: 'my-partical-image', component: ParticalImage },
+      { path: 'flashed-ideas', name: 'my-partical-flashed-ideas', component: ParticalFlashedIdeas },
+    ],
+  },
   { path: '/plan', name: 'plan', component: Plan },
   { path: '/about', name: 'about', component: About },
 ]

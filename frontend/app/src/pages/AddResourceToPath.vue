@@ -7,7 +7,7 @@
           <p class="text-sm text-slate-600">选择一个 learningpath，并查看其内容</p>
         </div>
         <RouterLink
-          to="/mypaths"
+          to="/my-paths"
           class="px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50"
         >
           返回 MyPaths
@@ -22,7 +22,14 @@
             <p class="text-sm text-slate-600">根据 id 展示</p>
           </div>
 
-          <div v-if="resource" class="p-4 space-y-3">
+          <div v-if="resourceLoading" class="p-6 text-sm text-slate-600">Loading…</div>
+          <div v-else-if="resourceError" class="p-6 text-sm text-red-600">{{ resourceError }}</div>
+
+          <div
+            v-else-if="resource"
+            class="p-4 space-y-3"
+            :class="isDragging ? 'opacity-70' : ''"
+          >
             <div class="h-36 rounded-xl bg-slate-100 overflow-hidden">
               <img :src="resource.thumbnail" :alt="resource.title" class="w-full h-full object-cover" />
             </div>
@@ -39,6 +46,22 @@
               <span v-if="resource.type !== 'video' && resource.pages" class="px-2 py-1 rounded-full bg-slate-100 text-slate-700 text-xs">
                 {{ resource.pages }} pages
               </span>
+            </div>
+
+            <div
+              class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-600"
+            >
+              拖拽此卡片到右侧 Selected Path 中添加
+            </div>
+
+            <div
+              class="rounded-xl border border-slate-200 bg-white p-3 cursor-grab active:cursor-grabbing"
+              draggable="true"
+              @dragstart="onDragStart"
+              @dragend="onDragEnd"
+            >
+              <div class="font-semibold text-slate-900 text-sm truncate">{{ resource.title }}</div>
+              <div class="text-xs text-slate-600 truncate">{{ resource.url }}</div>
             </div>
           </div>
 
@@ -76,14 +99,18 @@
                   <div class="font-semibold text-slate-900 truncate">{{ p.title }}</div>
                   <div class="text-xs text-slate-600 line-clamp-2">{{ p.description || '（无介绍）' }}</div>
                 </div>
-                <div class="text-xs text-slate-500 flex-shrink-0">{{ p.resourceIds.length }} items</div>
+                <div class="text-xs text-slate-500 shrink-0">{{ p.resourceIds.length }} items</div>
               </div>
             </button>
           </div>
         </div>
 
         <!-- Column 3: Selected LearningPath detail -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div
+          class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+          @dragover.prevent
+          @drop.prevent="onDrop"
+        >
           <div class="p-4 border-b border-slate-100 bg-slate-50">
             <h2 class="text-slate-900 font-semibold">Selected Path</h2>
             <p class="text-sm text-slate-600">默认展示第一条</p>
@@ -97,24 +124,70 @@
               <div class="text-sm text-slate-600 mt-1">{{ selectedPath.description || '（无介绍）' }}</div>
             </div>
 
+            <div class="flex items-center justify-between gap-3">
+              <div class="text-sm text-slate-700">
+                <span class="font-semibold">操作：</span>
+                <span class="text-slate-600">将左侧 resource 拖到本卡片，然后点击确认</span>
+              </div>
+              <button
+                type="button"
+                class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="!selectedPath || !resource || !hasDraftChange || saving"
+                @click="confirmAddToPath"
+              >
+                {{ saving ? 'Saving…' : '确认添加' }}
+              </button>
+            </div>
+
+            <div
+              class="rounded-xl border border-dashed p-3 text-sm"
+              :class="isOverDropZone ? 'border-blue-400 bg-blue-50/40 text-blue-700' : 'border-slate-300 bg-slate-50 text-slate-600'"
+              @dragenter.prevent="isOverDropZone = true"
+              @dragleave.prevent="isOverDropZone = false"
+            >
+              {{ isOverDropZone ? '松开以添加到该路径' : '将 Resource 拖到这里' }}
+            </div>
+
             <div class="space-y-2">
               <div class="text-sm font-semibold text-slate-900">内容</div>
-              <div v-if="selectedItems.length === 0" class="text-sm text-slate-600">（该路径暂无资源）</div>
+              <div v-if="draftItems.length === 0" class="text-sm text-slate-600">（该路径暂无资源）</div>
               <div v-else class="space-y-2">
                 <div
-                  v-for="it in selectedItems"
+                  v-for="(it, idx) in draftItems"
                   :key="it.id"
-                  class="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3"
+                  class="space-y-2"
                 >
-                  <img :src="it.thumbnail" :alt="it.title" class="h-14 w-14 rounded-lg object-cover bg-slate-100" />
-                  <div class="min-w-0 flex-1">
-                    <div class="font-semibold text-slate-900 line-clamp-1">{{ it.title }}</div>
-                    <div class="text-xs text-slate-600 line-clamp-2">{{ it.description }}</div>
-                    <div class="mt-1 flex flex-wrap gap-2">
-                      <span class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ it.category }}</span>
-                      <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs">{{ it.type }}</span>
+                  <div
+                    :class="[
+                      'flex items-start gap-3 rounded-xl border bg-white p-3 transition cursor-grab active:cursor-grabbing',
+                      draftDragState.draggingId === it.id ? 'border-pink-200 bg-pink-50/40' : 'border-slate-200',
+                    ]"
+                    draggable="true"
+                    @dragstart="onDraftDragStart($event, it.id, idx)"
+                    @dragend="onDraftDragEnd"
+                    @dragover.prevent="onDraftDragOver(idx)"
+                    @drop.prevent="onDraftDrop($event, idx)"
+                  >
+                    <div class="h-7 w-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-xs font-semibold shrink-0">
+                      {{ idx + 1 }}
+                    </div>
+                    <img :src="it.thumbnail" :alt="it.title" class="h-14 w-14 rounded-lg object-cover bg-slate-100 shrink-0" />
+                    <div class="min-w-0 flex-1">
+                      <div class="font-semibold text-slate-900 line-clamp-1">{{ it.title }}</div>
+                      <div class="text-xs text-slate-600 line-clamp-2">{{ it.description }}</div>
+                      <div class="mt-1 flex flex-wrap gap-2">
+                        <span class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ it.category }}</span>
+                        <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs">{{ it.type }}</span>
+                      </div>
                     </div>
                   </div>
+
+                  <div
+                    v-if="idx !== draftItems.length - 1"
+                    class="h-2"
+                    @dragover.prevent
+                    @drop.prevent="onDraftDrop($event, idx + 1)"
+                  />
                 </div>
               </div>
             </div>
@@ -126,17 +199,32 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
-import { listMyLearningPaths, type MyLearningPath } from '../data/myPaths'
+import { listMyLearningPaths, updateMyLearningPath, type MyLearningPath } from '../data/myPaths'
 import { getResourceById, listAllResources } from '../data/resourcesStore'
 import type { Resource } from '../data/resources'
+import { getMyResourceDetail, type DbResourceDetail } from '../api/resource'
 
 const route = useRoute()
 
 const resourceType = computed(() => (route.params.type as string) || 'document')
 const resourceId = computed(() => (route.params.id as string) || '')
+
+const resourceLoading = ref(false)
+const resourceError = ref('')
+const resourceFromDb = ref<Resource | null>(null)
+const isDragging = ref(false)
+const isOverDropZone = ref(false)
+const saving = ref(false)
+const draftResourceIds = ref<string[]>([])
+
+const draftDragState = reactive({
+  draggingId: '' as string,
+  fromIndex: -1 as number,
+  overIndex: -1 as number,
+})
 
 const paths = ref<MyLearningPath[]>(listMyLearningPaths())
 const selectedPathId = ref<string>('')
@@ -151,9 +239,7 @@ watch(
 )
 
 const resource = computed<Resource | null>(() => {
-  // Prefer unified resources store
-  const r = getResourceById(resourceId.value)
-  return r ?? null
+  return resourceFromDb.value ?? getResourceById(resourceId.value) ?? null
 })
 
 const selectedPath = computed<MyLearningPath | null>(() => {
@@ -161,11 +247,181 @@ const selectedPath = computed<MyLearningPath | null>(() => {
   return paths.value.find(p => p.id === selectedPathId.value) ?? null
 })
 
-const selectedItems = computed<Resource[]>(() => {
-  const p = selectedPath.value
-  if (!p) return []
+watch(
+  selectedPath,
+  (next) => {
+    draftResourceIds.value = next ? [...next.resourceIds] : []
+  },
+  { immediate: true },
+)
 
-  const byId = new Map(listAllResources().map(r => [r.id, r]))
-  return p.resourceIds.map(id => byId.get(id)).filter(Boolean) as Resource[]
+const hasDraftChange = computed(() => {
+  const p = selectedPath.value
+  if (!p) return false
+  if (p.resourceIds.length !== draftResourceIds.value.length) return true
+  for (let i = 0; i < p.resourceIds.length; i += 1) {
+    if (p.resourceIds[i] !== draftResourceIds.value[i]) return true
+  }
+  return false
 })
+
+const draftItems = computed<Resource[]>(() => {
+  const byId = new Map(listAllResources().map(r => [r.id, r]))
+  // Ensure the “resource to add” can be displayed even when it comes from DB
+  const r = resource.value
+  if (r) byId.set(r.id, r)
+  return draftResourceIds.value.map(id => byId.get(id)).filter(Boolean) as Resource[]
+})
+
+function normalizeUiType(raw: string): Resource['type'] {
+  const t = String(raw || '').trim().toLowerCase()
+  if (t === 'document') return 'document'
+  if (t === 'article') return 'article'
+  return 'video'
+}
+
+function mapDbToUi(detail: DbResourceDetail): Resource {
+  const fallbackThumb = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=225&fit=crop'
+  const routeType = normalizeUiType(resourceType.value)
+  const uiType = normalizeUiType(detail.resource_type) || routeType
+  return {
+    id: String(detail.id),
+    title: String(detail.title || ''),
+    description: String(detail.description || ''),
+    url: String(detail.url || ''),
+    type: uiType,
+    category: String(detail.category || 'Other'),
+    thumbnail: String(detail.thumbnail_url || fallbackThumb),
+    duration: undefined,
+    pages: undefined,
+    addedDate: String(detail.created_at || ''),
+    source: String(detail.source || 'youtube'),
+  }
+}
+
+async function loadDbResourceIfNeeded() {
+  resourceFromDb.value = null
+  resourceError.value = ''
+
+  const raw = String(resourceId.value || '').trim()
+  if (!raw) return
+  if (!/^\d+$/.test(raw)) return
+
+  resourceLoading.value = true
+  try {
+    const detail = await getMyResourceDetail(Number(raw))
+    resourceFromDb.value = mapDbToUi(detail)
+  } catch (e: any) {
+    const msg = e?.response?.data?.detail || e?.message || ''
+    // 允许 fallback 到 resourcesStore，因此这里只在完全找不到本地资源时提示错误
+    if (!getResourceById(raw)) {
+      resourceError.value = String(msg || 'Failed to load resource')
+    }
+  } finally {
+    resourceLoading.value = false
+  }
+}
+
+watch(
+  () => route.params.id,
+  () => {
+    void loadDbResourceIfNeeded()
+  },
+  { immediate: true },
+)
+
+function onDragStart(e: DragEvent) {
+  if (!resource.value) return
+  isDragging.value = true
+  try {
+    e.dataTransfer?.setData('text/plain', String(resource.value.id))
+    e.dataTransfer?.setData('application/x-resource-id', String(resource.value.id))
+    e.dataTransfer?.setData('application/x-resource-type', String(resource.value.type))
+    e.dataTransfer!.effectAllowed = 'copy'
+  } catch {
+    // ignore
+  }
+}
+
+function onDragEnd() {
+  isDragging.value = false
+  isOverDropZone.value = false
+}
+
+function onDrop(e: DragEvent) {
+  isOverDropZone.value = false
+
+  // 1) Reorder inside selected list: drop to empty area -> move to end
+  const reorderId = (e.dataTransfer?.getData('application/x-selected-resource-id') || '').trim()
+  const reorderFromStr = (e.dataTransfer?.getData('application/x-selected-resource-from') || '').trim()
+  if (reorderId && reorderFromStr) {
+    const fromIndex = Number(reorderFromStr)
+    if (Number.isFinite(fromIndex)) {
+      moveDraft(fromIndex, draftResourceIds.value.length - 1)
+    }
+    return
+  }
+
+  // 2) Add from left resource panel
+  const rid = (e.dataTransfer?.getData('application/x-resource-id') || e.dataTransfer?.getData('text/plain') || '').trim()
+  if (!rid) return
+  if (!draftResourceIds.value.includes(rid)) {
+    draftResourceIds.value = [...draftResourceIds.value, rid]
+  }
+}
+
+function moveDraft(fromIndex: number, toIndex: number) {
+  if (fromIndex === toIndex) return
+  if (fromIndex < 0 || fromIndex >= draftResourceIds.value.length) return
+  if (toIndex < 0) toIndex = 0
+  if (toIndex >= draftResourceIds.value.length) toIndex = draftResourceIds.value.length - 1
+
+  const next = [...draftResourceIds.value]
+  const [item] = next.splice(fromIndex, 1)
+  next.splice(toIndex, 0, item)
+  draftResourceIds.value = next
+}
+
+function onDraftDragStart(e: DragEvent, id: string, idx: number) {
+  draftDragState.draggingId = id
+  draftDragState.fromIndex = idx
+  draftDragState.overIndex = idx
+
+  e.dataTransfer?.setData('application/x-selected-resource-id', id)
+  e.dataTransfer?.setData('application/x-selected-resource-from', String(idx))
+  if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
+}
+
+function onDraftDragOver(idx: number) {
+  draftDragState.overIndex = idx
+}
+
+function onDraftDrop(e: DragEvent, dropIndex: number) {
+  const fromStr = (e.dataTransfer?.getData('application/x-selected-resource-from') || '').trim()
+  if (!fromStr) return
+  const fromIndex = Number(fromStr)
+  if (!Number.isFinite(fromIndex)) return
+  moveDraft(fromIndex, dropIndex)
+}
+
+function onDraftDragEnd() {
+  draftDragState.draggingId = ''
+  draftDragState.fromIndex = -1
+  draftDragState.overIndex = -1
+  isOverDropZone.value = false
+}
+
+async function confirmAddToPath() {
+  if (!selectedPath.value) return
+  if (!resource.value) return
+  if (!hasDraftChange.value) return
+
+  saving.value = true
+  try {
+    updateMyLearningPath(selectedPath.value.id, { resourceIds: [...draftResourceIds.value] })
+    paths.value = listMyLearningPaths()
+  } finally {
+    saving.value = false
+  }
+}
 </script>

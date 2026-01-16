@@ -84,8 +84,12 @@
               <img :src="resource.thumbnail_url || fallbackThumb" :alt="resource.title" class="w-full h-full object-cover" />
 
               <div class="absolute top-3 right-3">
-                <div class="px-2 py-1 rounded-full bg-gray-100 text-gray-700">
-                  <span class="text-xs capitalize">{{ resource.resource_type }}</span>
+                <div
+                  class="px-2 py-1 rounded-full flex items-center gap-1"
+                  :class="getTypeColor(normalizeResourceType(resource.resource_type))"
+                >
+                  <component :is="typeIcon(normalizeResourceType(resource.resource_type))" class="w-4 h-4" />
+                  <span class="text-xs capitalize">{{ normalizeResourceType(resource.resource_type) }}</span>
                 </div>
               </div>
 
@@ -101,6 +105,25 @@
               <h3 class="text-gray-900 font-semibold text-sm truncate mb-2">{{ resource.title }}</h3>
               <p class="text-gray-600 text-sm mb-3 line-clamp-3">{{ resource.description || '' }}</p>
 
+              <div class="space-y-1 text-xs text-gray-600 mb-3">
+                <div class="flex items-center justify-between gap-3">
+                  <span class="text-gray-500">Author</span>
+                  <span class="font-semibold text-gray-700 truncate">{{ getCardMeta(resource.id)?.author || '—' }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                  <span class="text-gray-500">Publish</span>
+                  <span class="font-semibold text-gray-700">{{ formatExtractDate(getCardMeta(resource.id)?.publish_date || null) || '—' }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                  <span class="text-gray-500">Video ID</span>
+                  <span class="font-mono text-[11px] text-gray-700 truncate">{{ getCardMeta(resource.id)?.video_id || '—' }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                  <span class="text-gray-500">Chapters</span>
+                  <span class="font-semibold text-gray-700">{{ (getCardMeta(resource.id)?.chapters || []).length || 0 }}</span>
+                </div>
+              </div>
+
               <div class="flex items-center gap-4 text-xs text-gray-500 mb-3">
                 <div class="flex items-center gap-1">
                   <Tag class="w-3 h-3" />
@@ -108,12 +131,9 @@
                 </div>
               </div>
 
-              <div class="flex gap-2 mt-auto">
-                <button @click.stop="viewResource(resource)" class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+              <div class="mt-auto">
+                <button @click.stop="viewResource(resource)" class="w-full px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
                   View
-                </button>
-                <button @click.stop="handleDeleteResource(resource.id)" class="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors">
-                  <Trash2 class="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -136,9 +156,13 @@
                     <h3 class="text-gray-900 mb-1">{{ resource.title }}</h3>
                     <p class="text-gray-600 text-sm line-clamp-2">{{ resource.description || '' }}</p>
                   </div>
-                  <div class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 shrink-0">
-                    <span class="text-xs capitalize">{{ resource.resource_type }}</span>
-                  </div>
+                    <div
+                      class="px-2 py-1 rounded-full flex items-center gap-1 shrink-0"
+                      :class="getTypeColor(normalizeResourceType(resource.resource_type))"
+                    >
+                      <component :is="typeIcon(normalizeResourceType(resource.resource_type))" class="w-4 h-4" />
+                      <span class="text-xs capitalize">{{ normalizeResourceType(resource.resource_type) }}</span>
+                    </div>
                 </div>
 
                 <div class="flex items-center gap-4 text-xs text-gray-500">
@@ -157,9 +181,25 @@
                 <button @click.stop="viewResource(resource)" class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
                   View
                 </button>
-                <button @click.stop="handleDeleteResource(resource.id)" class="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors">
-                  <Trash2 class="w-4 h-4" />
-                </button>
+              </div>
+            </div>
+
+            <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-gray-600">
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-gray-500">Author</span>
+                <span class="font-semibold text-gray-700 truncate">{{ getCardMeta(resource.id)?.author || '—' }}</span>
+              </div>
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-gray-500">Publish</span>
+                <span class="font-semibold text-gray-700">{{ formatExtractDate(getCardMeta(resource.id)?.publish_date || null) || '—' }}</span>
+              </div>
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-gray-500">Video ID</span>
+                <span class="font-mono text-[11px] text-gray-700 truncate">{{ getCardMeta(resource.id)?.video_id || '—' }}</span>
+              </div>
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-gray-500">Chapters</span>
+                <span class="font-semibold text-gray-700">{{ (getCardMeta(resource.id)?.chapters || []).length || 0 }}</span>
               </div>
             </div>
           </div>
@@ -198,16 +238,64 @@
             </div>
 
             <div class="space-y-3">
+              <div v-if="extractedMeta?.thumbnail_url" class="rounded-lg border border-gray-200 bg-white p-2">
+                <img
+                  :src="extractedMeta.thumbnail_url"
+                  :alt="extractedMeta?.title || 'thumbnail'"
+                  class="h-28 w-full object-cover rounded-md"
+                />
+              </div>
+
               <div>
                 <div class="text-xs text-gray-500 mb-1">Title</div>
                 <div class="text-sm text-gray-900 wrap-break-word">{{ extractedMeta?.title || '—' }}</div>
               </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <div class="text-xs text-gray-500 mb-1">Author</div>
+                  <div class="text-sm text-gray-700 wrap-break-word">{{ extractedMeta?.author || '—' }}</div>
+                </div>
+                <div>
+                  <div class="text-xs text-gray-500 mb-1">Publish date</div>
+                  <div class="text-sm text-gray-700 wrap-break-word">{{ formatExtractDate(extractedMeta?.publish_date || null) || '—' }}</div>
+                </div>
+              </div>
+
+              <div>
+                <div class="text-xs text-gray-500 mb-1">Video ID</div>
+                <div class="text-sm text-gray-700 wrap-break-word">{{ extractedMeta?.video_id || '—' }}</div>
+              </div>
+
               <div>
                 <div class="text-xs text-gray-500 mb-1">Description</div>
                 <div class="text-sm text-gray-700 whitespace-pre-wrap wrap-break-word max-h-48 overflow-auto">{{ extractedMeta?.description || '—' }}</div>
               </div>
+
+              <div>
+                <div class="text-xs text-gray-500 mb-1">Chapters</div>
+                <div v-if="(extractedMeta?.chapters || []).length === 0" class="text-sm text-gray-700">—</div>
+                <div v-else class="max-h-56 overflow-auto rounded-lg border border-gray-200 bg-white">
+                  <div
+                    v-for="ch in (extractedMeta?.chapters || []).slice(0, 12)"
+                    :key="ch.start_seconds + ':' + ch.title"
+                    class="flex items-start justify-between gap-3 px-3 py-2 border-b border-gray-100 last:border-b-0"
+                  >
+                    <div class="min-w-0">
+                      <div class="text-sm text-gray-900 wrap-break-word">{{ ch.title }}</div>
+                      <div v-if="ch.description" class="text-xs text-gray-500 mt-0.5 wrap-break-word">{{ ch.description }}</div>
+                    </div>
+                    <div class="shrink-0 text-xs font-semibold text-gray-500">{{ ch.timestamp }}</div>
+                  </div>
+                </div>
+                <div v-if="(extractedMeta?.chapters || []).length > 12" class="mt-1 text-xs text-gray-500">
+                  仅展示前 12 条章节
+                </div>
+              </div>
             </div>
           </div>
+
+          <p v-if="submitError" class="text-sm text-red-600">{{ submitError }}</p>
         </div>
 
         <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex gap-3 justify-end">
@@ -227,8 +315,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { BookOpen, ChevronDown, Filter, Grid3x3, Link as LinkIcon, List, Plus, Search, Tag, Trash2, X } from 'lucide-vue-next'
-import { createMyResourceFromUrl, deleteMyResource, extractVideoMetadata, listMyResources, type DbResource } from '../api/resource'
+import { BookOpen, ChevronDown, FileText, Filter, Grid3x3, Link as LinkIcon, List, Plus, Scissors, Search, Tag, Video, X } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { createMyResourceFromUrl, extractVideoMetadata, listMyResources, type DbResource, type UrlExtractResponse } from '../api/resource'
 
 const categories = ['All', 'Frontend', 'Backend', 'Database', 'DevOps', 'Design', 'Custom', 'Other']
 const fallbackThumb = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=225&fit=crop'
@@ -244,8 +333,95 @@ const showAddModal = ref(false)
 const urlInput = ref('')
 const extracting = ref(false)
 const extractError = ref('')
-const extractedMeta = ref<{ title: string; description: string | null } | null>(null)
+const extractedMeta = ref<UrlExtractResponse | null>(null)
 const submitting = ref(false)
+const submitError = ref('')
+
+const router = useRouter()
+
+const cardMetaById = ref<Record<number, UrlExtractResponse>>({})
+
+function getCardMeta(id: number) {
+  return cardMetaById.value[id]
+}
+
+function normalizeResourceType(resourceType: string) {
+  const t = String(resourceType || '').trim().toLowerCase()
+  return t || 'link'
+}
+
+function typeIcon(type: string) {
+  switch (type) {
+    case 'video':
+      return Video
+    case 'clip':
+      return Scissors
+    case 'link':
+      return LinkIcon
+    case 'document':
+      return FileText
+    case 'article':
+      return BookOpen
+    default:
+      return FileText
+  }
+}
+
+function getTypeColor(type: string) {
+  switch (type) {
+    case 'video':
+      return 'bg-purple-100 text-purple-600'
+    case 'clip':
+      return 'bg-emerald-100 text-emerald-700'
+    case 'link':
+      return 'bg-gray-100 text-gray-700'
+    case 'document':
+      return 'bg-blue-100 text-blue-600'
+    case 'article':
+      return 'bg-green-100 text-green-600'
+    default:
+      return 'bg-gray-100 text-gray-600'
+  }
+}
+
+function formatExtractDate(iso?: string | null) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleDateString()
+}
+
+async function prefetchCardMetas(list: DbResource[]) {
+  const targets = (list || []).filter(r => {
+    if (!r?.id) return false
+    if (cardMetaById.value[r.id]) return false
+    const url = String(r.url || '').trim()
+    return !!url
+  })
+
+  if (targets.length === 0) return
+
+  // simple concurrency limit to avoid flooding the backend
+  const concurrency = 3
+  let idx = 0
+
+  async function worker() {
+    while (idx < targets.length) {
+      const current = targets[idx]
+      idx += 1
+      try {
+        const url = String(current.url || '').trim()
+        if (!url) continue
+        const meta = await extractVideoMetadata(url)
+        cardMetaById.value = { ...cardMetaById.value, [current.id]: meta }
+      } catch {
+        // Ignore per-item failures (e.g. non-YouTube link)
+      }
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(concurrency, targets.length) }, () => worker()))
+}
 
 const filteredResources = computed(() => {
   return resources.value.filter(r => {
@@ -268,6 +444,8 @@ async function loadResources() {
   loading.value = true
   try {
     resources.value = await listMyResources()
+    // best-effort: fill cards with parsed metadata in background
+    void prefetchCardMetas(resources.value)
   } finally {
     loading.value = false
   }
@@ -278,6 +456,7 @@ function openAddModal() {
   urlInput.value = ''
   extractedMeta.value = null
   extractError.value = ''
+  submitError.value = ''
 }
 
 function closeAddModal() {
@@ -285,25 +464,32 @@ function closeAddModal() {
   urlInput.value = ''
   extractedMeta.value = null
   extractError.value = ''
+  submitError.value = ''
 }
 
 function viewResource(resource: DbResource) {
-  if (resource.url) window.open(resource.url, '_blank')
-}
-
-async function handleDeleteResource(id: number) {
-  if (!confirm('Are you sure you want to delete this resource?')) return
-  await deleteMyResource(id)
-  await loadResources()
+  router.push({ name: 'resource-video', params: { id: resource.id } })
 }
 
 async function confirmAdd() {
   if (!urlInput.value || !extractedMeta.value?.title) return
+  submitError.value = ''
   submitting.value = true
   try {
-    await createMyResourceFromUrl(urlInput.value, 'Other')
-    await loadResources()
+    const created = await createMyResourceFromUrl(urlInput.value, 'Other')
+    // Optimistically update list so the UI reacts immediately.
+    resources.value = [created, ...resources.value]
+    // Store parsed meta for the newly created resource (so card can show it immediately).
+    if (extractedMeta.value) {
+      cardMetaById.value = { ...cardMetaById.value, [created.id]: extractedMeta.value }
+    }
+    alert('Added successfully')
     closeAddModal()
+    // Best-effort refresh from server to keep list canonical.
+    await loadResources()
+  } catch (e: any) {
+    const msg = e?.response?.data?.detail || e?.message || 'Failed to add resource'
+    submitError.value = String(msg)
   } finally {
     submitting.value = false
   }
@@ -334,8 +520,14 @@ watch(
         new URL(url)
         const data = await extractVideoMetadata(url)
         extractedMeta.value = {
+          ...data,
           title: (data?.title || '').trim(),
           description: (data?.description ?? null) ? String(data.description) : null,
+          thumbnail_url: (data?.thumbnail_url ?? null) ? String(data.thumbnail_url) : null,
+          author: (data?.author ?? null) ? String(data.author) : null,
+          publish_date: (data?.publish_date ?? null) ? String(data.publish_date) : null,
+          video_id: (data?.video_id ?? null) ? String(data.video_id) : null,
+          chapters: Array.isArray(data?.chapters) ? data.chapters : [],
         }
         if (!extractedMeta.value.title) {
           extractError.value = 'Parse failed: missing title'

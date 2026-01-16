@@ -11,6 +11,30 @@ function getToken() {
     }
 }
 
+function clearAuth() {
+  try {
+    const storage = (globalThis as any).localStorage
+    storage?.removeItem?.('learnsmart_token')
+    storage?.removeItem?.('learnsmart_user')
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function redirectToLogin() {
+  try {
+    // Hard navigation is the most robust (no router import / circular deps)
+    if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname || ''
+      if (currentPath !== '/login') {
+        window.location.href = '/login'
+      }
+    }
+  } catch {
+    // ignore
+  }
+}
+
 const request:AxiosInstance =  axios.create({
   // FastAPI base URL
     baseURL:'http://localhost:8000',
@@ -47,6 +71,27 @@ request.interceptors.response.use(
         data: error.response.data,
         headers: error.response.headers
       })
+
+      // Auth errors (expired/invalid token)
+      const status = Number(error.response.status)
+      const detail = (error.response.data as any)?.detail
+      const url = String(error?.config?.url || '')
+      const isAuthRoute = url.includes('/users/login') || url.includes('/users/register')
+      const isTokenExpired = typeof detail === 'string' && /token has expired/i.test(detail)
+      const isUnauthorized = status === 401
+      if (!isAuthRoute && isUnauthorized) {
+        // clear local auth state so UI doesn't think we're logged in
+        clearAuth()
+        // show a friendly message only for explicit expiration
+        if (isTokenExpired) {
+          try {
+            alert('登录已过期，请重新登录')
+          } catch {
+            // ignore
+          }
+        }
+        redirectToLogin()
+      }
       
       // CORS-related errors
       if (error.message.includes('CORS') || error.message.includes('Access-Control')) {

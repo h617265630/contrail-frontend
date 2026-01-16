@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+  <div class="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-6">
     <div class="max-w-5xl mx-auto">
       <!-- Banner (similar to /learningpath/:id detail banner) -->
       <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
@@ -132,12 +132,12 @@
                       <!-- 详细进度信息 -->
                       <div class="space-y-2">
                         <div v-if="item.type === 'video'" class="flex items-center justify-between text-sm">
-                          <span class="text-gray-600">Watch Time:</span>
-                          <span class="text-gray-900">{{ item.watchedDuration }} / {{ item.totalDuration }}</span>
+                          <span class="text-gray-600">Duration:</span>
+                          <span class="text-gray-900">{{ item.duration || '—' }}</span>
                         </div>
                         <div v-else class="flex items-center justify-between text-sm">
-                          <span class="text-gray-600">Pages Read:</span>
-                          <span class="text-gray-900">{{ item.currentPage }} / {{ item.totalPages }}</span>
+                          <span class="text-gray-600">Pages:</span>
+                          <span class="text-gray-900">{{ typeof item.totalPages === 'number' ? item.totalPages : '—' }}</span>
                         </div>
 
                         <div class="flex items-center justify-between text-sm">
@@ -192,14 +192,14 @@
 
                       <div v-else class="cursor-pointer" @click="startEdit(item.id)">
                         <div
-                          v-if="notesByItemId[item.id]"
-                          class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-gray-700 hover:bg-yellow-100 transition-colors min-h-[120px] whitespace-pre-wrap"
+                          v-if="item.notes"
+                          class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-gray-700 hover:bg-yellow-100 transition-colors min-h-30 whitespace-pre-wrap"
                         >
-                          {{ notesByItemId[item.id] }}
+                          {{ item.notes }}
                         </div>
                         <div
                           v-else
-                          class="p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-400 hover:border-gray-400 hover:text-gray-500 transition-colors min-h-[120px] flex items-center justify-center"
+                          class="p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-400 hover:border-gray-400 hover:text-gray-500 transition-colors min-h-30 flex items-center justify-center"
                         >
                           Click to add notes...
                         </div>
@@ -225,13 +225,13 @@
         <div class="relative pl-16 mt-8">
           <div class="absolute left-0 top-6 w-12 h-12 flex items-center justify-center">
             <div
-              class="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-lg"
+              class="w-12 h-12 rounded-full flex items-center justify-center bg-linear-to-br from-yellow-400 to-orange-500 text-white shadow-lg"
             >
               <Award class="w-6 h-6" />
             </div>
           </div>
 
-          <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl shadow-lg p-8 border-2 border-purple-200">
+          <div class="bg-linear-to-br from-purple-50 to-pink-50 rounded-xl shadow-lg p-8 border-2 border-purple-200">
             <div class="text-center">
               <div class="flex items-center justify-center gap-2 mb-4">
                 <Sparkles class="w-8 h-8 text-purple-600" />
@@ -273,7 +273,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowDown,
@@ -288,6 +288,15 @@ import {
   Video,
 } from 'lucide-vue-next'
 import { learningPoolPaths } from '../data/learningPool'
+import { getMyLearningPath } from '../data/myPaths'
+import { getResourceById, listAllResources } from '../data/resourcesStore'
+import {
+  getMyPathResourceEntry,
+  loadMyPathResourceState,
+  saveMyPathResourceState,
+  setMyPathResourceEntry,
+} from '../data/myPathResourceState'
+import type { Resource } from '../data/resources'
 
 type PathItem = {
   id: string
@@ -299,8 +308,6 @@ type PathItem = {
   notes: string
   completed: boolean
   thumbnail: string
-  watchedDuration?: string
-  totalDuration?: string
   currentPage?: number
   totalPages?: number
 }
@@ -317,97 +324,103 @@ const route = useRoute()
 const router = useRouter()
 const id = computed(() => String(route.params.id || ''))
 
-const path = computed(() => learningPoolPaths.find(p => p.id === id.value) || null)
+const poolPath = computed(() => learningPoolPaths.find(p => p.id === id.value) || null)
+const myPath = computed(() => getMyLearningPath(id.value))
 
-// temp.vue 的 mock 数据，保留原结构；banner 会优先展示真实 path 的标题/描述/缩略图
-const learningPath = ref<LearningPathData>({
-  id: id.value || '1',
-  title: 'Full Stack Web Development',
-  description: 'Master modern web development from frontend to backend',
-  totalProgress: 45,
-  items: [
-    {
-      id: '1',
-      title: 'HTML & CSS Fundamentals',
-      description: 'Learn the basics of HTML5 and CSS3, including semantic markup, flexbox, and grid layout systems.',
-      type: 'video',
-      duration: '2h 30min',
-      progress: 100,
-      notes:
-        'Completed all exercises. Key takeaways: semantic HTML is important for SEO, CSS Grid is powerful for complex layouts.',
-      completed: true,
-      thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=225&fit=crop',
-      watchedDuration: '2h 30min',
-      totalDuration: '2h 30min',
-    },
-    {
-      id: '2',
-      title: 'JavaScript ES6+ Features',
-      description: 'Deep dive into modern JavaScript including arrow functions, destructuring, promises, and async/await.',
-      type: 'video',
-      duration: '3h 15min',
-      progress: 75,
-      notes: 'Currently on async/await section. Need to practice more with Promise chains and error handling.',
-      completed: false,
-      thumbnail: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=400&h=225&fit=crop',
-      watchedDuration: '2h 26min',
-      totalDuration: '3h 15min',
-    },
-    {
-      id: '3',
-      title: 'React Fundamentals Documentation',
-      description: 'Official React documentation covering components, props, state, and hooks.',
-      type: 'document',
-      duration: '4h',
-      progress: 40,
-      notes: 'Understanding useState and useEffect hooks. Will revisit useContext and useReducer later.',
-      completed: false,
-      thumbnail: 'https://images.unsplash.com/photo-1633356122102-3fe601e05bd2?w=400&h=225&fit=crop',
-      currentPage: 48,
-      totalPages: 120,
-    },
-    {
-      id: '4',
-      title: 'Building RESTful APIs with Node.js',
-      description: 'Learn to create scalable backend services using Express.js and Node.js.',
-      type: 'article',
-      duration: '2h 45min',
-      progress: 0,
-      notes: '',
-      completed: false,
-      thumbnail: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=225&fit=crop',
-      currentPage: 0,
-      totalPages: 25,
-    },
-    {
-      id: '5',
-      title: 'Database Design with PostgreSQL',
-      description: 'Understanding relational databases, SQL queries, and database optimization techniques.',
-      type: 'video',
-      duration: '3h',
-      progress: 0,
-      notes: '',
-      completed: false,
-      thumbnail: 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=400&h=225&fit=crop',
-      watchedDuration: '0min',
-      totalDuration: '3h',
-    },
-  ],
+const path = computed(() => {
+  if (poolPath.value) return poolPath.value
+  if (!myPath.value) return null
+
+  const cover = myPath.value.resourceIds[0] ? getResourceById(myPath.value.resourceIds[0]) : null
+  return {
+    id: myPath.value.id,
+    title: myPath.value.title,
+    description: myPath.value.description,
+    thumbnail: cover?.thumbnail || '',
+    category: 'My Paths',
+    level: 'Custom',
+    items: myPath.value.resourceIds.length,
+  }
 })
 
-const notesByItemId = reactive<Record<string, string>>({})
-for (const item of learningPath.value.items) notesByItemId[item.id] = item.notes
+const resourceState = ref(loadMyPathResourceState())
 
 const editingNotes = ref<string | null>(null)
 const noteDraft = ref('')
 
+watch(
+  id,
+  () => {
+    editingNotes.value = null
+    noteDraft.value = ''
+  },
+  { immediate: true },
+)
+
+const resourcesForPath = computed<Resource[]>(() => {
+  if (myPath.value) {
+    return myPath.value.resourceIds
+      .map(rid => getResourceById(rid))
+      .filter(Boolean) as Resource[]
+  }
+
+  const resources = listAllResources()
+  const desiredCount = poolPath.value?.items ?? 8
+  return resources.slice(0, Math.min(desiredCount, resources.length))
+})
+
+const learningPath = computed<LearningPathData>(() => {
+  const title = path.value?.title || 'Learning Path'
+  const description = path.value?.description || ''
+
+  const items: PathItem[] = resourcesForPath.value.map((r) => {
+    const entry = getMyPathResourceEntry(resourceState.value, id.value, r.id)
+    const progress = entry.progress ?? 0
+    const totalPages = typeof r.pages === 'number' ? r.pages : undefined
+    const currentPage = typeof totalPages === 'number' ? Math.round((progress / 100) * totalPages) : undefined
+
+    return {
+      id: r.id,
+      title: r.title,
+      description: r.description,
+      type: r.type,
+      duration: r.duration || (typeof r.pages === 'number' ? `${r.pages} pages` : '—'),
+      progress,
+      notes: entry.note ?? '',
+      completed: progress >= 100,
+      thumbnail: r.thumbnail,
+      totalPages,
+      currentPage,
+    }
+  })
+
+  const totalProgress = items.length
+    ? Math.round(items.reduce((sum, item) => sum + item.progress, 0) / items.length)
+    : 0
+
+  return {
+    id: id.value,
+    title,
+    description,
+    totalProgress,
+    items,
+  }
+})
+
 function startEdit(itemId: string) {
   editingNotes.value = itemId
-  noteDraft.value = notesByItemId[itemId] || ''
+  const entry = getMyPathResourceEntry(resourceState.value, id.value, itemId)
+  noteDraft.value = entry.note || ''
 }
 
 function saveNotes(itemId: string) {
-  notesByItemId[itemId] = noteDraft.value
+  const current = getMyPathResourceEntry(resourceState.value, id.value, itemId)
+  const next = setMyPathResourceEntry(resourceState.value, id.value, itemId, {
+    ...current,
+    note: noteDraft.value,
+  })
+  resourceState.value = next
+  saveMyPathResourceState(next)
   editingNotes.value = null
   noteDraft.value = ''
 }

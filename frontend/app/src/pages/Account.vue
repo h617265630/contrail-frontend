@@ -40,6 +40,13 @@
                 User Info
               </RouterLink>
               <RouterLink
+                to="/account/plan"
+                class="block rounded-xl px-3 py-2 text-sm font-semibold"
+                :class="isActive('/account/plan') ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
+              >
+                Plan
+              </RouterLink>
+              <RouterLink
                 to="/account/change-password"
                 class="block rounded-xl px-3 py-2 text-sm font-semibold"
                 :class="isActive('/account/change-password') ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
