@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html
+from pathlib import Path
 from app.routers import learning_path
+from app.routers import progress
+from app.routers import category
 from app.routers.rbac import role,user,permission
 
 
@@ -23,6 +26,12 @@ from app.routers.resources import clip, doc, product, video, resource
 # Ensure generic resource models are imported before create_all
 import app.models.user_resource
 import app.models.resources.link
+import app.models.resources.video
+import app.models.resource
+import app.models.learning_path
+import app.models.path_item
+import app.models.category
+import app.models.progress
 Base.metadata.create_all(bind=engine)
 
 """
@@ -33,14 +42,21 @@ app = FastAPI(title="User Management API", debug=True, docs_url=None, redoc_url=
 # 配置 CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 允许所有源，开发环境可以这样设置
+    # When allow_credentials=True, browsers reject Access-Control-Allow-Origin='*'.
+    # Explicitly allow the Vite dev origins to prevent axios 'Network Error' caused by CORS.
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
     allow_credentials=True,
     allow_methods=["*"],  # 允许所有方法
     allow_headers=["*"],  # 允许所有头
 )
 
-# Serve local static files (e.g., Swagger UI assets) from backend/static
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Serve local static files (e.g., Swagger UI assets) from backend/static.
+# Use an absolute path so the app can be started from any working directory.
+_STATIC_DIR = (Path(__file__).resolve().parents[1] / "static").as_posix()
+app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
 
 # Custom /docs using local swagger-ui assets
 @app.get("/docs", include_in_schema=False)
@@ -55,6 +71,8 @@ app.include_router(user.router)
 app.include_router(video.router)
 app.include_router(clip.router)
 app.include_router(learning_path.router)
+app.include_router(progress.router)
+app.include_router(category.router)
 app.include_router(product.router)
 app.include_router(doc.router)
 app.include_router(resource.router)

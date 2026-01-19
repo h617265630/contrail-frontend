@@ -9,6 +9,7 @@ const Register = () => import('./pages/Register.vue')
 const ResourceLibrary = () => import('./pages/ResourceLibrary.vue')
 const ResourceVideo = () => import('./pages/ResourceVideo.vue')
 const ResourceDocument = () => import('./pages/ResourceDocument.vue')
+const ResourceArticle = () => import('./pages/ResourceArticle.vue')
 const AddResourceToPath = () => import('./pages/AddResourceToPath.vue')
 const MyResource = () => import('./pages/MyResource.vue')
 const MyResourceEdit = () => import('./pages/MyResourceEdit.vue')
@@ -34,6 +35,7 @@ const AccountPlan = () => import('./pages/AccountPlan.vue')
 
 const About = () => import('./pages/About.vue')
 const Plan = () => import('./pages/Plan.vue')
+const Tool = () => import('./pages/Tool.vue')
 
 const routes: RouteRecordRaw[] = [
   // Canonical routes
@@ -54,10 +56,16 @@ const routes: RouteRecordRaw[] = [
   { path: '/register', name: 'register', component: Register },
   { path: '/resources', name: 'resources', component: ResourceLibrary },
   { path: '/my-resources', name: 'my-resources', component: MyResource },
-  { path: '/my-resources/:id', name: 'my-resource-detail', component: ResourceVideo },
+  // My resources (typed)
+  { path: '/my-resources/video/:id', name: 'my-resource-video', component: ResourceVideo },
+  { path: '/my-resources/document/:id', name: 'my-resource-document', component: ResourceDocument },
+  { path: '/my-resources/article/:id', name: 'my-resource-article', component: ResourceArticle },
+  // Legacy my resource detail route (assume video)
+  { path: '/my-resources/:id', redirect: (to) => ({ name: 'my-resource-video', params: { id: String(to.params.id || '') } }) },
   { path: '/my-resources/:id/edit', name: 'my-resource-edit', component: MyResourceEdit },
   { path: '/resources/video/:id', name: 'resource-video', component: ResourceVideo },
   { path: '/resources/document/:id', name: 'resource-document', component: ResourceDocument },
+  { path: '/resources/article/:id', name: 'resource-article', component: ResourceArticle },
   { path: '/resources/:type/:id/add-to-path', name: 'resource-add-to-path', component: AddResourceToPath },
 
   {
@@ -100,6 +108,7 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   { path: '/plan', name: 'plan', component: Plan },
+  { path: '/tools', name: 'tools', component: Tool },
   { path: '/about', name: 'about', component: About },
 ]
 

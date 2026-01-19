@@ -3,7 +3,29 @@ from sqlalchemy.orm import Session
 from app.models.rbac.role import Role
 from app.models.rbac.permission import Permission
 from app.models.rbac.user import User
+from app.models.category import Category
 from app import auth
+
+
+def init_default_categories(db: Session):
+    """初始化默认热门分类（用于 CreatePath 下拉选择）"""
+    default_categories = [
+        {"name": "AI", "code": "ai"},
+        {"name": "设计", "code": "design"},
+        {"name": "UI", "code": "ui"},
+        {"name": "前端", "code": "frontend"},
+        {"name": "后端", "code": "backend"},
+        {"name": "手工", "code": "handmade"},
+        {"name": "其他", "code": "other"},
+    ]
+
+    for cat in default_categories:
+        existing = db.query(Category).filter(Category.code == cat["code"]).first()
+        if not existing:
+            db.add(Category(name=cat["name"], code=cat["code"], level=0, is_leaf=True))
+
+    db.commit()
+    print("✅ 默认分类初始化完成")
 
 def init_default_permissions(db: Session):
     """初始化默认权限"""
@@ -166,4 +188,5 @@ def init_default_data(db: Session):
     init_default_permissions(db)
     init_default_roles(db)
     init_super_admin(db)
+    init_default_categories(db)
     print("🎉 默认数据初始化完成")

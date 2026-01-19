@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, HttpUrl
@@ -22,7 +22,7 @@ class UrlExtractResponse(BaseModel):
     description: Optional[str] = None
     thumbnail_url: Optional[str] = None
     author: Optional[str] = None
-    publish_date: Optional[datetime] = None
+    publish_date: Optional[date] = None
     video_id: Optional[str] = None
     chapters: list[ChapterItem] = []
     model_config = ConfigDict(from_attributes=True)

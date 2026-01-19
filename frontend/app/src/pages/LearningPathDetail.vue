@@ -21,17 +21,19 @@
             </div>
             <div class="flex gap-2">
               <RouterLink
-                to="/learningpool"
+                :to="fromMyPaths ? '/my-paths' : '/learningpool'"
                 class="px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-gray-600 hover:bg-gray-100"
               >
-                返回 LearningPool
+                {{ fromMyPaths ? '返回 My Paths' : '返回 LearningPool' }}
               </RouterLink>
-              <RouterLink
-                :to="{ name: 'learningpath-linear', params: { id } }"
-                class="px-4 py-2 rounded-lg flex items-center gap-2 transition-colors bg-blue-600 text-white hover:bg-blue-700"
+              <button
+                type="button"
+                class="px-4 py-2 rounded-lg flex items-center gap-2 transition-colors bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="fromMyPaths ? false : usingThisPath"
+                @click="fromMyPaths ? startLearning() : openUseThisPath()"
               >
-                Start
-              </RouterLink>
+                {{ fromMyPaths ? 'Start' : (usingThisPath ? 'Saving…' : 'Use this path') }}
+              </button>
             </div>
           </div>
         </div>
@@ -82,7 +84,7 @@
         <div class="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
           <textarea
             v-model="commentDraft"
-            class="w-full min-h-[96px] p-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-900"
+            class="w-full min-h-24 p-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-900"
             placeholder="写下你对这个 learningpath 的评论…"
           />
           <div class="flex justify-end">
@@ -111,6 +113,53 @@
       </div>
     </div>
   </div>
+
+  <div v-if="showUseModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full">
+      <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+        <h2 class="text-gray-900 text-lg font-semibold">{{ useModalTitle }}</h2>
+        <button type="button" class="text-gray-400 hover:text-gray-600" @click="closeUseModal" :disabled="usingThisPath">
+          <span class="sr-only">Close</span>
+          ×
+        </button>
+      </div>
+
+      <div class="p-6 space-y-3">
+        <p class="text-gray-700">{{ useModalMessage }}</p>
+        <p v-if="useModalHint" class="text-sm text-gray-500">{{ useModalHint }}</p>
+      </div>
+
+      <div class="p-6 pt-0 flex items-center justify-end gap-3">
+        <button
+          v-if="useModalState === 'confirm'"
+          type="button"
+          class="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold"
+          @click="closeUseModal"
+          :disabled="usingThisPath"
+        >
+          取消
+        </button>
+        <button
+          v-if="useModalState === 'confirm'"
+          type="button"
+          class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          @click="confirmUseThisPath"
+          :disabled="usingThisPath"
+        >
+          {{ usingThisPath ? 'Saving…' : '保存到 My Paths' }}
+        </button>
+
+        <button
+          v-else
+          type="button"
+          class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold"
+          @click="closeUseModal"
+        >
+          确定
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -118,7 +167,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, RouterLink, useRouter } from 'vue-router'
 import { BookOpen, Clock, Home as HomeIcon, Layers, Library } from 'lucide-vue-next'
 import { learningPoolPaths } from '../data/learningPool'
-import { getMyLearningPath } from '../data/myPaths'
+import { addMyLearningPath, getMyLearningPath } from '../data/myPaths'
 import { getResourceById, listAllResources } from '../data/resourcesStore'
 import { addLearningPathComment, listLearningPathComments, type LearningPathComment } from '../data/learningPathComments'
 
@@ -136,6 +185,8 @@ const route = useRoute()
 const router = useRouter()
 const id = computed(() => String(route.params.id || ''))
 
+const fromMyPaths = computed(() => String(route.query.from || '') === 'my-paths')
+
 const currentTab = computed(() => (route.path.startsWith('/resources') ? 'resourceLibrary' : 'learningPath'))
 
 const poolPath = computed(() => learningPoolPaths.find(p => p.id === id.value) || null)
@@ -143,6 +194,22 @@ const poolPath = computed(() => learningPoolPaths.find(p => p.id === id.value) |
 const myPath = computed(() => getMyLearningPath(id.value))
 
 const path = computed(() => {
+  // If user came from My Paths list, prefer the saved path display.
+  if (fromMyPaths.value) {
+    if (!myPath.value) return null
+
+    const cover = myPath.value.resourceIds[0] ? getResourceById(myPath.value.resourceIds[0]) : null
+    return {
+      id: myPath.value.id,
+      title: myPath.value.title,
+      description: myPath.value.description,
+      thumbnail: cover?.thumbnail || '',
+      category: 'My Paths',
+      level: 'Custom',
+      items: myPath.value.resourceIds.length,
+    }
+  }
+
   if (poolPath.value) return poolPath.value
   if (!myPath.value) return null
 
@@ -157,6 +224,93 @@ const path = computed(() => {
     items: myPath.value.resourceIds.length,
   }
 })
+
+const usingThisPath = ref(false)
+
+function startLearning() {
+  if (!id.value) return
+  router.push({ name: 'learningpath-linear', params: { id: id.value } })
+}
+
+type UseModalState = 'confirm' | 'done' | 'error'
+const showUseModal = ref(false)
+const useModalState = ref<UseModalState>('confirm')
+const useModalTitle = ref('Use this path')
+const useModalMessage = ref('将该路径保存到你的 My Paths？')
+const useModalHint = ref('')
+
+function openUseThisPath() {
+  if (fromMyPaths.value) {
+    // From My Paths: UX expects Start -> linear page.
+    startLearning()
+    return
+  }
+  // Pre-checks to show a friendly modal instead of alert().
+  if (myPath.value) {
+    showUseModal.value = true
+    useModalState.value = 'done'
+    useModalTitle.value = '已保存'
+    useModalMessage.value = '该路径已经在 My Paths 里了。'
+    useModalHint.value = ''
+    return
+  }
+
+  if (!poolPath.value) {
+    showUseModal.value = true
+    useModalState.value = 'error'
+    useModalTitle.value = '无法保存'
+    useModalMessage.value = '该路径暂不支持保存。'
+    useModalHint.value = ''
+    return
+  }
+
+  showUseModal.value = true
+  useModalState.value = 'confirm'
+  useModalTitle.value = 'Use this path'
+  useModalMessage.value = '将该路径保存到你的 My Paths？'
+  useModalHint.value = '保存后可在 My Paths 中查看与编辑。'
+}
+
+function closeUseModal() {
+  showUseModal.value = false
+  useModalHint.value = ''
+  useModalState.value = 'confirm'
+}
+
+async function confirmUseThisPath() {
+  if (usingThisPath.value) return
+  if (!poolPath.value) return
+
+  usingThisPath.value = true
+  try {
+    const title = poolPath.value.title
+    const description = poolPath.value.description
+
+    const all = listAllResources()
+    const count = Math.min(8, all.length)
+    const created = addMyLearningPath({
+      id: poolPath.value.id,
+      title,
+      description,
+      resources: all.slice(0, count),
+    })
+
+    useModalState.value = 'done'
+    useModalTitle.value = '保存成功'
+    useModalMessage.value = '已保存到 My Paths。'
+    useModalHint.value = ''
+
+    // Keep previous behavior: stay on the same detail route.
+    router.push({ name: 'learningpath', params: { id: created.id } })
+  } catch (e: any) {
+    useModalState.value = 'error'
+    useModalTitle.value = '保存失败'
+    useModalMessage.value = String(e?.message || '保存失败')
+    useModalHint.value = ''
+  } finally {
+    usingThisPath.value = false
+  }
+}
 
 function typeBadge(type: Module['type']) {
   switch (type) {

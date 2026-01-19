@@ -1,13 +1,32 @@
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from app.models.learning_path import LearningPath
+from app.models.category import Category
 from app.models.user_learning_path import UserLearningPath
 from app.models.path_item import PathItem
 from app.models.resource import Resource, ResourceType
 class LearningPathCURD:
     @staticmethod
-    def create_learning_path(db: Session, user_id: int, title: str, description: str = None) -> LearningPath:
-        learning_path = LearningPath(title=title, description=description)
+    def create_learning_path(
+        db: Session,
+        user_id: int,
+        title: str,
+        description: str = None,
+        *,
+        is_public: bool = False,
+        category_id: int | None = None,
+    ) -> LearningPath:
+        if category_id is not None:
+            hit = db.query(Category).filter(Category.id == category_id).first()
+            if not hit:
+                raise ValueError("Category not found")
+
+        learning_path = LearningPath(
+            title=title,
+            description=description,
+            is_public=bool(is_public),
+            category_id=category_id,
+        )
         db.add(learning_path)
         db.commit()
         db.refresh(learning_path)
@@ -22,6 +41,17 @@ class LearningPathCURD:
             raise Exception("This learning path is already associated with the user.")
 
         return learning_path
+
+    @staticmethod
+    def list_public_learning_paths(db: Session, skip: int = 0, limit: int = 100) -> List[LearningPath]:
+        return (
+            db.query(LearningPath)
+            .filter(LearningPath.is_public.is_(True))
+            .filter(LearningPath.is_active.is_(True))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
     
     @staticmethod
     def get_learning_paths_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 100) -> List[LearningPath]:

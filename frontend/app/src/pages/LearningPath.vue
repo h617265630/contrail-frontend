@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+  <div class="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-6">
     <div class="max-w-7xl mx-auto space-y-10">
       <!-- Header -->
       <div class="bg-white rounded-2xl shadow-xl p-8">
@@ -157,12 +157,55 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { learningPoolCategories, learningPoolPaths } from '../data/learningPool'
+import { computed, onMounted, ref } from 'vue'
+import { learningPoolCategories, learningPoolPaths, type LearningPoolPath } from '../data/learningPool'
 import { RouterLink } from 'vue-router'
+import { listPublicLearningPaths, type PublicLearningPath } from '../api/learningPath'
 
 const categories = [...learningPoolCategories]
-const allPaths = ref([...learningPoolPaths])
+
+function inferCategoryFromText(text: string): LearningPoolPath['category'] {
+  const t = text.toLowerCase()
+  if (t.includes('ai') || t.includes('llm') || t.includes('rag') || t.includes('agent')) return 'AI'
+  if (t.includes('front') || t.includes('vue') || t.includes('react') || t.includes('css')) return 'Frontend'
+  if (t.includes('back') || t.includes('api') || t.includes('fastapi') || t.includes('node')) return 'Backend'
+  if (t.includes('devops') || t.includes('docker') || t.includes('k8s') || t.includes('kubernetes') || t.includes('ci')) return 'DevOps'
+  if (t.includes('db') || t.includes('sql') || t.includes('database') || t.includes('postgres')) return 'Database'
+  if (t.includes('design') || t.includes('figma') || t.includes('ux')) return 'Design'
+  if (t.includes('product') || t.includes('pm') || t.includes('roadmap')) return 'Product'
+  if (t.includes('career') || t.includes('resume') || t.includes('interview')) return 'Career'
+  return 'Backend'
+}
+
+const allPaths = ref<LearningPoolPath[]>([...learningPoolPaths])
+
+function mapDbToPool(p: PublicLearningPath): LearningPoolPath {
+  const title = String(p.title || '').trim() || `Path ${p.id}`
+  const description = String(p.description || '').trim()
+  const category = inferCategoryFromText(`${title}\n${description}`)
+  return {
+    id: String(p.id),
+    title,
+    description: description || '（无介绍）',
+    category,
+    level: 'Beginner',
+    items: 0,
+    thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=900&h=506&fit=crop',
+    hotScore: 50,
+    isAI: category === 'AI',
+  }
+}
+
+onMounted(async () => {
+  try {
+    const db = await listPublicLearningPaths()
+    const mapped = (db || []).map(mapDbToPool)
+    const existing = new Set(allPaths.value.map(p => p.id))
+    allPaths.value = [...allPaths.value, ...mapped.filter(p => !existing.has(p.id))]
+  } catch {
+    // keep static fallback
+  }
+})
 
 const hotPaths = computed(() => [...allPaths.value].sort((a, b) => b.hotScore - a.hotScore).slice(0, 4))
 const aiPaths = computed(() => allPaths.value.filter(p => p.isAI))

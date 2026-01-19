@@ -4,17 +4,21 @@ from pydantic import BaseModel
 
 from app.schemas.resources.video import VideoResponse
 from app.schemas.resources.clip import ClipResponse
+from app.schemas.resources.resource import ResourceResponse
 
 
 class ResourceKind(str, Enum):
     video = "video"
     clip = "clip"
+    link = "link"
 
 
 class LearningPathBase(BaseModel):
     title: str
     description: Optional[str] = None
     is_public: bool = False
+    category_id: Optional[int] = None
+    category_name: Optional[str] = None
 
     model_config = {
         "from_attributes": True
@@ -31,6 +35,7 @@ class LearningPathUpdate(BaseModel):
     description: Optional[str] = None
     is_public: Optional[bool] = None
     is_active: Optional[bool] = None
+    category_id: Optional[int] = None
 
     model_config = {
         "from_attributes": True
@@ -46,7 +51,7 @@ class PathItemInLearningPathResponse(BaseModel):
     position: int
     description: Optional[str] = None
     # 按需返回嵌入的资源详情
-    resource_data: Optional[Union[VideoResponse, ClipResponse]] = None
+    resource_data: Optional[Union[VideoResponse, ClipResponse, ResourceResponse]] = None
 
     model_config = {
         "from_attributes": True
@@ -76,6 +81,15 @@ class AddResourceToLearningPathRequest(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     position: Optional[int] = None
+
+    model_config = {
+        "from_attributes": True
+    }
+
+
+class LearningPathAttachResponse(BaseModel):
+    already_exists: bool
+    learning_path: LearningPathResponse
 
     model_config = {
         "from_attributes": True

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Integer, String, Text, Enum, Boolean
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, Enum, Boolean
 from sqlalchemy.orm import relationship
 from app.db.database import Base
 import enum
@@ -15,9 +15,22 @@ class Resource(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(200), nullable=False)
-    resource_type = Column(Enum(ResourceType), nullable=False)  # 资源类型：video 或 clip
+    # Store enum values (video/clip/link) in DB, not member names (VIDEO/CLIP/LINK).
+    # This matches the existing Postgres enum values created by migrations.
+    resource_type = Column(
+        Enum(
+            ResourceType,
+            name="resourcetype",
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+        ),
+        nullable=False,
+    )
     description = Column(Text, nullable=True)
     is_active = Column(Boolean, default=True)
+    is_public = Column(Boolean, default=True)
+
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=True, index=True)
+    category_ref = relationship("Category")
 
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)

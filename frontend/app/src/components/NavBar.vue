@@ -2,13 +2,19 @@
   <header class="fixed top-0 left-0 right-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
     <div class="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between gap-4">
       <RouterLink to="/home" class="flex items-center gap-2 font-semibold text-gray-900">
-        <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white font-bold">CT</span>
-        <span class="text-lg">Contrail</span>
+        <img
+          src="/logo.svg"
+          alt="Contrail"
+          class="h-9 w-9"
+        />
+        <span class="text-lg tracking-tight">
+          <span class="font-extrabold italic text-blue-600">C</span>
+          <span class="font-medium tracking-[0.12em] text-gray-900">ontrail</span>
+        </span>
       </RouterLink>
       <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-700">
         <RouterLink class="hover:text-blue-600" to="/learningpool">LearningPool</RouterLink>
         <RouterLink class="hover:text-blue-600" to="/notification">Notification</RouterLink>
-        <RouterLink class="hover:text-blue-600" to="/partical">Partical</RouterLink>
         <RouterLink class="hover:text-blue-600" to="/about">About</RouterLink>
         <RouterLink class="hover:text-blue-600" to="/plan">Plan</RouterLink>
         <RouterLink
@@ -21,7 +27,7 @@
         </RouterLink>
       </nav>
       <div class="hidden md:flex items-center gap-3">
-        <div class="relative">
+        <div class="relative hidden lg:block">
           <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             v-model="searchQuery"
@@ -93,6 +99,13 @@
                 <span class="text-xs text-gray-400">Go</span>
               </RouterLink>
               <RouterLink
+                to="/tools"
+                class="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50"
+              >
+                <span>Tools</span>
+                <span class="text-xs text-gray-400">DB</span>
+              </RouterLink>
+              <RouterLink
                 to="/my-paths"
                 class="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50"
               >
@@ -102,7 +115,7 @@
            
 
               <RouterLink
-                to="/my-partical"
+                to="/partical"
                 class="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50"
               >
                 <span>Partical</span>
@@ -140,7 +153,7 @@
           class="px-4 py-2 rounded-full bg-pink-600 text-white text-sm hover:bg-pink-700 inline-flex items-center gap-2"
         >
           <Plus class="w-4 h-4" />
-          {{ t('CreatePath') }}
+          <span class="hidden lg:inline font-semibold">{{ t('CreatePath') }}</span>
         </RouterLink>
 
         <div ref="langMenuRef" class="relative">
@@ -178,7 +191,6 @@
         <RouterLink class="hover:text-blue-600" to="/notification" @click="open = false">Notification</RouterLink>
         <RouterLink class="hover:text-blue-600" to="/my-paths" @click="open = false">My Paths</RouterLink>
         <RouterLink class="hover:text-blue-600" to="/createpath" @click="open = false">CreatePath</RouterLink>
-        <RouterLink class="hover:text-blue-600" to="/partical" @click="open = false">Partical</RouterLink>
         <RouterLink class="hover:text-blue-600" to="/about" @click="open = false">About</RouterLink>
         <RouterLink
           to="/resources"
@@ -232,6 +244,13 @@
               @click="open = false"
             >
               My Favorites
+            </RouterLink>
+            <RouterLink
+              to="/partical"
+              class="rounded-xl bg-gray-50 px-3 py-2 text-center font-medium text-gray-700 hover:bg-gray-100"
+              @click="open = false"
+            >
+              Partical
             </RouterLink>
           </div>
           <button

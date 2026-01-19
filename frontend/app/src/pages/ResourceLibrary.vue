@@ -12,6 +12,7 @@
             <div class="relative flex-1">
               <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
+                ref="searchInputEl"
                 type="text"
                 placeholder="Search resources..."
                 v-model="searchQuery"
@@ -42,8 +43,18 @@
             </div>
 
             <button
-              @click="openAddModal"
+              type="button"
+              @click="focusSearch"
               class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            >
+              <Search class="w-4 h-4" />
+              Search
+            </button>
+
+            <button
+              type="button"
+              @click="openCreateModal"
+              class="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors flex items-center gap-2"
             >
               <Plus class="w-4 h-4" />
               Add Resource
@@ -63,12 +74,12 @@
           {{ searchQuery || selectedCategory !== 'All' ? 'Try adjusting your filters' : 'Start by adding your first resource' }}
         </p>
         <button
-          v-if="!searchQuery && selectedCategory === 'All'"
-          @click="openAddModal"
+          type="button"
+          @click="focusSearch"
           class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
         >
-          <Plus class="w-4 h-4" />
-          Add Resource
+          <Search class="w-4 h-4" />
+          Search
         </button>
       </div>
 
@@ -86,10 +97,10 @@
               <div class="absolute top-3 right-3">
                 <div
                   class="px-2 py-1 rounded-full flex items-center gap-1"
-                  :class="getTypeColor(normalizeResourceType(resource.resource_type))"
+                  :class="getTypeColor(displayResourceType(resource))"
                 >
-                  <component :is="typeIcon(normalizeResourceType(resource.resource_type))" class="w-4 h-4" />
-                  <span class="text-xs capitalize">{{ normalizeResourceType(resource.resource_type) }}</span>
+                  <component :is="typeIcon(displayResourceType(resource))" class="w-4 h-4" />
+                  <span class="text-xs capitalize">{{ displayResourceType(resource) }}</span>
                 </div>
               </div>
 
@@ -127,14 +138,27 @@
               <div class="flex items-center gap-4 text-xs text-gray-500 mb-3">
                 <div class="flex items-center gap-1">
                   <Tag class="w-3 h-3" />
-                  {{ resource.category || 'Other' }}
+                  {{ resourceCategoryLabel(resource) }}
                 </div>
               </div>
 
               <div class="mt-auto">
-                <button @click.stop="viewResource(resource)" class="w-full px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
-                  View
-                </button>
+                <div class="flex items-center gap-2">
+                  <button
+                    @click.stop="viewResource(resource)"
+                    class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                  >
+                    View
+                  </button>
+                  <button
+                    type="button"
+                    @click.stop="addToMyResources(resource)"
+                    :disabled="addingToMy[resource.id] || addedToMy[resource.id]"
+                    class="flex-1 px-3 py-2 rounded-lg bg-pink-600 text-white hover:bg-pink-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {{ addedToMy[resource.id] ? 'Added' : (addingToMy[resource.id] ? 'Adding…' : 'Add') }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -158,17 +182,17 @@
                   </div>
                     <div
                       class="px-2 py-1 rounded-full flex items-center gap-1 shrink-0"
-                      :class="getTypeColor(normalizeResourceType(resource.resource_type))"
+                      :class="getTypeColor(displayResourceType(resource))"
                     >
-                      <component :is="typeIcon(normalizeResourceType(resource.resource_type))" class="w-4 h-4" />
-                      <span class="text-xs capitalize">{{ normalizeResourceType(resource.resource_type) }}</span>
+                      <component :is="typeIcon(displayResourceType(resource))" class="w-4 h-4" />
+                      <span class="text-xs capitalize">{{ displayResourceType(resource) }}</span>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-4 text-xs text-gray-500">
                   <div class="flex items-center gap-1">
                     <Tag class="w-3 h-3" />
-                    {{ resource.category || 'Other' }}
+                    {{ resourceCategoryLabel(resource) }}
                   </div>
                   <div class="flex items-center gap-1">
                     <LinkIcon class="w-3 h-3" />
@@ -180,6 +204,14 @@
               <div class="flex gap-2 shrink-0">
                 <button @click.stop="viewResource(resource)" class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
                   View
+                </button>
+                <button
+                  type="button"
+                  @click.stop="addToMyResources(resource)"
+                  :disabled="addingToMy[resource.id] || addedToMy[resource.id]"
+                  class="px-3 py-2 rounded-lg bg-pink-600 text-white hover:bg-pink-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {{ addedToMy[resource.id] ? 'Added' : (addingToMy[resource.id] ? 'Adding…' : 'Add') }}
                 </button>
               </div>
             </div>
@@ -207,119 +239,109 @@
       </div>
     </div>
 
-    <div v-if="showAddModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
-          <h2 class="text-gray-900">Add New Resource</h2>
-          <button @click="closeAddModal" class="text-gray-400 hover:text-gray-600">
-            <X class="w-6 h-6" />
-          </button>
+  </div>
+
+  <div v-if="showAddResultModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
+      <div class="border-b border-gray-200 p-6 flex items-center justify-between">
+        <h2 class="text-gray-900 text-lg font-semibold">{{ addResultTitle }}</h2>
+        <button type="button" @click="closeAddResultModal" class="text-gray-400 hover:text-gray-600">
+          <X class="w-6 h-6" />
+        </button>
+      </div>
+
+      <div class="p-6 space-y-3">
+        <div class="text-gray-700">{{ addResultMessage }}</div>
+      </div>
+
+      <div class="bg-gray-50 border-t border-gray-200 p-6 flex gap-3 justify-end">
+        <button
+          type="button"
+          class="px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+          @click="closeAddResultModal"
+        >
+          确定
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div v-if="showCreateModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
+      <div class="border-b border-gray-200 p-6 flex items-center justify-between">
+        <h2 class="text-gray-900 text-lg font-semibold">Add Resource</h2>
+        <button type="button" @click="closeCreateModal" class="text-gray-400 hover:text-gray-600" :disabled="creating">
+          <X class="w-6 h-6" />
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-gray-700 mb-2">Resource URL *</label>
+          <input
+            v-model="createUrl"
+            type="url"
+            placeholder="Paste YouTube URL"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
 
-        <div class="p-6 space-y-4">
-          <div>
-            <label class="block text-gray-700 mb-2">Resource URL *</label>
-            <div class="relative">
-              <LinkIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="url"
-                placeholder="Paste YouTube URL"
-                v-model="urlInput"
-                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <p v-if="extractError" class="mt-2 text-sm text-red-600">{{ extractError }}</p>
+        <div>
+          <label class="block text-gray-700 mb-2">Category</label>
+          <div class="relative">
+            <select
+              v-model="createCategoryId"
+              class="w-full appearance-none px-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white cursor-pointer"
+            >
+              <option value="">选择分类</option>
+              <option v-for="c in dbCategories" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
+            </select>
+            <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
           </div>
-
-          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <div class="flex items-center justify-between gap-3 mb-2">
-              <h3 class="text-gray-900 text-sm font-semibold">Parsed Info</h3>
-              <span v-if="extracting" class="text-xs text-gray-500">Parsing…</span>
-            </div>
-
-            <div class="space-y-3">
-              <div v-if="extractedMeta?.thumbnail_url" class="rounded-lg border border-gray-200 bg-white p-2">
-                <img
-                  :src="extractedMeta.thumbnail_url"
-                  :alt="extractedMeta?.title || 'thumbnail'"
-                  class="h-28 w-full object-cover rounded-md"
-                />
-              </div>
-
-              <div>
-                <div class="text-xs text-gray-500 mb-1">Title</div>
-                <div class="text-sm text-gray-900 wrap-break-word">{{ extractedMeta?.title || '—' }}</div>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <div class="text-xs text-gray-500 mb-1">Author</div>
-                  <div class="text-sm text-gray-700 wrap-break-word">{{ extractedMeta?.author || '—' }}</div>
-                </div>
-                <div>
-                  <div class="text-xs text-gray-500 mb-1">Publish date</div>
-                  <div class="text-sm text-gray-700 wrap-break-word">{{ formatExtractDate(extractedMeta?.publish_date || null) || '—' }}</div>
-                </div>
-              </div>
-
-              <div>
-                <div class="text-xs text-gray-500 mb-1">Video ID</div>
-                <div class="text-sm text-gray-700 wrap-break-word">{{ extractedMeta?.video_id || '—' }}</div>
-              </div>
-
-              <div>
-                <div class="text-xs text-gray-500 mb-1">Description</div>
-                <div class="text-sm text-gray-700 whitespace-pre-wrap wrap-break-word max-h-48 overflow-auto">{{ extractedMeta?.description || '—' }}</div>
-              </div>
-
-              <div>
-                <div class="text-xs text-gray-500 mb-1">Chapters</div>
-                <div v-if="(extractedMeta?.chapters || []).length === 0" class="text-sm text-gray-700">—</div>
-                <div v-else class="max-h-56 overflow-auto rounded-lg border border-gray-200 bg-white">
-                  <div
-                    v-for="ch in (extractedMeta?.chapters || []).slice(0, 12)"
-                    :key="ch.start_seconds + ':' + ch.title"
-                    class="flex items-start justify-between gap-3 px-3 py-2 border-b border-gray-100 last:border-b-0"
-                  >
-                    <div class="min-w-0">
-                      <div class="text-sm text-gray-900 wrap-break-word">{{ ch.title }}</div>
-                      <div v-if="ch.description" class="text-xs text-gray-500 mt-0.5 wrap-break-word">{{ ch.description }}</div>
-                    </div>
-                    <div class="shrink-0 text-xs font-semibold text-gray-500">{{ ch.timestamp }}</div>
-                  </div>
-                </div>
-                <div v-if="(extractedMeta?.chapters || []).length > 12" class="mt-1 text-xs text-gray-500">
-                  仅展示前 12 条章节
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <p v-if="submitError" class="text-sm text-red-600">{{ submitError }}</p>
         </div>
 
-        <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex gap-3 justify-end">
-          <button @click="closeAddModal" class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
-          <button
-            @click="confirmAdd"
-            :disabled="!urlInput || extracting || !extractedMeta?.title || submitting"
-            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {{ submitting ? 'Saving…' : 'Add Resource' }}
-          </button>
-        </div>
+        <p v-if="createError" class="text-sm text-red-600">{{ createError }}</p>
+      </div>
+
+      <div class="bg-gray-50 border-t border-gray-200 p-6 flex gap-3 justify-end">
+        <button
+          type="button"
+          class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          @click="closeCreateModal"
+          :disabled="creating"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          @click="submitCreate"
+          :disabled="!createUrl || creating"
+        >
+          {{ creating ? 'Saving…' : 'Add' }}
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { BookOpen, ChevronDown, FileText, Filter, Grid3x3, Link as LinkIcon, List, Plus, Scissors, Search, Tag, Video, X } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
-import { createMyResourceFromUrl, extractVideoMetadata, listMyResources, type DbResource, type UrlExtractResponse } from '../api/resource'
+import {
+  addPublicResourceToMyResourcesWithStatus,
+  createMyResourceFromUrl,
+  extractVideoMetadata,
+  listMyResources,
+  listResources,
+  type DbResource,
+  type UrlExtractResponse,
+} from '../api/resource'
+import { listCategories, type Category } from '../api/category'
 
-const categories = ['All', 'Frontend', 'Backend', 'Database', 'DevOps', 'Design', 'Custom', 'Other']
+const dbCategories = ref<Category[]>([])
+const categories = computed(() => ['All', ...dbCategories.value.map(c => c.name)])
 const fallbackThumb = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=225&fit=crop'
 
 const resources = ref<DbResource[]>([])
@@ -329,25 +351,57 @@ const viewMode = ref<'grid' | 'list'>('grid')
 const selectedCategory = ref<string>('All')
 const searchQuery = ref('')
 
-const showAddModal = ref(false)
-const urlInput = ref('')
-const extracting = ref(false)
-const extractError = ref('')
-const extractedMeta = ref<UrlExtractResponse | null>(null)
-const submitting = ref(false)
-const submitError = ref('')
+const searchInputEl = ref<HTMLInputElement | null>(null)
 
 const router = useRouter()
 
 const cardMetaById = ref<Record<number, UrlExtractResponse>>({})
+const addingToMy = ref<Record<number, boolean>>({})
+const addedToMy = ref<Record<number, boolean>>({})
+
+const showAddResultModal = ref(false)
+const addResultTitle = ref('')
+const addResultMessage = ref('')
+
+const showCreateModal = ref(false)
+const createUrl = ref('')
+const createCategoryId = ref('')
+const creating = ref(false)
+const createError = ref('')
+
+function openAddResultModal(title: string, message: string) {
+  addResultTitle.value = title
+  addResultMessage.value = message
+  showAddResultModal.value = true
+}
+
+function closeAddResultModal() {
+  showAddResultModal.value = false
+  addResultTitle.value = ''
+  addResultMessage.value = ''
+}
 
 function getCardMeta(id: number) {
   return cardMetaById.value[id]
 }
 
+function resourceCategoryLabel(resource: DbResource) {
+  return (resource.category_name || resource.category || '其他')
+}
+
 function normalizeResourceType(resourceType: string) {
   const t = String(resourceType || '').trim().toLowerCase()
   return t || 'link'
+}
+
+function displayResourceType(resource: DbResource) {
+  const raw = normalizeResourceType(resource.resource_type)
+  if (raw !== 'link') return raw
+
+  const source = String(resource.source || '').trim().toLowerCase()
+  const meta = getCardMeta(resource.id)
+  const looksLikeVideo = source === 'youtube' || !!(meta?.video_id && String(meta.video_id).trim())
+  return looksLikeVideo ? 'video' : raw
 }
 
 function typeIcon(type: string) {
@@ -425,7 +479,7 @@ async function prefetchCardMetas(list: DbResource[]) {
 
 const filteredResources = computed(() => {
   return resources.value.filter(r => {
-    const cat = r.category || 'Other'
+    const cat = resourceCategoryLabel(r)
     const matchesCategory = selectedCategory.value === 'All' || cat === selectedCategory.value
     const q = searchQuery.value.trim().toLowerCase()
     if (!q) return matchesCategory
@@ -440,111 +494,114 @@ function setView(mode: 'grid' | 'list') {
   viewMode.value = mode
 }
 
+function openCreateModal() {
+  showCreateModal.value = true
+  createUrl.value = ''
+  createCategoryId.value = ''
+  createError.value = ''
+}
+
+function closeCreateModal() {
+  showCreateModal.value = false
+  createUrl.value = ''
+  createCategoryId.value = ''
+  createError.value = ''
+}
+
+async function submitCreate() {
+  const url = createUrl.value.trim()
+  if (!url) return
+  createError.value = ''
+  creating.value = true
+  try {
+    const catId = createCategoryId.value ? Number(createCategoryId.value) : null
+    const catName = catId ? (dbCategories.value.find(c => c.id === catId)?.name || undefined) : undefined
+    await createMyResourceFromUrl(url, { category: catName, category_id: catId })
+
+    closeCreateModal()
+    await loadResources()
+    openAddResultModal('保存成功', '资源已创建并添加到 My Resources。')
+  } catch (e: any) {
+    const msg = e?.response?.data?.detail || e?.message || 'Failed to add resource'
+    createError.value = String(msg)
+  } finally {
+    creating.value = false
+  }
+}
+
+function focusSearch() {
+  try {
+    searchInputEl.value?.focus?.()
+  } catch {
+    // ignore
+  }
+}
+
 async function loadResources() {
   loading.value = true
   try {
-    resources.value = await listMyResources()
+    resources.value = await listResources()
     // best-effort: fill cards with parsed metadata in background
     void prefetchCardMetas(resources.value)
+
+    // best-effort: mark which ones already exist in My Resources
+    void syncAddedFlags()
   } finally {
     loading.value = false
   }
 }
 
-function openAddModal() {
-  showAddModal.value = true
-  urlInput.value = ''
-  extractedMeta.value = null
-  extractError.value = ''
-  submitError.value = ''
+async function loadCategories() {
+  try {
+    dbCategories.value = await listCategories()
+  } catch {
+    dbCategories.value = []
+  }
 }
 
-function closeAddModal() {
-  showAddModal.value = false
-  urlInput.value = ''
-  extractedMeta.value = null
-  extractError.value = ''
-  submitError.value = ''
+async function syncAddedFlags() {
+  try {
+    const mine = await listMyResources()
+    const next: Record<number, boolean> = {}
+    for (const r of mine || []) {
+      if (r?.id) next[r.id] = true
+    }
+    addedToMy.value = next
+  } catch {
+    // not logged in / network errors: ignore, keep default Add state
+  }
 }
 
 function viewResource(resource: DbResource) {
-  router.push({ name: 'resource-video', params: { id: resource.id } })
+  const t = displayResourceType(resource)
+  const name = t === 'video' ? 'resource-video' : t === 'document' ? 'resource-document' : 'resource-article'
+  router.push({ name, params: { id: resource.id } })
 }
 
-async function confirmAdd() {
-  if (!urlInput.value || !extractedMeta.value?.title) return
-  submitError.value = ''
-  submitting.value = true
+async function addToMyResources(resource: DbResource) {
+  if (!resource?.id) return
+  if (addingToMy.value[resource.id] || addedToMy.value[resource.id]) return
+
+  addingToMy.value = { ...addingToMy.value, [resource.id]: true }
   try {
-    const created = await createMyResourceFromUrl(urlInput.value, 'Other')
-    // Optimistically update list so the UI reacts immediately.
-    resources.value = [created, ...resources.value]
-    // Store parsed meta for the newly created resource (so card can show it immediately).
-    if (extractedMeta.value) {
-      cardMetaById.value = { ...cardMetaById.value, [created.id]: extractedMeta.value }
+    const res = await addPublicResourceToMyResourcesWithStatus(resource.id)
+    addedToMy.value = { ...addedToMy.value, [resource.id]: true }
+
+    if (res?.already_exists) {
+      openAddResultModal('已存在', '该资源已经在 My Resources 中。')
+    } else {
+      openAddResultModal('保存成功', '已添加到 My Resources。')
     }
-    alert('Added successfully')
-    closeAddModal()
-    // Best-effort refresh from server to keep list canonical.
-    await loadResources()
   } catch (e: any) {
-    const msg = e?.response?.data?.detail || e?.message || 'Failed to add resource'
-    submitError.value = String(msg)
+    const msg = e?.response?.data?.detail || e?.message || 'Failed to add to my resources'
+    openAddResultModal('保存失败', String(msg))
   } finally {
-    submitting.value = false
+    addingToMy.value = { ...addingToMy.value, [resource.id]: false }
   }
 }
-
-let extractTimer: number | null = null
-watch(
-  () => urlInput.value,
-  (nextUrl) => {
-    extractError.value = ''
-    extractedMeta.value = null
-
-    if (extractTimer) {
-      clearTimeout(extractTimer)
-      extractTimer = null
-    }
-
-    const url = (nextUrl || '').trim()
-    if (!url) {
-      extracting.value = false
-      return
-    }
-
-    extracting.value = true
-    extractTimer = window.setTimeout(async () => {
-      try {
-        // eslint-disable-next-line no-new
-        new URL(url)
-        const data = await extractVideoMetadata(url)
-        extractedMeta.value = {
-          ...data,
-          title: (data?.title || '').trim(),
-          description: (data?.description ?? null) ? String(data.description) : null,
-          thumbnail_url: (data?.thumbnail_url ?? null) ? String(data.thumbnail_url) : null,
-          author: (data?.author ?? null) ? String(data.author) : null,
-          publish_date: (data?.publish_date ?? null) ? String(data.publish_date) : null,
-          video_id: (data?.video_id ?? null) ? String(data.video_id) : null,
-          chapters: Array.isArray(data?.chapters) ? data.chapters : [],
-        }
-        if (!extractedMeta.value.title) {
-          extractError.value = 'Parse failed: missing title'
-          extractedMeta.value = null
-        }
-      } catch (e: any) {
-        const msg = e?.response?.data?.detail || e?.message || 'Parse failed'
-        extractError.value = String(msg)
-        extractedMeta.value = null
-      } finally {
-        extracting.value = false
-      }
-    }, 500)
-  }
-)
 
 onMounted(async () => {
+  await loadCategories()
   await loadResources()
 })
 </script>

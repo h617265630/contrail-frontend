@@ -118,10 +118,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Calendar, Clock, Download, Link as LinkIcon, Play, UserRound } from 'lucide-vue-next'
-import { getMyResourceDetail, type DbResourceDetail } from '../api/resource'
+import { getMyResourceDetail, getResourceDetail, resolvePublicResourceIdByUrl, type DbResourceDetail } from '../api/resource'
+import { getMyProgressForItem, upsertMyProgress } from '../api/progress'
 import { getResourceById } from '../data/resourcesStore'
 
 const route = useRoute()
@@ -147,6 +148,54 @@ const resource = ref<DbResourceDetail>({
 })
 
 const startSeconds = ref(0)
+
+const pathItemId = computed(() => {
+  const raw = String((route.query as any)?.path_item_id || '').trim()
+  if (!raw) return null
+  if (!/^\d+$/.test(raw)) return null
+  const n = Number(raw)
+  return Number.isFinite(n) ? n : null
+})
+
+const trackedProgress = ref(0)
+let progressTimer: number | null = null
+const progressUpdating = ref(false)
+
+function stopProgressTimer() {
+  if (progressTimer != null) {
+    window.clearInterval(progressTimer)
+    progressTimer = null
+  }
+}
+
+async function startProgressTimer() {
+  stopProgressTimer()
+  if (pathItemId.value == null) return
+
+  // Seed from server
+  try {
+    const row = await getMyProgressForItem(pathItemId.value)
+    trackedProgress.value = Number(row?.progress_percentage) || 0
+  } catch {
+    trackedProgress.value = 0
+  }
+
+  progressTimer = window.setInterval(async () => {
+    const pid = pathItemId.value
+    if (pid == null) return
+    if (progressUpdating.value) return
+    progressUpdating.value = true
+    try {
+      const next = Math.min(Math.max(0, trackedProgress.value) + 5, 95)
+      trackedProgress.value = next
+      await upsertMyProgress({ path_item_id: pid, progress_percentage: next })
+    } catch {
+      // ignore
+    } finally {
+      progressUpdating.value = false
+    }
+  }, 15_000)
+}
 
 const resourceIdRaw = computed(() => String(route.params.id || '').trim())
 
@@ -179,29 +228,6 @@ function extractYouTubeId(url: string): string {
     // ignore
   }
   return ''
-}
-
-function mapLocalToDbDetail(idRaw: string): DbResourceDetail {
-  const local = getResourceById(idRaw)
-  if (!local) {
-    throw new Error('Resource not found')
-  }
-
-  return {
-    id: 0,
-    title: local.title,
-    description: local.description,
-    resource_type: local.type,
-    url: local.url,
-    source: local.source,
-    category: local.category,
-    thumbnail_url: local.thumbnail,
-    created_at: local.addedDate || null,
-    author: null,
-    publish_date: null,
-    video_id: local.type === 'video' ? extractYouTubeId(local.url) : null,
-    chapters: [],
-  }
 }
 
 function formatDate(iso?: string | null) {
@@ -238,21 +264,27 @@ async function load() {
     if (!raw) throw new Error('Invalid resource id')
 
     const dbId = resourceIdNumber.value
-    if (dbId != null) {
-      try {
-        const data = await getMyResourceDetail(dbId)
-        resource.value = {
-          ...data,
-          chapters: Array.isArray(data.chapters) ? data.chapters : [],
+    if (dbId == null) {
+      // Legacy compatibility: old UI used local ids like u_...; try to resolve via URL.
+      const legacy = getResourceById(raw)
+      const legacyUrl = legacy?.url
+      if (legacyUrl) {
+        try {
+          const resolved = await resolvePublicResourceIdByUrl(legacyUrl)
+          router.replace({ name: 'resource-video', params: { id: String(resolved.id) } })
+          return
+        } catch {
+          throw new Error('该链接使用旧的本地资源ID，但未能在数据库中找到对应资源。请到 Resources 页面重新添加该链接。')
         }
-      } catch (e: any) {
-        // If backend is unavailable / unauthorized / not found, but we have a local seed/custom
-        // resource with the same id, render it as a fallback.
-        resource.value = mapLocalToDbDetail(raw)
       }
-    } else {
-      // Local-only resource (e.g. created in CreatePath and stored in localStorage)
-      resource.value = mapLocalToDbDetail(raw)
+      throw new Error('Invalid resource id')
+    }
+
+    const isMy = String(route.path || '').startsWith('/my-resources')
+    const data = isMy ? await getMyResourceDetail(dbId) : await getResourceDetail(dbId)
+    resource.value = {
+      ...data,
+      chapters: Array.isArray(data.chapters) ? data.chapters : [],
     }
     startSeconds.value = 0
   } catch (e: any) {
@@ -285,5 +317,14 @@ watch(
 
 onMounted(() => {
   load()
+  void startProgressTimer()
+})
+
+watch(pathItemId, () => {
+  void startProgressTimer()
+})
+
+onBeforeUnmount(() => {
+  stopProgressTimer()
 })
 </script>

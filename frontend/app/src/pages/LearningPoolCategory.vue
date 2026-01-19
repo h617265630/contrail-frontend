@@ -58,13 +58,60 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
-import { learningPoolPaths } from '../data/learningPool'
+import { learningPoolPaths, type LearningPoolPath } from '../data/learningPool'
 import Card from '../components/ui/Card.vue'
+import { listPublicLearningPaths, type PublicLearningPath } from '../api/learningPath'
 
 const route = useRoute()
 const category = computed(() => decodeURIComponent(String(route.params.category || '')))
 
-const filteredPaths = computed(() => learningPoolPaths.filter(p => p.category === category.value))
+const dynamicPaths = ref<LearningPoolPath[]>([])
+
+function inferCategoryFromText(text: string): LearningPoolPath['category'] {
+  const t = text.toLowerCase()
+  if (t.includes('ai') || t.includes('llm') || t.includes('rag') || t.includes('agent')) return 'AI'
+  if (t.includes('front') || t.includes('vue') || t.includes('react') || t.includes('css')) return 'Frontend'
+  if (t.includes('back') || t.includes('api') || t.includes('fastapi') || t.includes('node')) return 'Backend'
+  if (t.includes('devops') || t.includes('docker') || t.includes('k8s') || t.includes('kubernetes') || t.includes('ci')) return 'DevOps'
+  if (t.includes('db') || t.includes('sql') || t.includes('database') || t.includes('postgres')) return 'Database'
+  if (t.includes('design') || t.includes('figma') || t.includes('ux')) return 'Design'
+  if (t.includes('product') || t.includes('pm') || t.includes('roadmap')) return 'Product'
+  if (t.includes('career') || t.includes('resume') || t.includes('interview')) return 'Career'
+  return 'Backend'
+}
+
+function mapDbToPool(p: PublicLearningPath): LearningPoolPath {
+  const title = String(p.title || '').trim() || `Path ${p.id}`
+  const description = String(p.description || '').trim()
+  const cat = inferCategoryFromText(`${title}\n${description}`)
+  return {
+    id: String(p.id),
+    title,
+    description: description || '（无介绍）',
+    category: cat,
+    level: 'Beginner',
+    items: 0,
+    thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=900&h=506&fit=crop',
+    hotScore: 50,
+    isAI: cat === 'AI',
+  }
+}
+
+onMounted(async () => {
+  try {
+    const db = await listPublicLearningPaths()
+    dynamicPaths.value = (db || []).map(mapDbToPool)
+  } catch {
+    dynamicPaths.value = []
+  }
+})
+
+const filteredPaths = computed(() => {
+  const combined = [...learningPoolPaths, ...dynamicPaths.value]
+  const byId = new Map<string, LearningPoolPath>()
+  for (const p of combined) byId.set(p.id, p)
+  return Array.from(byId.values()).filter(p => p.category === category.value)
+})
 </script>

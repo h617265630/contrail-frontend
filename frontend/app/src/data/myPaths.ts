@@ -56,13 +56,14 @@ export function saveMyLearningPaths(paths: MyLearningPath[]) {
 }
 
 export function addMyLearningPath(input: {
+  id?: string
   title: string
   description: string
   resources: Resource[]
 }): MyLearningPath {
   const createdAt = nowIso()
   const newPath: MyLearningPath = {
-    id: generateMyLearningPathId(),
+    id: (input.id || '').trim() || generateMyLearningPathId(),
     title: input.title.trim(),
     description: input.description.trim(),
     resourceIds: input.resources.map(r => r.id),

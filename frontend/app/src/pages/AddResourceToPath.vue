@@ -99,7 +99,7 @@
                   <div class="font-semibold text-slate-900 truncate">{{ p.title }}</div>
                   <div class="text-xs text-slate-600 line-clamp-2">{{ p.description || '（无介绍）' }}</div>
                 </div>
-                <div class="text-xs text-slate-500 shrink-0">{{ p.resourceIds.length }} items</div>
+                <div class="text-xs text-slate-500 shrink-0">—</div>
               </div>
             </button>
           </div>
@@ -202,10 +202,10 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
-import { listMyLearningPaths, updateMyLearningPath, type MyLearningPath } from '../data/myPaths'
+import { addResourceToMyLearningPath, listMyLearningPaths, type MyLearningPath } from '../api/learningPath'
 import { getResourceById, listAllResources } from '../data/resourcesStore'
 import type { Resource } from '../data/resources'
-import { getMyResourceDetail, type DbResourceDetail } from '../api/resource'
+import { getMyResourceDetail, getResourceDetail, type DbResourceDetail } from '../api/resource'
 
 const route = useRoute()
 
@@ -226,14 +226,27 @@ const draftDragState = reactive({
   overIndex: -1 as number,
 })
 
-const paths = ref<MyLearningPath[]>(listMyLearningPaths())
-const selectedPathId = ref<string>('')
+const paths = ref<MyLearningPath[]>([])
+const selectedPathId = ref<number | null>(null)
+
+async function loadPaths() {
+  try {
+    const data = await listMyLearningPaths()
+    paths.value = data || []
+    if (selectedPathId.value == null && paths.value.length > 0) {
+      selectedPathId.value = paths.value[0].id
+    }
+  } catch {
+    paths.value = []
+    selectedPathId.value = null
+  }
+}
 
 watch(
   () => paths.value,
-  (next) => {
-    if (selectedPathId.value) return
-    if (next.length > 0) selectedPathId.value = next[0].id
+  () => {
+    if (selectedPathId.value != null) return
+    if (paths.value.length > 0) selectedPathId.value = paths.value[0].id
   },
   { immediate: true },
 )
@@ -243,26 +256,23 @@ const resource = computed<Resource | null>(() => {
 })
 
 const selectedPath = computed<MyLearningPath | null>(() => {
-  if (!selectedPathId.value) return null
+  if (selectedPathId.value == null) return null
   return paths.value.find(p => p.id === selectedPathId.value) ?? null
 })
 
 watch(
-  selectedPath,
-  (next) => {
-    draftResourceIds.value = next ? [...next.resourceIds] : []
+  selectedPathId,
+  () => {
+    // We don't load full existing items here; only track a pending add.
+    draftResourceIds.value = []
   },
   { immediate: true },
 )
 
 const hasDraftChange = computed(() => {
-  const p = selectedPath.value
-  if (!p) return false
-  if (p.resourceIds.length !== draftResourceIds.value.length) return true
-  for (let i = 0; i < p.resourceIds.length; i += 1) {
-    if (p.resourceIds[i] !== draftResourceIds.value[i]) return true
-  }
-  return false
+  if (!selectedPath.value) return false
+  if (!resource.value) return false
+  return draftResourceIds.value.includes(String(resource.value.id))
 })
 
 const draftItems = computed<Resource[]>(() => {
@@ -309,7 +319,12 @@ async function loadDbResourceIfNeeded() {
 
   resourceLoading.value = true
   try {
-    const detail = await getMyResourceDetail(Number(raw))
+    let detail: DbResourceDetail
+    try {
+      detail = await getResourceDetail(Number(raw))
+    } catch {
+      detail = await getMyResourceDetail(Number(raw))
+    }
     resourceFromDb.value = mapDbToUi(detail)
   } catch (e: any) {
     const msg = e?.response?.data?.detail || e?.message || ''
@@ -418,10 +433,23 @@ async function confirmAddToPath() {
 
   saving.value = true
   try {
-    updateMyLearningPath(selectedPath.value.id, { resourceIds: [...draftResourceIds.value] })
-    paths.value = listMyLearningPaths()
+    const rt = String(resourceType.value || '').toLowerCase()
+    const backendType = rt === 'video' ? 'video' : rt === 'clip' ? 'clip' : 'link'
+    await addResourceToMyLearningPath(selectedPath.value.id, {
+      resource_type: backendType,
+      resource_id: Number(resource.value.id),
+      title: resource.value.title,
+      description: resource.value.description,
+    })
+    draftResourceIds.value = []
+    await loadPaths()
+  } catch (e: any) {
+    const msg = e?.response?.data?.detail || e?.message || 'Failed to add to path'
+    alert(String(msg))
   } finally {
     saving.value = false
   }
 }
+
+void loadPaths()
 </script>

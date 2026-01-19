@@ -30,7 +30,7 @@
 							<span aria-hidden>→</span>
 						</RouterLink>
 						<RouterLink
-							to="/mypaths"
+							to="/my-paths"
 							class="inline-flex items-center gap-2 rounded-lg border border-white/30 text-white px-4 py-2 text-sm font-semibold hover:bg-white/10"
 						>
 							View all paths
@@ -58,7 +58,7 @@
 					<h2 class="text-xl font-semibold text-gray-900">Featured Learning Paths</h2>
 					<p class="text-gray-600 text-sm">5 popular paths to get started</p>
 				</div>
-				<RouterLink to="/mypaths" class="text-blue-600 hover:text-blue-700 text-sm font-medium">View all</RouterLink>
+				<RouterLink to="/my-paths" class="text-blue-600 hover:text-blue-700 text-sm font-medium">View all</RouterLink>
 			</div>
 			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
 				<RouterLink

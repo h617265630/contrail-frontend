@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+  <div class="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-6">
     <div class="max-w-7xl mx-auto space-y-6">
       <div class="bg-white rounded-2xl shadow-xl p-8">
         <div class="flex items-start justify-between gap-4">
@@ -8,7 +8,7 @@
             <p class="text-gray-600">修改名称/介绍，并编辑学习路径中的资源。</p>
           </div>
           <RouterLink
-            to="/mypaths"
+            to="/my-paths"
             class="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
           >
             返回 My Paths
@@ -22,7 +22,7 @@
 
       <div v-else-if="!exists" class="bg-white rounded-2xl shadow-xl p-6">
         <p class="text-gray-900 font-semibold">未找到该 LearningPath</p>
-        <RouterLink to="/mypaths" class="inline-flex mt-4 text-blue-600 hover:text-blue-700 text-sm font-semibold">
+        <RouterLink to="/my-paths" class="inline-flex mt-4 text-blue-600 hover:text-blue-700 text-sm font-semibold">
           返回 My Paths
         </RouterLink>
       </div>
@@ -45,7 +45,7 @@
             />
           </div>
 
-          <div class="max-h-[520px] overflow-y-auto pr-1 space-y-3">
+          <div class="max-h-130 overflow-y-auto pr-1 space-y-3">
             <article
               v-for="r in filteredResources"
               :key="r.id"
@@ -54,7 +54,7 @@
               @dragstart="handleDragStart($event, r)"
             >
               <div class="flex gap-3 p-3">
-                <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-lg bg-gray-100 flex-shrink-0" />
+                <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-lg bg-gray-100 shrink-0" />
                 <div class="min-w-0 flex-1">
                   <div class="flex items-start justify-between gap-2">
                     <h3 class="text-gray-900 font-semibold text-sm line-clamp-1" :title="r.title">{{ r.title }}</h3>
@@ -121,6 +121,43 @@
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-white"
               />
             </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">分类</label>
+              <select
+                v-model.number="meta.categoryId"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                :disabled="categoriesLoading || categories.length === 0"
+              >
+                <option :value="null">未选择</option>
+                <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+              </select>
+              <p v-if="categoriesError" class="text-xs text-red-600 mt-2">{{ categoriesError }}</p>
+              <p v-else class="text-xs text-gray-500 mt-2">从数据库读取分类（可不选）。</p>
+            </div>
+
+            <div class="flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <div class="text-sm font-semibold text-gray-700">是否公开</div>
+                <div class="text-xs text-gray-500">公开：会出现在 LearningPool；私有：仅自己可见</div>
+              </div>
+              <button
+                type="button"
+                class="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-200"
+                @click="meta.isPublic = !meta.isPublic"
+              >
+                <span>{{ meta.isPublic ? 'Public' : 'Private' }}</span>
+                <span
+                  class="relative h-5 w-9 rounded-full transition-colors"
+                  :class="meta.isPublic ? 'bg-blue-600' : 'bg-gray-300'"
+                >
+                  <span
+                    class="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform"
+                    :class="meta.isPublic ? 'translate-x-0' : 'translate-x-4'"
+                  />
+                </span>
+              </button>
+            </div>
           </div>
 
           <div
@@ -145,11 +182,11 @@
                   @drop.prevent="onSelectedDrop($event, idx)"
                 >
                   <div
-                    class="w-8 h-8 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center text-xs font-semibold flex-shrink-0"
+                    class="w-8 h-8 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center text-xs font-semibold shrink-0"
                   >
                     {{ idx + 1 }}
                   </div>
-                  <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-lg bg-gray-100 flex-shrink-0" />
+                  <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-lg bg-gray-100 shrink-0" />
                   <div class="min-w-0 flex-1">
                     <div class="flex items-start justify-between gap-2">
                       <h3 class="text-gray-900 font-semibold text-sm line-clamp-1">{{ r.title }}</h3>
@@ -200,10 +237,14 @@ import { ChevronDown, Plus, Search, X } from 'lucide-vue-next'
 import { type Resource } from '../data/resources'
 import { getMyLearningPath, updateMyLearningPath } from '../data/myPaths'
 import { listAllResources } from '../data/resourcesStore'
+import { getMyLearningPathDetail, updateMyLearningPath as updateMyLearningPathDb } from '../api/learningPath'
+import { listCategories, type Category } from '../api/category'
 
 type PathMeta = {
   title: string
   description: string
+  isPublic: boolean
+  categoryId: number | null
 }
 
 const route = useRoute()
@@ -211,6 +252,10 @@ const router = useRouter()
 
 const loaded = ref(false)
 const exists = ref(false)
+
+const categories = ref<Category[]>([])
+const categoriesLoading = ref(false)
+const categoriesError = ref('')
 
 const allResources = ref<Resource[]>(listAllResources())
 const searchQuery = ref('')
@@ -222,7 +267,26 @@ const filteredResources = computed(() => {
 })
 
 const selected = ref<Resource[]>([])
-const meta = reactive<PathMeta>({ title: '', description: '' })
+const meta = reactive<PathMeta>({ title: '', description: '', isPublic: true, categoryId: null })
+
+const idNum = computed(() => {
+  const raw = String(route.params.id || '').trim()
+  const n = Number(raw)
+  return Number.isFinite(n) ? n : NaN
+})
+
+async function loadCategories() {
+  categoriesLoading.value = true
+  categoriesError.value = ''
+  try {
+    categories.value = await listCategories()
+  } catch (e: any) {
+    categories.value = []
+    categoriesError.value = String(e?.response?.data?.detail || e?.message || '加载分类失败')
+  } finally {
+    categoriesLoading.value = false
+  }
+}
 
 const selectedDragState = reactive({
   draggingId: '' as string,
@@ -318,31 +382,67 @@ function onSelectedDragEnd() {
   selectedDragState.overIndex = -1
 }
 
-function save() {
+async function save() {
   const id = String(route.params.id || '')
   if (!id) return
   if (!meta.title.trim()) return
 
+  // 1) Persist meta to backend so LearningPool can see public paths.
+  if (Number.isFinite(idNum.value)) {
+    try {
+      await updateMyLearningPathDb(idNum.value, {
+        title: meta.title,
+        description: meta.description,
+        is_public: meta.isPublic,
+        category_id: meta.categoryId,
+      })
+    } catch (e: any) {
+      alert(String(e?.response?.data?.detail || e?.message || '保存失败'))
+      return
+    }
+  }
+
+  // 2) Keep existing local update for current UI flows (resourceIds builder).
   updateMyLearningPath(id, {
     title: meta.title,
     description: meta.description,
     resourceIds: selected.value.map(r => r.id),
   })
 
-  router.push({ name: 'mypaths' })
+  router.push({ name: 'my-paths' })
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await loadCategories()
+
   const id = String(route.params.id || '')
-  const path = id ? getMyLearningPath(id) : null
+  const local = id ? getMyLearningPath(id) : null
+  exists.value = Boolean(local)
+
+  // Prefer DB meta fields when possible.
+  if (Number.isFinite(idNum.value)) {
+    try {
+      const db = await getMyLearningPathDetail(idNum.value)
+      if (db) {
+        exists.value = true
+        meta.title = String(db.title || '')
+        meta.description = String(db.description || '')
+        meta.isPublic = Boolean(db.is_public)
+        meta.categoryId = (db.category_id ?? null) as any
+      }
+    } catch {
+      // fallback to local
+    }
+  }
+
+  if (local) {
+    if (!meta.title) meta.title = local.title
+    if (!meta.description) meta.description = local.description
+
+    const byId = new Map(allResources.value.map(r => [r.id, r]))
+    selected.value = local.resourceIds.map(rid => byId.get(rid)).filter(Boolean) as Resource[]
+  }
+
   loaded.value = true
-  exists.value = Boolean(path)
-  if (!path) return
-
-  meta.title = path.title
-  meta.description = path.description
-
-  const byId = new Map(allResources.value.map(r => [r.id, r]))
-  selected.value = path.resourceIds.map(rid => byId.get(rid)).filter(Boolean) as Resource[]
 })
 </script>

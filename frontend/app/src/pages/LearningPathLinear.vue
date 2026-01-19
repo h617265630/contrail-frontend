@@ -273,7 +273,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowDown,
@@ -287,19 +287,19 @@ import {
   StickyNote,
   Video,
 } from 'lucide-vue-next'
-import { learningPoolPaths } from '../data/learningPool'
-import { getMyLearningPath } from '../data/myPaths'
-import { getResourceById, listAllResources } from '../data/resourcesStore'
+import { getMyLearningPathDetail, type MyLearningPathDetail } from '../api/learningPath'
+import { getMyResourceDetail, type DbResourceDetail } from '../api/resource'
+import { listMyProgressForLearningPath, type ProgressRow } from '../api/progress'
 import {
   getMyPathResourceEntry,
   loadMyPathResourceState,
   saveMyPathResourceState,
   setMyPathResourceEntry,
 } from '../data/myPathResourceState'
-import type { Resource } from '../data/resources'
 
 type PathItem = {
-  id: string
+  id: number
+  resourceId: number
   title: string
   description: string
   type: 'video' | 'document' | 'article'
@@ -313,7 +313,7 @@ type PathItem = {
 }
 
 type LearningPathData = {
-  id: string
+  id: number
   title: string
   description: string
   totalProgress: number
@@ -322,34 +322,54 @@ type LearningPathData = {
 
 const route = useRoute()
 const router = useRouter()
-const id = computed(() => String(route.params.id || ''))
+const idRaw = computed(() => String(route.params.id || '').trim())
+const learningPathId = computed(() => {
+  if (!/^\d+$/.test(idRaw.value)) return null
+  const n = Number(idRaw.value)
+  return Number.isFinite(n) ? n : null
+})
 
-const poolPath = computed(() => learningPoolPaths.find(p => p.id === id.value) || null)
-const myPath = computed(() => getMyLearningPath(id.value))
+const loading = ref(false)
+const error = ref('')
+
+const lp = ref<MyLearningPathDetail | null>(null)
+const resourcesById = ref<Record<number, DbResourceDetail>>({})
+const progressByPathItemId = ref<Record<number, number>>({})
+
+function asPresentedType(raw: unknown): PathItem['type'] {
+  const t = String(raw || '').toLowerCase().trim()
+  if (t === 'document') return 'document'
+  if (t === 'article') return 'article'
+  return 'video'
+}
+
+function getEmbeddedResource(it: any): DbResourceDetail | null {
+  const r = it?.resource_data
+  return r && typeof r === 'object' ? (r as DbResourceDetail) : null
+}
 
 const path = computed(() => {
-  if (poolPath.value) return poolPath.value
-  if (!myPath.value) return null
-
-  const cover = myPath.value.resourceIds[0] ? getResourceById(myPath.value.resourceIds[0]) : null
+  if (!lp.value) return null
+  const firstItem: any = lp.value.path_items?.[0]
+  const cover = getEmbeddedResource(firstItem) || (firstItem?.resource_id ? resourcesById.value[Number(firstItem.resource_id)] : undefined)
   return {
-    id: myPath.value.id,
-    title: myPath.value.title,
-    description: myPath.value.description,
-    thumbnail: cover?.thumbnail || '',
-    category: 'My Paths',
-    level: 'Custom',
-    items: myPath.value.resourceIds.length,
+    id: lp.value.id,
+    title: lp.value.title,
+    description: lp.value.description || '',
+    thumbnail: (cover?.thumbnail_url || '').trim(),
+    category: lp.value.category_name || 'My Paths',
+    level: lp.value.is_public ? 'Public' : 'Private',
+    items: (lp.value.path_items || []).length,
   }
 })
 
 const resourceState = ref(loadMyPathResourceState())
 
-const editingNotes = ref<string | null>(null)
+const editingNotes = ref<number | null>(null)
 const noteDraft = ref('')
 
 watch(
-  id,
+  idRaw,
   () => {
     editingNotes.value = null
     noteDraft.value = ''
@@ -357,49 +377,42 @@ watch(
   { immediate: true },
 )
 
-const resourcesForPath = computed<Resource[]>(() => {
-  if (myPath.value) {
-    return myPath.value.resourceIds
-      .map(rid => getResourceById(rid))
-      .filter(Boolean) as Resource[]
-  }
-
-  const resources = listAllResources()
-  const desiredCount = poolPath.value?.items ?? 8
-  return resources.slice(0, Math.min(desiredCount, resources.length))
-})
-
 const learningPath = computed<LearningPathData>(() => {
   const title = path.value?.title || 'Learning Path'
   const description = path.value?.description || ''
 
-  const items: PathItem[] = resourcesForPath.value.map((r) => {
-    const entry = getMyPathResourceEntry(resourceState.value, id.value, r.id)
-    const progress = entry.progress ?? 0
-    const totalPages = typeof r.pages === 'number' ? r.pages : undefined
-    const currentPage = typeof totalPages === 'number' ? Math.round((progress / 100) * totalPages) : undefined
+  const items: PathItem[] = (lp.value?.path_items || [])
+    .slice()
+    .sort((a, b) => (a.position || 0) - (b.position || 0))
+    .map((it) => {
+      const embedded = getEmbeddedResource(it as any)
+      const res = embedded || resourcesById.value[it.resource_id]
+      const type = asPresentedType(res?.resource_type || (it as any).resource_type)
 
-    return {
-      id: r.id,
-      title: r.title,
-      description: r.description,
-      type: r.type,
-      duration: r.duration || (typeof r.pages === 'number' ? `${r.pages} pages` : '—'),
-      progress,
-      notes: entry.note ?? '',
-      completed: progress >= 100,
-      thumbnail: r.thumbnail,
-      totalPages,
-      currentPage,
-    }
-  })
+      const pid = Number(it.id)
+      const progress = progressByPathItemId.value[pid] ?? 0
+
+      const entry = getMyPathResourceEntry(resourceState.value, String(lp.value?.id || ''), String(pid))
+      return {
+        id: pid,
+        resourceId: Number(it.resource_id),
+        title: String(res?.title || it.title || `Resource ${it.resource_id}`),
+        description: String(res?.description || it.description || ''),
+        type,
+        duration: type === 'video' ? '—' : '—',
+        progress,
+        notes: entry.note ?? '',
+        completed: progress >= 100,
+        thumbnail: (res?.thumbnail_url || '').trim() || 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=225&fit=crop',
+      }
+    })
 
   const totalProgress = items.length
     ? Math.round(items.reduce((sum, item) => sum + item.progress, 0) / items.length)
     : 0
 
   return {
-    id: id.value,
+    id: lp.value?.id || 0,
     title,
     description,
     totalProgress,
@@ -407,15 +420,15 @@ const learningPath = computed<LearningPathData>(() => {
   }
 })
 
-function startEdit(itemId: string) {
+function startEdit(itemId: number) {
   editingNotes.value = itemId
-  const entry = getMyPathResourceEntry(resourceState.value, id.value, itemId)
+  const entry = getMyPathResourceEntry(resourceState.value, String(lp.value?.id || ''), String(itemId))
   noteDraft.value = entry.note || ''
 }
 
-function saveNotes(itemId: string) {
-  const current = getMyPathResourceEntry(resourceState.value, id.value, itemId)
-  const next = setMyPathResourceEntry(resourceState.value, id.value, itemId, {
+function saveNotes(itemId: number) {
+  const current = getMyPathResourceEntry(resourceState.value, String(lp.value?.id || ''), String(itemId))
+  const next = setMyPathResourceEntry(resourceState.value, String(lp.value?.id || ''), String(itemId), {
     ...current,
     note: noteDraft.value,
   })
@@ -453,12 +466,92 @@ function typeColor(type: PathItem['type']) {
 }
 
 function goToResource(item: PathItem) {
-  if (item.type === 'video') {
-    router.push({ name: 'resource-video', params: { id: item.id } })
-    return
-  }
-
-  // document / article -> document page
-  router.push({ name: 'resource-document', params: { id: item.id } })
+  const name = item.type === 'video' ? 'resource-video' : item.type === 'document' ? 'resource-document' : 'resource-article'
+  router.push({
+    name,
+    params: { id: String(item.resourceId) },
+    query: { path_item_id: String(item.id), learning_path_id: String(learningPathId.value || '') },
+  })
 }
+
+let pollTimer: number | null = null
+
+async function refreshProgress() {
+  const lid = learningPathId.value
+  if (!lid) return
+  try {
+    const rows = await listMyProgressForLearningPath(lid)
+    const next: Record<number, number> = {}
+    for (const r of rows || []) {
+      next[Number((r as ProgressRow).path_item_id)] = Number((r as ProgressRow).progress_percentage) || 0
+    }
+    progressByPathItemId.value = next
+  } catch {
+    // ignore polling errors
+  }
+}
+
+async function load() {
+  error.value = ''
+  loading.value = true
+  try {
+    const lid = learningPathId.value
+    if (!lid) throw new Error('Invalid learning path id')
+
+    lp.value = await getMyLearningPathDetail(lid)
+
+    // Progress first (so UI paints quickly)
+    await refreshProgress()
+
+    // Prefer embedded resource_data from learning path detail; only fetch missing details.
+    const embeddedMap: Record<number, DbResourceDetail> = {}
+    const missing: number[] = []
+    for (const it of lp.value.path_items || []) {
+      const rid = Number((it as any).resource_id)
+      if (!rid) continue
+      const embedded = getEmbeddedResource(it as any)
+      if (embedded) embeddedMap[rid] = embedded
+      else missing.push(rid)
+    }
+
+    const uniqueMissing = Array.from(new Set(missing))
+    const fetchedPairs = await Promise.all(
+      uniqueMissing.map(async (rid) => {
+        const r = await getMyResourceDetail(rid)
+        return [rid, r] as const
+      }),
+    )
+    for (const [rid, r] of fetchedPairs) embeddedMap[rid] = r
+    resourcesById.value = embeddedMap
+  } catch (e: any) {
+    error.value = String(e?.response?.data?.detail || e?.message || 'Failed to load learning path')
+    lp.value = null
+    resourcesById.value = {}
+    progressByPathItemId.value = {}
+  } finally {
+    loading.value = false
+  }
+}
+
+watch(
+  learningPathId,
+  async () => {
+    if (pollTimer != null) {
+      window.clearInterval(pollTimer)
+      pollTimer = null
+    }
+    await load()
+    pollTimer = window.setInterval(() => {
+      void refreshProgress()
+    }, 10_000)
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => {
+  if (pollTimer != null) {
+    window.clearInterval(pollTimer)
+    pollTimer = null
+  }
+})
 </script>

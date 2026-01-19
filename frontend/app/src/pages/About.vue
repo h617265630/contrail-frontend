@@ -8,23 +8,23 @@
           <p class="text-sm uppercase tracking-wide text-blue-600 font-semibold">About</p>
           <h1 class="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">What is Contrail?</h1>
           <p class="text-gray-700 text-base leading-relaxed">
-            Contrail is a Learning Path Platform built with Vue + Tailwind. It includes a home page, learning path listings,
-            path detail views, a resource library, and auth pages. You can browse steps in a horizontally scrollable layout,
-            view progress and notes in cards, and navigate through a consistent global header and footer.
+            Contrail is a platform for building personal learning paths. It helps you turn scattered resources—found across
+            YouTube, blogs, and course platforms—into a clear, actionable path you can actually finish.
+            Instead of collecting links and losing momentum, you get structure, progress, and feedback in one place.
           </p>
         </div>
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div class="rounded-xl bg-blue-50/50 shadow-sm p-4">
-            <h3 class="font-semibold text-gray-900">Tech Stack</h3>
-            <p class="text-sm text-gray-700 mt-1">Vue 3 + Vite + TypeScript, styled with TailwindCSS, icons via lucide-vue-next.</p>
+            <h3 class="font-semibold text-gray-900">Resources</h3>
+            <p class="text-sm text-gray-700 mt-1">Import videos, articles, documents, and links—then manage them in one library instead of browser bookmarks.</p>
           </div>
           <div class="rounded-xl bg-purple-50/40 shadow-sm p-4">
-            <h3 class="font-semibold text-gray-900">Pages & Routes</h3>
-            <p class="text-sm text-gray-700 mt-1">Home (hero + featured paths), LearningPool, path details, Resources, Login/Register, About, and a shared NavBar/Footer layout.</p>
+            <h3 class="font-semibold text-gray-900">Learning Paths</h3>
+            <p class="text-sm text-gray-700 mt-1">Drag resources into a path, reorder steps, and shape a learning rhythm that fits your goal and schedule.</p>
           </div>
           <div class="rounded-xl bg-green-50/40 shadow-sm p-4">
-            <h3 class="font-semibold text-gray-900">Path Experience</h3>
-            <p class="text-sm text-gray-700 mt-1">Featured paths in a 5-card row; multiple paths in lists; steps scroll horizontally; long text is clamped for readability.</p>
+            <h3 class="font-semibold text-gray-900">Progress</h3>
+            <p class="text-sm text-gray-700 mt-1">Track progress per resource and see how much of a path you’ve completed—so learning stays continuous, not fragmented.</p>
           </div>
         </div>
       </section>
@@ -32,22 +32,22 @@
       <!-- Sections -->
       <section class="grid gap-6 md:grid-cols-2">
         <div class="rounded-2xl bg-white shadow-lg p-6 space-y-3">
-          <h2 class="text-xl font-semibold text-gray-900">Core Features</h2>
+          <h2 class="text-xl font-semibold text-gray-900">Why Contrail</h2>
           <ul class="space-y-2 text-gray-700 text-sm leading-relaxed list-disc list-inside">
-            <li>Learning path lists: horizontally scrollable step cards for quick browsing.</li>
-            <li>Path details: timeline, progress, and note editing.</li>
-            <li>Resource library: grid/list view, search, add/remove resources.</li>
-            <li>Login/Register: client-side validation and password visibility toggle.</li>
-            <li>Unified layout: global navigation and consistent footer.</li>
+            <li>Your learning resources are scattered across platforms and hard to organize systematically.</li>
+            <li>You save a lot, but you don’t know where to start—or where you stopped.</li>
+            <li>Learning happens in small fragments, but you lack a single framework to measure progress and outcomes.</li>
+            <li>Contrail’s goal is to turn fragmented learning into structured, repeatable progress.</li>
           </ul>
         </div>
         <div class="rounded-2xl bg-white shadow-lg p-6 space-y-3">
-          <h2 class="text-xl font-semibold text-gray-900">Highlights</h2>
+          <h2 class="text-xl font-semibold text-gray-900">Core Features</h2>
           <ul class="space-y-2 text-gray-700 text-sm leading-relaxed list-disc list-inside">
-            <li>Card-based UI with a bold hero section to spotlight featured paths.</li>
-            <li>Line-clamp for long text to keep layouts clean.</li>
-            <li>Tailwind layout primitives: centered max width, soft shadows, and rounded corners.</li>
-            <li>Extensible: connect a real backend API to replace mock data.</li>
+            <li><span class="font-semibold">Resource</span>: discover public resources and keep your own private library.</li>
+            <li><span class="font-semibold">Learning Path</span>: build a path by adding resources, reordering steps, and categorizing.</li>
+            <li><span class="font-semibold">Progress</span>: record learning progress per step and see overall completion at a glance.</li>
+            <li><span class="font-semibold">Personal Pool</span>: save quick ideas (links, images, notes) and turn them into resources later.</li>
+            <li><span class="font-semibold">Public & Private</span>: choose what you share and what stays personal.</li>
           </ul>
         </div>
       </section>

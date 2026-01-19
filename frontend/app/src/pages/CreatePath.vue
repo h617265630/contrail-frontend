@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+  <div class="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-6">
     <div class="max-w-7xl mx-auto space-y-6">
       <!-- Header -->
       <div class="bg-white rounded-2xl shadow-xl p-8">
@@ -55,7 +55,7 @@
             <p v-if="newResourceError" class="text-xs text-red-600">{{ newResourceError }}</p>
           </div>
 
-          <div class="max-h-[520px] overflow-y-auto pr-1 space-y-3">
+          <div class="max-h-130 overflow-y-auto pr-1 space-y-3">
             <article
               v-for="r in filteredResources"
               :key="r.id"
@@ -64,7 +64,7 @@
               @dragstart="handleDragStart($event, r)"
             >
               <div class="flex gap-3 p-3">
-                <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-lg bg-gray-100 flex-shrink-0" />
+                <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-lg bg-gray-100 shrink-0" />
                 <div class="min-w-0 flex-1">
                   <div class="flex items-start justify-between gap-2">
                     <h3 class="text-gray-900 font-semibold text-sm line-clamp-1" :title="r.title">{{ r.title }}</h3>
@@ -136,6 +136,43 @@
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-white"
               />
             </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">分类</label>
+              <select
+                v-model.number="pathMeta.categoryId"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                :disabled="categoriesLoading || categories.length === 0"
+              >
+                <option :value="null">未选择</option>
+                <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+              </select>
+              <p v-if="categoriesError" class="text-xs text-red-600 mt-2">{{ categoriesError }}</p>
+              <p v-else class="text-xs text-gray-500 mt-2">从数据库读取分类（可不选）。</p>
+            </div>
+
+            <div class="flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <div class="text-sm font-semibold text-gray-700">是否公开</div>
+                <div class="text-xs text-gray-500">公开：会出现在 LearningPool；私有：仅自己可见</div>
+              </div>
+              <button
+                type="button"
+                class="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-200"
+                @click="pathMeta.isPublic = !pathMeta.isPublic"
+              >
+                <span>{{ pathMeta.isPublic ? 'Public' : 'Private' }}</span>
+                <span
+                  class="relative h-5 w-9 rounded-full transition-colors"
+                  :class="pathMeta.isPublic ? 'bg-blue-600' : 'bg-gray-300'"
+                >
+                  <span
+                    class="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform"
+                    :class="pathMeta.isPublic ? 'translate-x-0' : 'translate-x-4'"
+                  />
+                </span>
+              </button>
+            </div>
           </div>
 
           <div
@@ -161,10 +198,10 @@
                   @dragover.prevent="onSelectedDragOver(idx)"
                   @drop.prevent="onSelectedDrop($event, idx)"
                 >
-                  <div class="w-8 h-8 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                  <div class="w-8 h-8 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center text-xs font-semibold shrink-0">
                     {{ idx + 1 }}
                   </div>
-                  <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-lg bg-gray-100 flex-shrink-0" />
+                  <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-lg bg-gray-100 shrink-0" />
                   <div class="min-w-0 flex-1">
                     <div class="flex items-start justify-between gap-2">
                       <h3 class="text-gray-900 font-semibold text-sm line-clamp-1">{{ r.title }}</h3>
@@ -209,16 +246,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ChevronDown, Plus, Search, X } from 'lucide-vue-next'
 import { resourceSeed, type Resource } from '../data/resources'
 import { addMyLearningPath } from '../data/myPaths'
 import { listAllResources, upsertResource } from '../data/resourcesStore'
+import { createLearningPathWithCategory } from '../api/learningPath'
+import { listCategories, type Category } from '../api/category'
 
 type PathMeta = {
   title: string
   description: string
+  isPublic: boolean
+  categoryId: number | null
 }
 
 const router = useRouter()
@@ -246,7 +287,29 @@ const selectedDragState = reactive({
   overIndex: -1 as number,
 })
 
-const pathMeta = reactive<PathMeta>({ title: '', description: '' })
+const pathMeta = reactive<PathMeta>({ title: '', description: '', isPublic: true, categoryId: null })
+
+const categories = ref<Category[]>([])
+const categoriesLoading = ref(false)
+const categoriesError = ref('')
+
+async function loadCategories() {
+  categoriesLoading.value = true
+  categoriesError.value = ''
+  try {
+    const res = await listCategories()
+    categories.value = res ?? []
+  } catch (e: any) {
+    categories.value = []
+    categoriesError.value = e?.message || '分类加载失败'
+  } finally {
+    categoriesLoading.value = false
+  }
+}
+
+onMounted(() => {
+  loadCategories()
+})
 
 function typeBadge(type: Resource['type']) {
   switch (type) {
@@ -460,9 +523,27 @@ function onSelectedDragEnd() {
   selectedDragState.overIndex = -1
 }
 
-function createLearningPath() {
+async function createLearningPath() {
   if (!pathMeta.title.trim()) return
+
+  // 1) Create in backend (sync learning_paths table + is_public)
+  // If backend call fails, we still create locally to avoid blocking the UX.
+  let backendId: string | null = null
+  try {
+    const createdDb = await createLearningPathWithCategory({
+      title: pathMeta.title,
+      description: pathMeta.description,
+      is_public: pathMeta.isPublic,
+      category_id: pathMeta.categoryId,
+    })
+    backendId = String(createdDb?.id ?? '').trim() || null
+  } catch {
+    backendId = null
+  }
+
+  // 2) Create locally for current UI flows
   const created = addMyLearningPath({
+    id: backendId ?? undefined,
     title: pathMeta.title,
     description: pathMeta.description,
     resources: selected.value,
@@ -473,6 +554,8 @@ function createLearningPath() {
 
   pathMeta.title = ''
   pathMeta.description = ''
+  pathMeta.isPublic = true
+  pathMeta.categoryId = null
   selected.value = []
   searchQuery.value = ''
 }

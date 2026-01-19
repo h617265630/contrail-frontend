@@ -2,7 +2,6 @@ from sqlalchemy import Column, Integer, String, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.database import Base
 from sqlalchemy import UniqueConstraint
-from app.models.resource import Resource
 # 采用多模态或者继承的方式来实现 PathItem
 
 class PathItem(Base):
@@ -24,4 +23,4 @@ class PathItem(Base):
     )
 
     def __repr__(self):
-        return f"<PathItem {self.title}>"
+        return f"<PathItem(id={self.id}, learning_path_id={self.learning_path_id}, position={self.position})>"

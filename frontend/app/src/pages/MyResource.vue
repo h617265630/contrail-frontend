@@ -4,7 +4,7 @@
       <div class="mb-8 flex items-start justify-between gap-4">
         <div>
           <h1 class="text-gray-900 mb-2">My Resources</h1>
-          <p class="text-gray-600">Resources you added</p>
+          <!-- http://localhost:5173/resources -->
         </div>
         <button
           type="button"
@@ -18,6 +18,21 @@
 
       <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
         <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+          <div class="w-full">
+            <div class="flex flex-wrap gap-2 mb-3">
+              <button
+                v-for="cat in categoryTags"
+                :key="cat"
+                type="button"
+                class="px-3 py-1.5 rounded-full text-sm font-semibold border transition-colors"
+                :class="selectedCategory === cat ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'"
+                @click="selectedCategory = cat"
+              >
+                {{ cat }}
+              </button>
+            </div>
+          </div>
+
           <div class="relative flex-1 w-full">
             <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -73,6 +88,7 @@
                 </div>
               </div>
 
+
               <div class="absolute bottom-3 left-3">
                 <div class="px-2 py-1 rounded-full bg-black bg-opacity-60 text-white text-xs flex items-center gap-1">
                   <LinkIcon class="w-3 h-3" />
@@ -96,12 +112,33 @@
               </div>
 
               <div class="mt-auto pt-4">
-                <button
-                  @click.stop="viewResource(resource)"
-                  class="w-full px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-                >
-                  View
-                </button>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    @click.stop="togglePublic(resource)"
+                    :disabled="publicUpdatingId === resource.id"
+                    aria-label="Toggle public/private"
+                  >
+                    <span>{{ resource.isPublic ? 'Public' : 'Private' }}</span>
+                    <span
+                      class="relative h-5 w-9 rounded-full transition-colors"
+                      :class="resource.isPublic ? 'bg-blue-600' : 'bg-gray-300'"
+                    >
+                      <span
+                        class="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform"
+                        :class="resource.isPublic ? 'translate-x-0' : 'translate-x-4'"
+                      />
+                    </span>
+                  </button>
+
+                  <button
+                    @click.stop="viewResource(resource)"
+                    class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                  >
+                    View
+                  </button>
+                </div>
 
                 <div class="grid grid-cols-2 gap-2 mt-2">
                   <button
@@ -162,12 +199,33 @@
 
               <div class="shrink-0">
                 <div class="flex flex-col gap-2">
-                  <button
-                    @click.stop="viewResource(resource)"
-                    class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-                  >
-                    View
-                  </button>
+                  <div class="flex items-center gap-2" @click.stop>
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      @click.stop="togglePublic(resource)"
+                      :disabled="publicUpdatingId === resource.id"
+                      aria-label="Toggle public/private"
+                    >
+                      <span>{{ resource.isPublic ? 'Public' : 'Private' }}</span>
+                      <span
+                        class="relative h-5 w-9 rounded-full transition-colors"
+                        :class="resource.isPublic ? 'bg-blue-600' : 'bg-gray-300'"
+                      >
+                        <span
+                          class="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform"
+                          :class="resource.isPublic ? 'translate-x-0' : 'translate-x-4'"
+                        />
+                      </span>
+                    </button>
+
+                    <button
+                      @click.stop="viewResource(resource)"
+                      class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                    >
+                      View
+                    </button>
+                  </div>
                   <button
                     type="button"
                     class="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold"
@@ -213,6 +271,21 @@
               />
             </div>
             <p v-if="extractError" class="mt-2 text-sm text-red-600">{{ extractError }}</p>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 mb-2">Category</label>
+            <div class="relative">
+              <Tag class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <select
+                v-model="addCategoryId"
+                class="w-full appearance-none pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white cursor-pointer"
+              >
+                <option value="">选择分类</option>
+                <option v-for="c in dbCategories" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
+              </select>
+              <ChevronDown class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            </div>
           </div>
 
           <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
@@ -340,8 +413,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import { BookOpen, FileText, Grid3x3, Link as LinkIcon, List, Plus, Search, Tag, Video, X } from 'lucide-vue-next'
-import { createMyResourceFromUrl, deleteMyResource, extractVideoMetadata, listMyResources, type DbResource, type UrlExtractResponse } from '../api/resource'
+import { BookOpen, ChevronDown, FileText, Grid3x3, Link as LinkIcon, List, Plus, Search, Tag, Video, X } from 'lucide-vue-next'
+import { createMyResourceFromUrl, deleteMyResource, extractVideoMetadata, listMyResources, updateMyResource, type DbResource, type UrlExtractResponse } from '../api/resource'
+import { listCategories, type Category } from '../api/category'
 
 const router = useRouter()
 
@@ -352,14 +426,27 @@ type UiResource = {
   category: string
   source: string
   thumbnail: string
-  type: 'video'
+  type: 'video' | 'document' | 'article'
   addedDate?: string
+  isPublic: boolean
 }
 
 const resources = ref<UiResource[]>([])
 const searchQuery = ref('')
 const viewMode = ref<'grid' | 'list'>('grid')
 const deletingId = ref<number | null>(null)
+const publicUpdatingId = ref<number | null>(null)
+
+const selectedCategory = ref('All')
+
+const categoryTags = computed(() => {
+  const set = new Set<string>()
+  for (const r of resources.value) {
+    const c = (r.category || '').trim() || 'Other'
+    set.add(c)
+  }
+  return ['All', ...Array.from(set).sort((a, b) => a.localeCompare(b))]
+})
 
 const showDeleteConfirm = ref(false)
 const deleteTarget = ref<UiResource | null>(null)
@@ -372,6 +459,9 @@ const extractError = ref('')
 const extractedMeta = ref<UrlExtractResponse | null>(null)
 const submitting = ref(false)
 const submitError = ref('')
+
+const dbCategories = ref<Category[]>([])
+const addCategoryId = ref('')
 
 const fallbackThumb = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=225&fit=crop'
 
@@ -391,15 +481,34 @@ function formatExtractDate(iso?: string | null) {
 
 function mapDbToUi(r: DbResource): UiResource {
   const source = (r.source || '').trim() || 'youtube'
+  const rawType = String((r as any).resource_type || '').trim().toLowerCase()
+  const type: UiResource['type'] = rawType === 'document' || rawType === 'article' ? rawType : 'video'
   return {
     id: r.id,
     title: r.title,
     description: (r.description || '').trim(),
-    category: (r.category || '').trim() || 'Other',
+    category: (r.category_name || r.category || '').trim() || 'Other',
     source,
     thumbnail: (r.thumbnail_url || '').trim() || fallbackThumb,
-    type: 'video',
+    type,
     addedDate: formatDate(r.created_at),
+    isPublic: r.is_public ?? true,
+  }
+}
+
+async function togglePublic(resource: UiResource) {
+  if (publicUpdatingId.value !== null) return
+  publicUpdatingId.value = resource.id
+  const next = !resource.isPublic
+  try {
+    await updateMyResource(resource.id, { is_public: next })
+    resource.isPublic = next
+  } catch (e: any) {
+    // keep UX minimal: rely on global 401 handler, otherwise show a simple message
+    const msg = e?.response?.data?.detail || e?.message || 'Failed to update public status'
+    alert(String(msg))
+  } finally {
+    publicUpdatingId.value = null
   }
 }
 
@@ -408,15 +517,27 @@ async function load() {
   resources.value = (data || []).map(mapDbToUi)
 }
 
+async function loadCategories() {
+  try {
+    dbCategories.value = await listCategories()
+  } catch {
+    dbCategories.value = []
+  }
+}
+
 onMounted(() => {
+  void loadCategories()
   load()
 })
 
 const filteredResources = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
-  if (!q) return resources.value
+  const cat = selectedCategory.value
 
   return resources.value.filter(r => {
+    const matchCategory = cat === 'All' ? true : r.category === cat
+    if (!matchCategory) return false
+    if (!q) return true
     return (
       r.title.toLowerCase().includes(q) ||
       r.description.toLowerCase().includes(q) ||
@@ -426,6 +547,16 @@ const filteredResources = computed(() => {
   })
 })
 
+watch(
+  categoryTags,
+  (next) => {
+    if (!next.includes(selectedCategory.value)) {
+      selectedCategory.value = 'All'
+    }
+  },
+  { immediate: true },
+)
+
 function setView(mode: 'grid' | 'list') {
   viewMode.value = mode
 }
@@ -433,6 +564,7 @@ function setView(mode: 'grid' | 'list') {
 function openAddModal() {
   showAddModal.value = true
   urlInput.value = ''
+  addCategoryId.value = ''
   extractedMeta.value = null
   extractError.value = ''
   submitError.value = ''
@@ -441,6 +573,7 @@ function openAddModal() {
 function closeAddModal() {
   showAddModal.value = false
   urlInput.value = ''
+  addCategoryId.value = ''
   extractedMeta.value = null
   extractError.value = ''
   submitError.value = ''
@@ -451,7 +584,9 @@ async function confirmAdd() {
   submitError.value = ''
   submitting.value = true
   try {
-    await createMyResourceFromUrl(urlInput.value, 'Other')
+    const catId = addCategoryId.value ? Number(addCategoryId.value) : null
+    const catName = catId ? (dbCategories.value.find(c => c.id === catId)?.name || undefined) : undefined
+    await createMyResourceFromUrl(urlInput.value, { category: catName, category_id: catId })
     closeAddModal()
     await load()
   } catch (e: any) {
@@ -538,7 +673,12 @@ function getTypeColor(type: string) {
 }
 
 function viewResource(resource: UiResource) {
-  router.push({ name: 'my-resource-detail', params: { id: resource.id } })
+  const name = resource.type === 'video'
+    ? 'my-resource-video'
+    : resource.type === 'document'
+      ? 'my-resource-document'
+      : 'my-resource-article'
+  router.push({ name, params: { id: resource.id } })
 }
 
 function editResource(resource: UiResource) {
