@@ -3,10 +3,10 @@
     <div class="max-w-5xl mx-auto space-y-8">
     <header class="space-y-2">
       <p class="text-sm uppercase tracking-wide text-blue-600 font-semibold">Plans</p>
-      <h1 class="text-3xl font-bold text-gray-900">选择适合你的方案</h1>
-      <p class="text-gray-600">使用 Contrail 的核心能力，开始结构化你的学习。</p>
+      <h1 class="text-3xl font-bold text-gray-900">Choose the plan that fits you</h1>
+      <p class="text-gray-600">Use Contrail’s core features to start learning with structure.</p>
       <div class="inline-flex items-center gap-2 rounded-full bg-white border border-gray-200 px-3 py-1 text-sm text-gray-700">
-        <span class="font-semibold">当前方案：</span>
+        <span class="font-semibold">Current plan:</span>
         <span class="font-bold text-gray-900">{{ currentPlan }}</span>
       </div>
     </header>
@@ -23,14 +23,14 @@
             <h2 class="text-xl font-semibold text-gray-900">{{ plan.name }}</h2>
             <p class="text-gray-600 text-sm">{{ plan.description }}</p>
           </div>
-          <span v-if="plan.highlight" class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">推荐</span>
+          <span v-if="plan.highlight" class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">Recommended</span>
         </div>
 
         <div class="space-y-2 flex-1">
-          <p class="text-sm font-semibold text-gray-800">适合：</p>
+          <p class="text-sm font-semibold text-gray-800">Best for:</p>
           <p class="text-sm text-gray-700">{{ plan.suitable }}</p>
 
-          <p class="text-sm font-semibold text-gray-800 mt-2">包含：</p>
+          <p class="text-sm font-semibold text-gray-800 mt-2">Includes:</p>
           <ul class="space-y-1 text-sm text-gray-700 list-disc list-inside">
             <li v-for="feat in plan.features" :key="feat">{{ feat }}</li>
           </ul>
@@ -43,17 +43,17 @@
           type="button"
           @click="onSelectPlan(plan)"
         >
-          {{ isCurrent(plan) ? '当前方案' : plan.cta }}
+          {{ isCurrent(plan) ? 'Current plan' : plan.cta }}
         </button>
       </article>
     </div>
 
     <section class="bg-white rounded-2xl shadow-lg p-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-3">对比说明</h2>
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Notes</h2>
       <ul class="space-y-1 text-sm text-gray-700 list-disc list-inside">
-        <li>所有方案均支持进度记录</li>
-        <li>你可以随时升级或降级方案</li>
-        <li>你的学习数据始终属于你</li>
+        <li>All plans include progress tracking</li>
+        <li>You can upgrade or downgrade anytime</li>
+        <li>Your learning data always stays yours</li>
       </ul>
     </section>
     </div>
@@ -79,29 +79,29 @@ const plans = computed<Plan[]>(() => [
   {
     id: 'free',
     name: 'Free',
-    description: '适合刚开始构建学习路径、轻度学习用户',
-    suitable: '刚开始构建学习路径、轻度学习用户',
-    features: ['查看所有公开资源', '查看所有公开 Learning Path', '创建最多 5 条 Learning Path', '随时查看自己的学习进度'],
-    tagline: '使用 Contrail 的核心能力，开始结构化你的学习。',
-    cta: '立即开始',
+    description: 'For getting started with learning paths',
+    suitable: 'New users building their first learning paths',
+    features: ['Browse all public resources', 'Browse all public learning paths', 'Create up to 5 learning paths', 'Track your progress anytime'],
+    tagline: 'Start learning with structure using Contrail’s core features.',
+    cta: 'Get started',
   },
   {
     id: 'basic',
     name: 'Basic',
-    description: '适合有明确学习目标、需要更多个人管理空间的用户',
-    suitable: '有明确学习目标、需要更多个人管理空间的用户',
-    features: ['创建最多 10 条 Learning Path', '随时查看完整学习进度', '创建最多 5 条私有 Learning Path', '更灵活地管理你的学习结构'],
-    tagline: '在公开与私有之间取得平衡，专注推进自己的学习计划。',
-    cta: '升级以解锁更多路径',
+    description: 'More space for personal learning management',
+    suitable: 'Learners with clear goals who need more room to organize',
+    features: ['Create up to 10 learning paths', 'See full progress anytime', 'Create up to 5 private learning paths', 'Manage your structure more flexibly'],
+    tagline: 'Balance public and private while staying focused on your plan.',
+    cta: 'Upgrade for more paths',
   },
   {
     id: 'pro',
     name: 'Pro',
-    description: '适合长期学习者、重度学习用户、内容创作者',
-    suitable: '长期学习者、重度学习用户、内容创作者',
-    features: ['创建无限条 Learning Path', '使用 AI 生成学习笔记与总结', 'AI 分析学习章节与内容结构', '基于 AI 的资源与 Learning Path 分析与优化建议'],
-    tagline: '让 AI 成为你的学习助手，持续优化你的学习路径与学习效率。',
-    cta: '使用 AI 深度优化你的学习',
+    description: 'For power learners and creators',
+    suitable: 'Long-term learners, heavy users, and creators',
+    features: ['Unlimited learning paths', 'AI-generated learning notes and summaries', 'AI analysis of chapters and structure', 'AI-based recommendations to optimize resources and paths'],
+    tagline: 'Make AI your learning copilot to continuously improve outcomes.',
+    cta: 'Use AI to optimize',
     highlight: true,
   },
 ])

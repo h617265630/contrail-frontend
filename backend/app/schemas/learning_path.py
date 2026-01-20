@@ -17,6 +17,7 @@ class LearningPathBase(BaseModel):
     title: str
     description: Optional[str] = None
     is_public: bool = False
+    cover_image_url: Optional[str] = None
     category_id: Optional[int] = None
     category_name: Optional[str] = None
 
@@ -35,6 +36,7 @@ class LearningPathUpdate(BaseModel):
     description: Optional[str] = None
     is_public: Optional[bool] = None
     is_active: Optional[bool] = None
+    cover_image_url: Optional[str] = None
     category_id: Optional[int] = None
 
     model_config = {

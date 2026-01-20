@@ -11,7 +11,7 @@
 			<div class="absolute inset-0 bg-black/35" aria-hidden="true" />
 			<div class="relative px-8 py-10 md:px-12 md:py-14 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
 				<div class="space-y-4 max-w-xl">
-					<p class="text-sm uppercase tracking-wide text-white/80">{{ t('Learning Path Platform') }}</p>
+					<p class="text-sm uppercase tracking-wide text-white/80">{{ t('Contrail') }}</p>
 					<h1 class="text-3xl md:text-4xl font-bold leading-tight">{{ t('Build system-level skills with structured learning paths') }}</h1>
 					<p class="text-white/90">{{ t('This is a Learning Path Platform: create and discover great learning paths, turn scattered knowledge into an actionable plan, and track progress as you improve over time.') }}</p>
 					<p class="text-white-200 italic text-xs tracking-wide">

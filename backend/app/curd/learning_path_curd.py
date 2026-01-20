@@ -14,6 +14,7 @@ class LearningPathCURD:
         description: str = None,
         *,
         is_public: bool = False,
+        cover_image_url: str | None = None,
         category_id: int | None = None,
     ) -> LearningPath:
         if category_id is not None:
@@ -25,6 +26,7 @@ class LearningPathCURD:
             title=title,
             description=description,
             is_public=bool(is_public),
+            cover_image_url=cover_image_url,
             category_id=category_id,
         )
         db.add(learning_path)

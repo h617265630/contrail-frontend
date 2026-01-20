@@ -80,6 +80,7 @@ def create_learning_path(
 			title=payload.title,
 			description=payload.description,
 			is_public=payload.is_public,
+			cover_image_url=getattr(payload, "cover_image_url", None),
 			category_id=payload.category_id,
 		)
 	except ValueError as e:
@@ -130,6 +131,7 @@ def get_public_learning_path_detail(
 		title=lp.title,
 		description=lp.description,
 		is_public=lp.is_public,
+		cover_image_url=getattr(lp, "cover_image_url", None),
 		category_id=getattr(lp, "category_id", None),
 		category_name=getattr(lp, "category_name", None),
 		is_active=lp.is_active,
@@ -233,6 +235,7 @@ def get_learning_path_detail(
 		title=lp.title,
 		description=lp.description,
 		is_public=lp.is_public,
+		cover_image_url=getattr(lp, "cover_image_url", None),
 		category_id=getattr(lp, "category_id", None),
 		category_name=getattr(lp, "category_name", None),
 		is_active=lp.is_active,

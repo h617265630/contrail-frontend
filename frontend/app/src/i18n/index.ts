@@ -53,6 +53,7 @@ const zhCN: Record<string, string> = {
   'View all paths': '查看全部路径',
   'Start now': '立即开始',
   'Create path': '创建路径',
+  'Contrail': 'Contrail',
   'Learning Path Platform': '学习路径平台',
   'Build system-level skills with structured learning paths': '用路径化、结构化学习，构建体系化能力',
   'This is a Learning Path Platform: create and discover great learning paths, turn scattered knowledge into an actionable plan, and track progress as you improve over time.':

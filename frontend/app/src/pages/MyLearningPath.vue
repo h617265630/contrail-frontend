@@ -1,9 +1,30 @@
 <template>
   <div class="min-h-screen bg-gray-50 p-6">
     <div class="max-w-7xl mx-auto space-y-10">
-    <div class="space-y-2">
-      <h1 class="text-2xl font-semibold text-gray-900">My Paths</h1>
-      <p class="text-gray-600">只显示你在数据库中创建/添加的 LearningPath</p>
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div class="space-y-2">
+        <h1 class="text-2xl font-semibold text-gray-900">My Paths</h1>
+        <p class="text-gray-600">只显示你在数据库中创建/添加的 LearningPath</p>
+      </div>
+
+      <div class="inline-flex rounded-lg bg-white border border-gray-200 p-1 w-fit">
+        <button
+          type="button"
+          class="px-3 py-1.5 rounded-md text-sm font-semibold"
+          :class="viewMode === 'grid' ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-50'"
+          @click="viewMode = 'grid'"
+        >
+          卡片
+        </button>
+        <button
+          type="button"
+          class="px-3 py-1.5 rounded-md text-sm font-semibold"
+          :class="viewMode === 'list' ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-50'"
+          @click="viewMode = 'list'"
+        >
+          列表
+        </button>
+      </div>
     </div>
 
     <Card v-if="loading" as="section" :hoverable="false" className="rounded-2xl p-6">
@@ -25,36 +46,106 @@
       </RouterLink>
     </Card>
 
-    <Card
-      v-for="path in paths"
-      :key="path.id"
-      as="section"
-      :hoverable="true"
-      className="rounded-2xl p-4 cursor-pointer"
-      @click="openDetail(path.id)"
-    >
-      <div class="flex items-center justify-between gap-6">
-        <div class="min-w-0">
-          <h2 class="text-lg font-semibold text-gray-900 truncate">{{ path.title }}</h2>
-          <p class="text-gray-600 text-sm line-clamp-2">{{ path.description || '（无介绍）' }}</p>
+    <section v-else-if="viewMode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <Card
+        v-for="path in paths"
+        :key="path.id"
+        as="article"
+        :hoverable="true"
+        className="rounded-2xl p-3 cursor-pointer"
+        @click="openDetail(path.id)"
+      >
+        <div class="rounded-xl overflow-hidden bg-gray-100 aspect-video relative">
+          <img
+            v-if="coverFor(path.id)"
+            :src="coverFor(path.id)"
+            :alt="path.title"
+            class="w-full h-full object-cover object-left-top"
+            loading="lazy"
+          />
+          <div
+            v-else
+            class="absolute inset-0 bg-linear-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center"
+          >
+            <ImageIcon class="w-10 h-10 text-blue-600" />
+            <div class="mt-2 text-xs font-semibold text-gray-700 text-center px-2">
+              {{ path.category_name || 'Learning Path' }}
+            </div>
+          </div>
         </div>
-        <div class="flex items-center gap-2 shrink-0" @click.stop>
+
+        <div class="mt-3 min-w-0">
+          <h2 class="text-sm font-semibold text-gray-900 line-clamp-1">{{ path.title }}</h2>
+          <p class="mt-1 text-gray-600 text-xs line-clamp-3">{{ path.description || '（无介绍）' }}</p>
+        </div>
+
+        <div class="mt-3 flex items-center gap-2" @click.stop>
           <RouterLink
             :to="{ name: 'learningpath-edit', params: { id: String(path.id) } }"
-            class="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-semibold"
+            class="flex-1 px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-semibold text-center"
           >
             编辑
           </RouterLink>
           <button
             type="button"
-            class="px-4 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 text-sm font-semibold"
+            class="flex-1 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 text-xs font-semibold"
             @click="openDeleteConfirm(path.id)"
           >
             删除
           </button>
         </div>
-      </div>
-    </Card>
+      </Card>
+    </section>
+
+    <section v-else class="space-y-3">
+      <Card
+        v-for="path in paths"
+        :key="path.id"
+        as="article"
+        :hoverable="true"
+        className="rounded-2xl p-4 cursor-pointer"
+        @click="openDetail(path.id)"
+      >
+        <div class="flex gap-4">
+          <div class="w-32 shrink-0 rounded-xl overflow-hidden bg-gray-100 aspect-video relative">
+            <img
+              v-if="coverFor(path.id)"
+              :src="coverFor(path.id)"
+              :alt="path.title"
+              class="w-full h-full object-cover object-left-top"
+              loading="lazy"
+            />
+            <div
+              v-else
+              class="absolute inset-0 bg-linear-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center"
+            >
+              <ImageIcon class="w-7 h-7 text-blue-600" />
+            </div>
+          </div>
+
+          <div class="min-w-0 flex-1">
+            <h2 class="text-base font-semibold text-gray-900 line-clamp-1">{{ path.title }}</h2>
+            <p class="mt-1 text-gray-600 text-sm line-clamp-2">{{ path.description || '（无介绍）' }}</p>
+
+            <div class="mt-3 flex items-center gap-2" @click.stop>
+              <RouterLink
+                :to="{ name: 'learningpath-edit', params: { id: String(path.id) } }"
+                class="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-semibold"
+              >
+                编辑
+              </RouterLink>
+              <button
+                type="button"
+                class="px-4 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 text-sm font-semibold"
+                @click="openDeleteConfirm(path.id)"
+              >
+                删除
+              </button>
+            </div>
+          </div>
+        </div>
+      </Card>
+    </section>
   </div>
   </div>
 
@@ -98,11 +189,17 @@ import { onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import Card from '../components/ui/Card.vue'
 
-import { deleteMyLearningPath, listMyLearningPaths, type MyLearningPath } from '../api/learningPath'
+import { deleteMyLearningPath, getMyLearningPathDetail, listMyLearningPaths, type MyLearningPath } from '../api/learningPath'
+import { getMyResourceDetail, getResourceDetail } from '../api/resource'
+import { Image as ImageIcon } from 'lucide-vue-next'
 
 const paths = ref<MyLearningPath[]>([])
 const loading = ref(false)
 const error = ref('')
+
+const viewMode = ref<'grid' | 'list'>('grid')
+
+const coverByPathId = ref<Record<number, string>>({})
 
 const router = useRouter()
 
@@ -115,6 +212,63 @@ async function loadPaths() {
   try {
     const data = await listMyLearningPaths()
     paths.value = Array.isArray(data) ? data : []
+
+    // Load cover images from the first resource in each path.
+    await Promise.allSettled(
+      paths.value.map(async (p) => {
+        try {
+          const explicitCover = String((p as any)?.cover_image_url || '').trim()
+          if (explicitCover) {
+            coverByPathId.value[p.id] = explicitCover
+            return
+          }
+
+          const detail = await getMyLearningPathDetail(p.id)
+          const items = Array.isArray(detail.path_items) ? detail.path_items : []
+
+          // “第一个 resource”：优先按 position 最小的 path item；如果 position 异常则按返回顺序。
+          let first = items[0] || null
+          for (const it of items) {
+            const a = Number((first as any)?.position)
+            const b = Number((it as any)?.position)
+            const aOk = Number.isFinite(a)
+            const bOk = Number.isFinite(b)
+            if (!first) {
+              first = it
+              continue
+            }
+            if (bOk && (!aOk || b < a)) {
+              first = it
+            }
+          }
+
+          let thumb = String((first as any)?.resource_data?.thumbnail_url || '').trim()
+
+          // 如果学习路径详情里没带缩略图，则回退去拉一次 resource 详情（先 public，再 my）。
+          if (!thumb) {
+            const rid = Number((first as any)?.resource_id)
+            if (Number.isFinite(rid) && rid > 0) {
+              try {
+                const r = await getResourceDetail(rid)
+                thumb = String(r?.thumbnail_url || '').trim()
+              } catch {
+                try {
+                  const r = await getMyResourceDetail(rid)
+                  thumb = String(r?.thumbnail_url || '').trim()
+                } catch {
+                  // ignore
+                }
+              }
+            }
+          }
+
+          // Rule: use first resource thumbnail if present; otherwise show placeholder.
+          coverByPathId.value[p.id] = thumb
+        } catch {
+          coverByPathId.value[p.id] = coverByPathId.value[p.id] || ''
+        }
+      }),
+    )
   } catch (e: any) {
     error.value = String(e?.response?.data?.detail || e?.message || 'Failed to load learning paths')
   } finally {
@@ -126,6 +280,10 @@ onMounted(loadPaths)
 
 function openDetail(id: number) {
   router.push({ name: 'learningpath', params: { id: String(id) }, query: { from: 'my-paths' } })
+}
+
+function coverFor(id: number) {
+  return String(coverByPathId.value[id] || '').trim()
 }
 
 function openDeleteConfirm(id: number) {

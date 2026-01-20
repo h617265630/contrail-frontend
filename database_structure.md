@@ -8,7 +8,6 @@
 - 字段类型以 SQLAlchemy 模型/迁移为准，数据库真实类型可能因方言（Postgres）略有差异。
 - 本项目存在“资源多态继承”：`resources` 为基表，不同资源类型在子表中扩展（如 `link_resources`、`videos`、`clips`）。
 - `categories` 为通用分类表，`resources.category_id`、`learning_paths.category_id` 均指向它。
-
 ---
 
 ## 1. 核心业务域（Learning Path + Resource）
@@ -40,6 +39,7 @@
   - `description`（可空）
   - `is_public`（是否公开）
   - `is_active`（是否可用）
+  - `cover_image_url`（可空；学习路径封面 URL，可为 data-url 或普通 URL）
   - `category_id`（FK → `categories.id`，可空，索引）
 - 关系：
   - 1 对多：`learning_paths.id` ← `path_items.learning_path_id`

@@ -123,6 +123,76 @@
             </div>
 
             <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">封面</label>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                  <div class="aspect-video bg-gray-100">
+                    <img
+                      v-if="meta.coverImageUrl"
+                      :src="meta.coverImageUrl"
+                      alt="Selected cover"
+                      class="w-full h-full object-cover"
+                    />
+                    <div v-else class="w-full h-full flex items-center justify-center text-sm text-gray-500">
+                      未选择封面
+                    </div>
+                  </div>
+                  <div class="p-3">
+                    <p class="text-xs text-gray-500">左侧为当前选择的封面预览</p>
+                  </div>
+                </div>
+
+                <div class="rounded-xl border border-gray-200 bg-white p-3">
+                  <div v-if="uploadedCoverUrl" class="space-y-3">
+                    <button
+                      type="button"
+                      class="w-full rounded-lg overflow-hidden border-2"
+                      :class="meta.coverImageUrl === uploadedCoverUrl ? 'border-blue-600' : 'border-gray-200 hover:border-gray-300'"
+                      @click="selectCover(uploadedCoverUrl)"
+                    >
+                      <div class="aspect-video bg-gray-100">
+                        <img :src="uploadedCoverUrl" alt="Uploaded cover" class="w-full h-full object-cover" />
+                      </div>
+                    </button>
+                  </div>
+
+                  <div v-else class="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                    <button
+                      v-for="(u, idx) in defaultCoverUrls"
+                      :key="idx"
+                      type="button"
+                      class="rounded-lg overflow-hidden border-2"
+                      :class="meta.coverImageUrl === u ? 'border-blue-600' : 'border-gray-200 hover:border-gray-300'"
+                      @click="selectCover(u)"
+                    >
+                      <div class="aspect-video bg-gray-100">
+                        <img :src="u" :alt="`Cover ${idx + 1}`" class="w-full h-full object-cover" />
+                      </div>
+                    </button>
+                  </div>
+
+                  <div class="mt-3 flex items-center justify-between gap-3">
+                    <input
+                      ref="coverFileInput"
+                      type="file"
+                      accept="image/*"
+                      class="hidden"
+                      @change="onCoverFileChange"
+                    />
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-semibold"
+                      @click="openCoverFilePicker"
+                    >
+                      上传图片
+                    </button>
+                    <p class="text-xs text-gray-500">上传后右侧仅显示上传图</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">分类</label>
               <select
                 v-model.number="meta.categoryId"
@@ -245,6 +315,7 @@ type PathMeta = {
   description: string
   isPublic: boolean
   categoryId: number | null
+  coverImageUrl: string
 }
 
 const route = useRoute()
@@ -267,7 +338,62 @@ const filteredResources = computed(() => {
 })
 
 const selected = ref<Resource[]>([])
-const meta = reactive<PathMeta>({ title: '', description: '', isPublic: true, categoryId: null })
+const meta = reactive<PathMeta>({ title: '', description: '', isPublic: true, categoryId: null, coverImageUrl: '' })
+
+const coverFileInput = ref<HTMLInputElement | null>(null)
+const uploadedCoverUrl = ref<string>('')
+
+function makeCoverSvg(seed: number) {
+  const w = 640
+  const h = 360
+  const a = (seed * 37) % 100
+  const b = (seed * 61) % 100
+  const c = (seed * 83) % 100
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eff6ff"/>
+      <stop offset="1" stop-color="#e0e7ff"/>
+    </linearGradient>
+    <linearGradient id="fg" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#60a5fa" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#818cf8" stop-opacity="0.35"/>
+    </linearGradient>
+  </defs>
+  <rect width="${w}" height="${h}" fill="url(#bg)"/>
+  <circle cx="${(a / 100) * w}" cy="${(b / 100) * h}" r="${70 + (c % 40)}" fill="url(#fg)"/>
+  <circle cx="${w - (b / 100) * w}" cy="${(c / 100) * h}" r="${40 + (a % 30)}" fill="url(#fg)" opacity="0.8"/>
+  <path d="M -40 ${h * 0.75} C ${w * 0.2} ${h * (0.55 + (a % 15) / 100)} , ${w * 0.55} ${h * (0.95 - (b % 20) / 100)} , ${w + 40} ${h * 0.7}" fill="none" stroke="#1f2937" stroke-opacity="0.08" stroke-width="14" stroke-linecap="round"/>
+  <path d="M -40 ${h * 0.2} C ${w * 0.3} ${h * (0.3 + (b % 15) / 100)} , ${w * 0.6} ${h * (0.05 + (c % 25) / 100)} , ${w + 40} ${h * 0.25}" fill="none" stroke="#1f2937" stroke-opacity="0.06" stroke-width="10" stroke-linecap="round"/>
+</svg>`
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
+}
+
+const defaultCoverUrls = Array.from({ length: 20 }, (_, i) => makeCoverSvg(i + 1))
+
+function selectCover(url: string) {
+  meta.coverImageUrl = String(url || '').trim()
+}
+
+function openCoverFilePicker() {
+  coverFileInput.value?.click()
+}
+
+function onCoverFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  const reader = new FileReader()
+  reader.onload = () => {
+    const url = String(reader.result || '').trim()
+    if (!url) return
+    uploadedCoverUrl.value = url
+    selectCover(url)
+  }
+  reader.readAsDataURL(file)
+}
 
 const idNum = computed(() => {
   const raw = String(route.params.id || '').trim()
@@ -394,6 +520,7 @@ async function save() {
         title: meta.title,
         description: meta.description,
         is_public: meta.isPublic,
+        cover_image_url: meta.coverImageUrl || null,
         category_id: meta.categoryId,
       })
     } catch (e: any) {
@@ -415,6 +542,8 @@ async function save() {
 onMounted(async () => {
   await loadCategories()
 
+  if (!meta.coverImageUrl) selectCover(defaultCoverUrls[0] || '')
+
   const id = String(route.params.id || '')
   const local = id ? getMyLearningPath(id) : null
   exists.value = Boolean(local)
@@ -429,6 +558,8 @@ onMounted(async () => {
         meta.description = String(db.description || '')
         meta.isPublic = Boolean(db.is_public)
         meta.categoryId = (db.category_id ?? null) as any
+        const cover = String((db as any)?.cover_image_url || '').trim()
+        if (cover) selectCover(cover)
       }
     } catch {
       // fallback to local

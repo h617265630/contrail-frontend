@@ -13,6 +13,8 @@ class LearningPath(Base):
     is_public = Column(Boolean, default=True)
     is_active = Column(Boolean, default=True)
 
+    cover_image_url = Column(String(2048), nullable=True)
+
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True, index=True)
     category = relationship("Category")
     # relationships 

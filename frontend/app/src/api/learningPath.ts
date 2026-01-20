@@ -7,6 +7,7 @@ export type PublicLearningPath = {
   description?: string | null
   is_public: boolean
   is_active: boolean
+  cover_image_url?: string | null
   category_id?: number | null
   category_name?: string | null
 }
@@ -32,7 +33,7 @@ export function getPublicLearningPathDetail(id: number) {
   return request.get<PublicLearningPathDetail, PublicLearningPathDetail>(`/learning-paths/public/${id}`)
 }
 
-export function createLearningPath(payload: { title: string; description?: string; is_public: boolean }) {
+export function createLearningPath(payload: { title: string; description?: string; is_public: boolean; cover_image_url?: string | null }) {
   return request.post<PublicLearningPath, PublicLearningPath>('/learning-paths/', payload)
 }
 
@@ -40,6 +41,7 @@ export function createLearningPathWithCategory(payload: {
   title: string
   description?: string
   is_public: boolean
+  cover_image_url?: string | null
   category_id?: number | null
 }) {
   return request.post<PublicLearningPath, PublicLearningPath>('/learning-paths/', payload)
@@ -59,7 +61,7 @@ export function getMyLearningPathDetail(id: number) {
 
 export function updateMyLearningPath(
   id: number,
-  payload: { title?: string; description?: string; is_public?: boolean; category_id?: number | null },
+  payload: { title?: string; description?: string; is_public?: boolean; cover_image_url?: string | null; category_id?: number | null },
 ) {
   return request.patch<MyLearningPath, MyLearningPath>(`/learning-paths/${id}`, payload)
 }
