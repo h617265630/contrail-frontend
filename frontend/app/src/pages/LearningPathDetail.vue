@@ -211,18 +211,19 @@ onMounted(async () => {
         }
 
         modules.value = (detail.path_items || []).map((it: any) => {
+          // type 显示原始 resource_kind 或 resource_type
           const rk = String(it?.resource_data?.resource_kind || it?.resource_data?.resource_type || it?.resource_type || '').toLowerCase()
-          const uiType: Module['type'] = rk === 'video' ? 'video' : rk === 'clip' ? 'article' : 'document'
+          const uiType: Module['type'] = rk === 'video' ? 'video' : rk === 'clip' ? 'clip' : rk === 'link' ? 'link' : rk === 'document' ? 'document' : rk === 'article' ? 'article' : 'unknown'
           return {
-          id: it.id,
-          resourceId: it.resource_id,
-          title: it.title || (it.resource_data?.title || `Resource ${it.resource_id}`),
-          description: it.description || (it.resource_data?.description || ''),
-          type: uiType,
-          duration: it.resource_data?.duration || '',
-          level: 'Beginner',
-          resource_data: it.resource_data || null,
-        }
+            id: it.id,
+            resourceId: it.resource_id,
+            title: it.title || (it.resource_data?.title || `Resource ${it.resource_id}`),
+            description: it.description || (it.resource_data?.description || ''),
+            type: uiType,
+            duration: '', // duration 字段隐藏
+            level: 'Beginner',
+            resource_data: it.resource_data || null,
+          }
         })
         loading.value = false
         return

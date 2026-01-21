@@ -332,8 +332,8 @@ class ResourceCURD:
             title=title,
             description=description,
             resource_type=LinkResource.__mapper_args__["polymorphic_identity"],
-            # User-created resources should not automatically become public.
-            is_public=False,
+            # 新建资源默认公开
+            is_public=True,
             url=url,
             source=source,
             category=category,
