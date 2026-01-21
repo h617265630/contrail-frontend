@@ -1,10 +1,12 @@
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
 from app.models.learning_path import LearningPath
 from app.models.category import Category
 from app.models.user_learning_path import UserLearningPath
 from app.models.path_item import PathItem
 from app.models.resource import Resource, ResourceType
+
 class LearningPathCURD:
     @staticmethod
     def create_learning_path(
@@ -128,14 +130,19 @@ class LearningPathCURD:
         item = PathItem(
             learning_path_id=learning_path_id,
             resource_id=resource_id,
-            title=title,
-            resource_type=resource_type.value,
             position=position,
             description=description,
         )
         db.add(item)
-        db.commit()
-        db.refresh(item)
+        try:
+            db.commit()
+            db.refresh(item)
+        except IntegrityError:
+            db.rollback()
+            raise ValueError("Duplicate path item: position or resource already exists in this learning path")
+        except Exception as e:
+            db.rollback()
+            raise ValueError(f"Failed to add resource to learning path: {e}")
         return item
 
     @staticmethod

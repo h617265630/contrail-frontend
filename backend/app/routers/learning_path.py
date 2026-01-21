@@ -71,6 +71,18 @@ def _to_resource_response(obj: Resource) -> ResourceResponse:
 	)
 
 
+def _to_resource_kind(obj: Resource | None) -> ResourceKind:
+	if obj is None:
+		return ResourceKind.link
+	rt = getattr(obj, "resource_type", None)
+	val = rt.value if hasattr(rt, "value") else (str(rt) if rt is not None else "")
+	val = (val or "").strip().lower()
+	try:
+		return ResourceKind(val)
+	except Exception:
+		return ResourceKind.link
+
+
 @router.post("/", response_model=LearningPathResponse, status_code=status.HTTP_201_CREATED)
 def create_learning_path(
 	payload: LearningPathCreate,
@@ -115,15 +127,16 @@ def get_public_learning_path_detail(
 		res = getattr(it, "resource", None)
 		resource_data = None
 		# Public endpoint: only embed if the referenced resource is public.
-		if res is not None and bool(getattr(res, "is_public", False)):
+		is_public_resource = res is not None and bool(getattr(res, "is_public", False))
+		if is_public_resource:
 			resource_data = _to_resource_response(res)
 		items.append(
 			PathItemInLearningPathResponse(
 				id=it.id,
 				learning_path_id=it.learning_path_id,
 				resource_id=it.resource_id,
-				resource_type=it.resource_type,
-				title=it.title,
+				resource_type=_to_resource_kind(res) if is_public_resource else ResourceKind.link,
+				title=(getattr(res, "title", "") if is_public_resource else ""),
 				position=it.position,
 				description=it.description,
 				resource_data=resource_data,
@@ -226,8 +239,8 @@ def get_learning_path_detail(
 				id=it.id,
 				learning_path_id=it.learning_path_id,
 				resource_id=it.resource_id,
-				resource_type=it.resource_type,  # 与 ResourceKind 的值兼容
-				title=it.title,
+				resource_type=_to_resource_kind(res),
+				title=(getattr(res, "title", None) or f"Resource {it.resource_id}"),
 				position=it.position,
 				description=it.description,
 				resource_data=resource_data,
@@ -292,21 +305,32 @@ def add_resource_to_learning_path(
 ):
 	_ensure_ownership(db, current_user.id, learning_path_id)
 
-	item = LearningPathCURD.add_resource_to_learning_path(
-		db=db,
-		learning_path_id=learning_path_id,
-		resource_id=payload.resource_id,
-		resource_type=payload.resource_type.value,
-		title=payload.title,
-		description=payload.description,
-		position=payload.position,
-	)
+	try:
+		item = LearningPathCURD.add_resource_to_learning_path(
+			db=db,
+			learning_path_id=learning_path_id,
+			resource_id=payload.resource_id,
+			resource_type=payload.resource_type.value,
+			title=payload.title,
+			description=payload.description,
+			position=payload.position,
+		)
+	except ValueError as e:
+		raise HTTPException(status_code=400, detail=str(e))
+	except Exception as e:
+		# Ensure any failed transaction is rolled back before returning.
+		try:
+			db.rollback()
+		except Exception:
+			pass
+		raise HTTPException(status_code=400, detail=f"添加失败: {e}")
+	res = db.query(Resource).filter(Resource.id == item.resource_id).first()
 	return PathItemInLearningPathResponse(
 		id=item.id,
 		learning_path_id=item.learning_path_id,
 		resource_id=item.resource_id,
-		resource_type=item.resource_type,
-		title=item.title,
+		resource_type=_to_resource_kind(res),
+		title=(getattr(res, "title", None) or f"Resource {item.resource_id}"),
 		position=item.position,
 		description=item.description,
 		resource_data=None,
@@ -342,8 +366,8 @@ def list_path_items(
 			id=it.id,
 			learning_path_id=it.learning_path_id,
 			resource_id=it.resource_id,
-			resource_type=it.resource_type,
-			title=it.title,
+			resource_type=_to_resource_kind(getattr(it, "resource", None)),
+			title=(getattr(getattr(it, "resource", None), "title", None) or f"Resource {it.resource_id}"),
 			position=it.position,
 			description=it.description,
 			resource_data=None,

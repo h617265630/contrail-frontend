@@ -81,14 +81,9 @@ class PathItemCURD:
             ).scalar()
             position = (max_pos or 0) + 1
 
-        if title is None:
-            title = getattr(res, "title", f"Resource {res.id}")
-
         item = PathItem(
             learning_path_id=learning_path_id,
             resource_id=resource_id,
-            resource_type=resource_type.value,
-            title=title,
             description=description,
             position=position,
         )
@@ -146,8 +141,6 @@ class PathItemCURD:
         if not item:
             return None
 
-        if title is not None:
-            item.title = title
         if description is not None:
             item.description = description
         if position is not None:
