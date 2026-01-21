@@ -67,10 +67,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { Clock, Layers } from 'lucide-vue-next'
-import { learningPoolPaths } from '../data/learningPool'
+import { listPublicLearningPaths, type PublicLearningPath } from '../api/learningPath'
 
 type Module = {
   id: string
@@ -84,7 +84,16 @@ type Module = {
 const route = useRoute()
 const id = computed(() => String(route.params.id || ''))
 
-const path = computed(() => learningPoolPaths.find(p => p.id === id.value) || null)
+const path = ref<any | null>(null)
+
+onMounted(async () => {
+  try {
+    const db = await listPublicLearningPaths()
+    path.value = db.find((p) => String(p.id) === id.value) || null
+  } catch {
+    path.value = null
+  }
+})
 
 function typeBadge(type: Module['type']) {
   switch (type) {
@@ -98,18 +107,19 @@ function typeBadge(type: Module['type']) {
 }
 
 const modules = computed<Module[]>(() => {
-  const baseTitle = path.value?.title || `Path ${id.value}`
-  const levels: Module['level'][] = ['Beginner', 'Intermediate', 'Advanced']
-  const types: Module['type'][] = ['video', 'document', 'article']
-
-  // 生成示例模块（后续可替换为真实后端数据）
-  return Array.from({ length: 8 }).map((_, idx) => ({
-    id: `${id.value}-${idx + 1}`,
-    title: `${baseTitle} · Module ${idx + 1}`,
-    description: '这里是模块简介（示例）。后续可以接入真实的资源列表与进度。',
-    type: types[idx % types.length],
-    duration: `${20 + idx * 5} min`,
-    level: levels[Math.min(levels.length - 1, Math.floor(idx / 3))],
-  }))
+  // 兼容无 path_items 的情况
+  if (!path.value || !Array.isArray(path.value.path_items)) return []
+  return (path.value.path_items || []).map((it: any, idx: number) => {
+    const rk = String(it?.resource_data?.resource_kind || it?.resource_data?.resource_type || it?.resource_type || '').toLowerCase()
+    const uiType: Module['type'] = rk === 'video' ? 'video' : rk === 'clip' ? 'article' : 'document'
+    return {
+      id: String(it.id),
+      title: it.title || (it.resource_data?.title || `Resource ${it.resource_id}`),
+      description: it.description || (it.resource_data?.description || ''),
+      type: uiType,
+      duration: '',
+      level: 'Beginner',
+    }
+  })
 })
 </script>

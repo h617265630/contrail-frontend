@@ -158,13 +158,12 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { learningPoolCategories, learningPoolPaths, type LearningPoolPath } from '../data/learningPool'
-import { RouterLink } from 'vue-router'
 import { listPublicLearningPaths, type PublicLearningPath } from '../api/learningPath'
+import { RouterLink } from 'vue-router'
 
-const categories = [...learningPoolCategories]
+const categories = ['AI','Frontend','Backend','DevOps','Database','Design','Product','Career']
 
-function inferCategoryFromText(text: string): LearningPoolPath['category'] {
+function inferCategoryFromText(text: string): string {
   const t = text.toLowerCase()
   if (t.includes('ai') || t.includes('llm') || t.includes('rag') || t.includes('agent')) return 'AI'
   if (t.includes('front') || t.includes('vue') || t.includes('react') || t.includes('css')) return 'Frontend'
@@ -177,7 +176,7 @@ function inferCategoryFromText(text: string): LearningPoolPath['category'] {
   return 'Backend'
 }
 
-const allPaths = ref<LearningPoolPath[]>([...learningPoolPaths])
+const allPaths = ref<any[]>([])
 
 function mapDbToPool(p: PublicLearningPath): LearningPoolPath {
   const title = String(p.title || '').trim() || `Path ${p.id}`
@@ -200,8 +199,7 @@ onMounted(async () => {
   try {
     const db = await listPublicLearningPaths()
     const mapped = (db || []).map(mapDbToPool)
-    const existing = new Set(allPaths.value.map(p => p.id))
-    allPaths.value = [...allPaths.value, ...mapped.filter(p => !existing.has(p.id))]
+    allPaths.value = mapped
   } catch {
     // keep static fallback
   }

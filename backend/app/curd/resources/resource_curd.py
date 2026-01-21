@@ -371,7 +371,8 @@ class ResourceCURD:
 
     @staticmethod
     def list_public(db: Session) -> list[Resource]:
-        return db.query(Resource).filter(Resource.is_public.is_(True)).order_by(Resource.id.desc()).all()
+        from app.models.resources.link import LinkResource
+        return db.query(LinkResource).filter(LinkResource.is_public.is_(True)).order_by(LinkResource.id.desc()).all()
 
     @staticmethod
     def create_from_url(

@@ -124,11 +124,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
-import { learningPoolPaths } from '../data/learningPool'
 import Card from '../components/ui/Card.vue'
 import { useI18n } from '../i18n'
+import { listPublicLearningPaths, type PublicLearningPath } from '../api/learningPath'
 
 const { t } = useI18n()
 
@@ -147,48 +147,7 @@ interface FeaturedPath {
 	duration: string
 }
 
-const featuredPaths = ref<FeaturedPath[]>([
-	{
-		id: 'lp-1',
-		title: 'Full Stack Web Development',
-		description: 'Hands-on projects across frontend, backend, database, and deployment',
-		thumbnail: 'https://images.unsplash.com/photo-1523475472560-d2df97ec485c?w=400&h=240&fit=crop',
-		level: 'Advanced',
-		duration: '24h',
-	},
-	{
-		id: 'lp-2',
-		title: 'Frontend Mastery',
-		description: 'UI/UX, component architecture, performance, and design systems',
-		thumbnail: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=240&fit=crop',
-		level: 'Intermediate',
-		duration: '18h',
-	},
-	{
-		id: 'lp-3',
-		title: 'AI Engineer Foundations',
-		description: 'ML, deep learning, and LLM fundamentals to real-world applications',
-		thumbnail: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=240&fit=crop',
-		level: 'Intermediate',
-		duration: '20h',
-	},
-	{
-		id: 'lp-4',
-		title: 'DevOps Fundamentals',
-		description: 'CI/CD, containers, Kubernetes, and observability essentials',
-		thumbnail: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400&h=240&fit=crop',
-		level: 'Beginner',
-		duration: '16h',
-	},
-	{
-		id: 'lp-5',
-		title: 'Data & Visualization',
-		description: 'Data analysis, SQL, visualization, and dashboard building',
-		thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=240&fit=crop',
-		level: 'Beginner',
-		duration: '14h',
-	},
-])
+const featuredPaths = ref<FeaturedPath[]>([])
 
 function pickRandom<T>(items: T[], count: number) {
 	const arr = [...items]
@@ -208,15 +167,33 @@ function pickRandomWithReplacement<T>(items: T[], count: number) {
 	return out
 }
 
-const randomPoolPaths = computed<FeaturedPath[]>(() => {
-	const picks = pickRandomWithReplacement(learningPoolPaths, 24)
-	return picks.map(p => ({
-		id: p.id,
-		title: p.title,
-		description: p.description,
-		thumbnail: p.thumbnail,
-		level: p.level,
-		duration: `${p.items} items`,
-	}))
+const randomPoolPaths = ref<FeaturedPath[]>([])
+
+onMounted(async () => {
+	try {
+		const db = await listPublicLearningPaths()
+		// 取前5个作为 featuredPaths
+		featuredPaths.value = db.slice(0, 5).map((p) => ({
+			id: String(p.id),
+			title: p.title,
+			description: p.description || '',
+			thumbnail: p.cover_image_url || '',
+			level: 'Beginner',
+			duration: '',
+		}))
+		// 随机取24个作为 randomPoolPaths
+		const picks = pickRandomWithReplacement(db, 24)
+		randomPoolPaths.value = picks.map((p) => ({
+			id: String(p.id),
+			title: p.title,
+			description: p.description || '',
+			thumbnail: p.cover_image_url || '',
+			level: 'Beginner',
+			duration: '',
+		}))
+	} catch {
+		featuredPaths.value = []
+		randomPoolPaths.value = []
+	}
 })
 </script>

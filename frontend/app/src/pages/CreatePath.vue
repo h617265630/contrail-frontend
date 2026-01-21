@@ -303,7 +303,7 @@
             <button
               type="button"
               class="w-full px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              :disabled="!pathMeta.title.trim()"
+              :disabled="!pathMeta.title.trim() || selected.length === 0"
               @click="createLearningPath"
             >
               创建 LearningPath
@@ -319,10 +319,8 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ChevronDown, Plus, Search, X } from 'lucide-vue-next'
-import { resourceSeed, type Resource } from '../data/resources'
-import { addMyLearningPath } from '../data/myPaths'
-import { listAllResources, upsertResource } from '../data/resourcesStore'
-import { createLearningPathWithCategory } from '../api/learningPath'
+import { createMyResourceFromUrl, listMyResources, type DbResource } from '../api/resource'
+import { addResourceToMyLearningPath, createLearningPathWithCategory } from '../api/learningPath'
 import { listCategories, type Category } from '../api/category'
 
 type PathMeta = {
@@ -333,16 +331,28 @@ type PathMeta = {
   coverImageUrl: string
 }
 
+type ResourceKind = 'video' | 'clip' | 'link' | 'unknown'
+type ResourceType = 'video' | 'document' | 'article' | 'clip' | 'link'
+
+type UiResource = {
+  id: number
+  title: string
+  description: string
+  url: string | null
+  type: ResourceType
+  resource_kind: ResourceKind
+  category: string
+  thumbnail: string
+}
+
 const router = useRouter()
 
-const allResources = ref<Resource[]>(listAllResources())
+const allResources = ref<UiResource[]>([])
 const searchQuery = ref('')
 
 const newResourceUrl = ref('')
 const newResourceError = ref('')
 const newResourceLoading = ref(false)
-
-const defaultThumbnail = resourceSeed[0]?.thumbnail ?? ''
 
 const filteredResources = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
@@ -350,7 +360,7 @@ const filteredResources = computed(() => {
   return allResources.value.filter(r => r.title.toLowerCase().includes(q) || r.description.toLowerCase().includes(q))
 })
 
-const selected = ref<Resource[]>([])
+const selected = ref<UiResource[]>([])
 
 const selectedDragState = reactive({
   draggingId: '' as string,
@@ -436,10 +446,11 @@ async function loadCategories() {
 
 onMounted(() => {
   loadCategories()
+  void loadResources()
   if (!pathMeta.coverImageUrl) selectCover(defaultCoverUrls[0] || '')
 })
 
-function typeBadge(type: Resource['type']) {
+function typeBadge(type: UiResource['type']) {
   switch (type) {
     case 'video':
       return 'bg-purple-50 text-purple-700'
@@ -447,74 +458,50 @@ function typeBadge(type: Resource['type']) {
       return 'bg-blue-50 text-blue-700'
     case 'article':
       return 'bg-green-50 text-green-700'
+    case 'clip':
+      return 'bg-gray-100 text-gray-700'
+    case 'link':
+      return 'bg-gray-100 text-gray-700'
   }
 }
 
-function inferTypeFromUrl(url: URL): Resource['type'] {
-  const host = url.hostname.toLowerCase()
-  const path = url.pathname.toLowerCase()
-  if (host.includes('youtube.com') || host.includes('youtu.be') || host.includes('bilibili.com') || host.includes('vimeo.com')) {
-    return 'video'
-  }
-  if (path.endsWith('.mp4') || path.endsWith('.mov') || path.endsWith('.m4v') || path.endsWith('.webm')) {
-    return 'video'
-  }
-  return 'document'
+function normalizePresentedType(raw: unknown): ResourceType {
+  const t = String(raw || '').trim().toLowerCase()
+  if (t === 'video') return 'video'
+  if (t === 'document') return 'document'
+  if (t === 'article') return 'article'
+  if (t === 'clip') return 'clip'
+  if (t === 'link') return 'link'
+  return 'article'
 }
 
-async function fetchMetaForUrl(url: URL): Promise<{ title: string; description: string; thumbnail: string } | null> {
-  const href = url.toString()
-  const host = url.hostname.toLowerCase()
+function normalizeResourceKind(raw: unknown): ResourceKind {
+  const t = String(raw || '').trim().toLowerCase()
+  if (t === 'video') return 'video'
+  if (t === 'clip') return 'clip'
+  if (t === 'link') return 'link'
+  return 'unknown'
+}
 
-  // Prefer oEmbed where available (often supports CORS)
-  try {
-    if (host.includes('youtube.com') || host.includes('youtu.be')) {
-      const endpoint = `https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(href)}`
-      const res = await fetch(endpoint)
-      if (res.ok) {
-        const data = (await res.json()) as { title?: string; thumbnail_url?: string }
-        return {
-          title: data.title ?? '',
-          description: '',
-          thumbnail: data.thumbnail_url ?? '',
-        }
-      }
-    }
-    if (host.includes('vimeo.com')) {
-      const endpoint = `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(href)}`
-      const res = await fetch(endpoint)
-      if (res.ok) {
-        const data = (await res.json()) as { title?: string; description?: string; thumbnail_url?: string }
-        return {
-          title: data.title ?? '',
-          description: data.description ?? '',
-          thumbnail: data.thumbnail_url ?? '',
-        }
-      }
-    }
-  } catch {
-    // ignore and fallback
+function toUiResource(r: DbResource): UiResource {
+  return {
+    id: Number(r.id),
+    title: String(r.title || '').trim() || `Resource ${r.id}`,
+    description: String(r.description || '').trim(),
+    url: (r.url ?? null) as any,
+    type: normalizePresentedType(r.resource_type),
+    resource_kind: normalizeResourceKind((r as any).resource_kind ?? null),
+    category: String((r as any)?.category_name || r.category || 'Uncategorized'),
+    thumbnail: String((r as any)?.thumbnail_url || '').trim(),
   }
+}
 
-  // Fallback: fetch HTML and parse OpenGraph (may fail due to CORS)
+async function loadResources() {
   try {
-    const res = await fetch(href)
-    if (!res.ok) return null
-    const html = await res.text()
-    const doc = new DOMParser().parseFromString(html, 'text/html')
-    const ogTitle = doc.querySelector('meta[property="og:title"]')?.getAttribute('content') ?? ''
-    const ogDesc = doc.querySelector('meta[property="og:description"]')?.getAttribute('content') ?? ''
-    const ogImg = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') ?? ''
-    const title = ogTitle || doc.querySelector('title')?.textContent?.trim() || ''
-    const description = ogDesc || doc.querySelector('meta[name="description"]')?.getAttribute('content') || ''
-
-    return {
-      title,
-      description,
-      thumbnail: ogImg,
-    }
+    const rows = await listMyResources()
+    allResources.value = Array.isArray(rows) ? rows.map(toUiResource) : []
   } catch {
-    return null
+    allResources.value = []
   }
 }
 
@@ -536,50 +523,39 @@ async function createResourceFromUrl() {
     return
   }
 
-  const exists = allResources.value.some(r => r.url === parsed.toString())
+  const exists = allResources.value.some(r => (r.url || '') === parsed.toString())
   if (exists) {
     newResourceError.value = '该链接已存在于资源列表'
     return
   }
 
   newResourceLoading.value = true
-  const meta = await fetchMetaForUrl(parsed)
-  newResourceLoading.value = false
-
-  const type = inferTypeFromUrl(parsed)
-  const hostLabel = parsed.hostname.replace(/^www\./, '')
-  const today = new Date().toISOString().slice(0, 10)
-
-  if (!meta) {
-    // Most common reason is CORS; keep UX simple but informative.
-    newResourceError.value = '已生成资源，但无法自动抓取标题/简介/图片（可能是跨域限制）'
+  try {
+    await createMyResourceFromUrl(parsed.toString())
+    newResourceUrl.value = ''
+    await loadResources()
+  } catch (e: any) {
+    newResourceError.value = String(e?.response?.data?.detail || e?.message || '生成失败')
+  } finally {
+    newResourceLoading.value = false
   }
-
-  const resource: Resource = {
-    id: `u_${Date.now()}_${Math.random().toString(16).slice(2)}`,
-    title: meta?.title?.trim() || hostLabel || 'External Resource',
-    description: meta?.description?.trim() || '从链接生成的资源',
-    url: parsed.toString(),
-    type,
-    category: 'Custom',
-    thumbnail: meta?.thumbnail?.trim() || defaultThumbnail,
-    addedDate: today,
-    source: hostLabel || 'External',
-  }
-
-  // Save to resource “database” (localStorage)
-  upsertResource(resource)
-  allResources.value = listAllResources()
-  newResourceUrl.value = ''
 }
 
-function addResource(resource: Resource) {
+function addResource(resource: UiResource) {
   if (selected.value.some(r => r.id === resource.id)) return
   selected.value = [...selected.value, resource]
+
+  // Rule: cover uses the first resource thumbnail.
+  const firstThumb = String(selected.value[0]?.thumbnail || '').trim()
+  if (firstThumb) selectCover(firstThumb)
 }
 
-function removeResource(id: string) {
+function removeResource(id: number) {
   selected.value = selected.value.filter(r => r.id !== id)
+
+  // Rule: cover uses the first resource thumbnail.
+  const firstThumb = String(selected.value[0]?.thumbnail || '').trim()
+  if (firstThumb) selectCover(firstThumb)
 }
 
 function clearSelected() {
@@ -600,12 +576,13 @@ function onDrop(e: DragEvent) {
 
   // 2) Add from resources panel
   const resourceId = e.dataTransfer?.getData('text/plain') || ''
-  const hit = allResources.value.find(r => r.id === resourceId)
+  const n = Number(resourceId)
+  const hit = Number.isFinite(n) ? allResources.value.find(r => r.id === n) : undefined
   if (hit) addResource(hit)
 }
 
-function handleDragStart(e: DragEvent, resource: Resource) {
-  e.dataTransfer?.setData('text/plain', resource.id)
+function handleDragStart(e: DragEvent, resource: UiResource) {
+  e.dataTransfer?.setData('text/plain', String(resource.id))
   e.dataTransfer!.effectAllowed = 'copy'
 }
 
@@ -653,33 +630,40 @@ function onSelectedDragEnd() {
 
 async function createLearningPath() {
   if (!pathMeta.title.trim()) return
+  if (selected.value.length === 0) return
 
-  // 1) Create in backend (sync learning_paths table + is_public)
-  // If backend call fails, we still create locally to avoid blocking the UX.
-  let backendId: string | null = null
+  // Rule: cover_image_url always uses the first resource thumbnail.
+  const coverUrl = String(selected.value[0]?.thumbnail || '').trim() || null
+  if (coverUrl) selectCover(coverUrl)
+
   try {
     const createdDb = await createLearningPathWithCategory({
       title: pathMeta.title,
       description: pathMeta.description,
       is_public: pathMeta.isPublic,
-      cover_image_url: pathMeta.coverImageUrl || null,
+      cover_image_url: coverUrl,
       category_id: pathMeta.categoryId,
     })
-    backendId = String(createdDb?.id ?? '').trim() || null
-  } catch {
-    backendId = null
+
+    const lpId = Number((createdDb as any)?.id)
+    if (!Number.isFinite(lpId) || lpId <= 0) throw new Error('创建失败：无效的 learning path id')
+
+    for (let i = 0; i < selected.value.length; i++) {
+      const r = selected.value[i]
+      await addResourceToMyLearningPath(lpId, {
+        resource_type: (r.resource_kind === 'unknown' ? 'link' : r.resource_kind) as any,
+        resource_id: r.id,
+        title: r.title,
+        description: r.description || undefined,
+        position: i + 1,
+      })
+    }
+
+    router.push({ name: 'learningpath', params: { id: String(lpId) }, query: { from: 'my-paths' } })
+  } catch (e: any) {
+    alert(String(e?.response?.data?.detail || e?.message || '创建失败'))
+    return
   }
-
-  // 2) Create locally for current UI flows
-  const created = addMyLearningPath({
-    id: backendId ?? undefined,
-    title: pathMeta.title,
-    description: pathMeta.description,
-    resources: selected.value,
-  })
-
-  alert('创建成功')
-  router.push({ name: 'learningpath', params: { id: created.id } })
 
   pathMeta.title = ''
   pathMeta.description = ''

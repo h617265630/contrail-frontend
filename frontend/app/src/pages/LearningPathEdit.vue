@@ -304,10 +304,13 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { ChevronDown, Plus, Search, X } from 'lucide-vue-next'
-import { type Resource } from '../data/resources'
-import { getMyLearningPath, updateMyLearningPath } from '../data/myPaths'
-import { listAllResources } from '../data/resourcesStore'
-import { getMyLearningPathDetail, updateMyLearningPath as updateMyLearningPathDb } from '../api/learningPath'
+import {
+  addResourceToMyLearningPath,
+  getMyLearningPathDetail,
+  removeResourceFromMyLearningPath,
+  updateMyLearningPath as updateMyLearningPathDb,
+} from '../api/learningPath'
+import { listMyResources, type DbResource } from '../api/resource'
 import { listCategories, type Category } from '../api/category'
 
 type PathMeta = {
@@ -316,6 +319,19 @@ type PathMeta = {
   isPublic: boolean
   categoryId: number | null
   coverImageUrl: string
+}
+
+type ResourceKind = 'video' | 'clip' | 'link' | 'unknown'
+type ResourceType = 'video' | 'document' | 'article' | 'clip' | 'link'
+
+type UiResource = {
+  id: number
+  title: string
+  description: string
+  type: ResourceType
+  resource_kind: ResourceKind
+  category: string
+  thumbnail: string
 }
 
 const route = useRoute()
@@ -328,7 +344,7 @@ const categories = ref<Category[]>([])
 const categoriesLoading = ref(false)
 const categoriesError = ref('')
 
-const allResources = ref<Resource[]>(listAllResources())
+const allResources = ref<UiResource[]>([])
 const searchQuery = ref('')
 
 const filteredResources = computed(() => {
@@ -337,7 +353,7 @@ const filteredResources = computed(() => {
   return allResources.value.filter(r => r.title.toLowerCase().includes(q) || r.description.toLowerCase().includes(q))
 })
 
-const selected = ref<Resource[]>([])
+const selected = ref<UiResource[]>([])
 const meta = reactive<PathMeta>({ title: '', description: '', isPublic: true, categoryId: null, coverImageUrl: '' })
 
 const coverFileInput = ref<HTMLInputElement | null>(null)
@@ -420,7 +436,7 @@ const selectedDragState = reactive({
   overIndex: -1 as number,
 })
 
-function typeBadge(type: Resource['type']) {
+function typeBadge(type: UiResource['type']) {
   switch (type) {
     case 'video':
       return 'bg-purple-50 text-purple-700'
@@ -428,16 +444,66 @@ function typeBadge(type: Resource['type']) {
       return 'bg-blue-50 text-blue-700'
     case 'article':
       return 'bg-green-50 text-green-700'
+    case 'clip':
+      return 'bg-gray-100 text-gray-700'
+    case 'link':
+      return 'bg-gray-100 text-gray-700'
   }
 }
 
-function addResource(resource: Resource) {
-  if (selected.value.some(r => r.id === resource.id)) return
-  selected.value = [...selected.value, resource]
+function normalizePresentedType(raw: unknown): ResourceType {
+  const t = String(raw || '').trim().toLowerCase()
+  if (t === 'video') return 'video'
+  if (t === 'document') return 'document'
+  if (t === 'article') return 'article'
+  if (t === 'clip') return 'clip'
+  if (t === 'link') return 'link'
+  return 'article'
 }
 
-function removeResource(id: string) {
+function normalizeResourceKind(raw: unknown): ResourceKind {
+  const t = String(raw || '').trim().toLowerCase()
+  if (t === 'video') return 'video'
+  if (t === 'clip') return 'clip'
+  if (t === 'link') return 'link'
+  return 'unknown'
+}
+
+function toUiResource(r: DbResource): UiResource {
+  return {
+    id: Number(r.id),
+    title: String(r.title || '').trim() || `Resource ${r.id}`,
+    description: String(r.description || '').trim(),
+    type: normalizePresentedType((r as any)?.resource_type),
+    resource_kind: normalizeResourceKind((r as any)?.resource_kind ?? null),
+    category: String((r as any)?.category_name || r.category || 'Uncategorized'),
+    thumbnail: String((r as any)?.thumbnail_url || '').trim(),
+  }
+}
+
+async function loadResources() {
+  try {
+    const rows = await listMyResources()
+    allResources.value = Array.isArray(rows) ? rows.map(toUiResource) : []
+  } catch {
+    allResources.value = []
+  }
+}
+
+function addResource(resource: UiResource) {
+  if (selected.value.some(r => r.id === resource.id)) return
+  selected.value = [...selected.value, resource]
+
+  // Rule: cover uses the first resource thumbnail.
+  const firstThumb = String(selected.value[0]?.thumbnail || '').trim()
+  if (firstThumb) selectCover(firstThumb)
+}
+
+function removeResource(id: number) {
   selected.value = selected.value.filter(r => r.id !== id)
+
+  const firstThumb = String(selected.value[0]?.thumbnail || '').trim()
+  if (firstThumb) selectCover(firstThumb)
 }
 
 function clearSelected() {
@@ -458,12 +524,13 @@ function onDrop(e: DragEvent) {
 
   // 2) Add from resources panel
   const resourceId = e.dataTransfer?.getData('text/plain') || ''
-  const hit = allResources.value.find(r => r.id === resourceId)
+  const n = Number(resourceId)
+  const hit = Number.isFinite(n) ? allResources.value.find(r => r.id === n) : undefined
   if (hit) addResource(hit)
 }
 
-function handleDragStart(e: DragEvent, resource: Resource) {
-  e.dataTransfer?.setData('text/plain', resource.id)
+function handleDragStart(e: DragEvent, resource: UiResource) {
+  e.dataTransfer?.setData('text/plain', String(resource.id))
   if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copy'
 }
 
@@ -479,12 +546,12 @@ function moveSelected(fromIndex: number, toIndex: number) {
   selected.value = next
 }
 
-function onSelectedDragStart(e: DragEvent, id: string, idx: number) {
+function onSelectedDragStart(e: DragEvent, id: number, idx: number) {
   selectedDragState.draggingId = id
   selectedDragState.fromIndex = idx
   selectedDragState.overIndex = idx
 
-  e.dataTransfer?.setData('application/x-selected-resource-id', id)
+  e.dataTransfer?.setData('application/x-selected-resource-id', String(id))
   e.dataTransfer?.setData('application/x-selected-resource-from', String(idx))
   if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
 }
@@ -509,71 +576,117 @@ function onSelectedDragEnd() {
 }
 
 async function save() {
-  const id = String(route.params.id || '')
-  if (!id) return
   if (!meta.title.trim()) return
 
+  const lpId = Number(idNum.value)
+  if (!Number.isFinite(lpId) || lpId <= 0) return
+
+  // Rule: cover uses first item thumbnail.
+  const coverUrl = String(selected.value[0]?.thumbnail || '').trim() || null
+  if (coverUrl) selectCover(coverUrl)
+
   // 1) Persist meta to backend so LearningPool can see public paths.
-  if (Number.isFinite(idNum.value)) {
-    try {
-      await updateMyLearningPathDb(idNum.value, {
-        title: meta.title,
-        description: meta.description,
-        is_public: meta.isPublic,
-        cover_image_url: meta.coverImageUrl || null,
-        category_id: meta.categoryId,
-      })
-    } catch (e: any) {
-      alert(String(e?.response?.data?.detail || e?.message || '保存失败'))
-      return
-    }
+  try {
+    await updateMyLearningPathDb(lpId, {
+      title: meta.title,
+      description: meta.description,
+      is_public: meta.isPublic,
+      cover_image_url: coverUrl,
+      category_id: meta.categoryId,
+    })
+  } catch (e: any) {
+    alert(String(e?.response?.data?.detail || e?.message || '保存失败'))
+    return
   }
 
-  // 2) Keep existing local update for current UI flows (resourceIds builder).
-  updateMyLearningPath(id, {
-    title: meta.title,
-    description: meta.description,
-    resourceIds: selected.value.map(r => r.id),
-  })
+  // 2) Rebuild items to match current selection + order.
+  try {
+    const detail = await getMyLearningPathDetail(lpId)
+    const existing = Array.isArray((detail as any)?.path_items) ? (detail as any).path_items : []
+    for (const it of existing) {
+      const rid = Number((it as any)?.resource_id)
+      if (Number.isFinite(rid) && rid > 0) {
+        await removeResourceFromMyLearningPath(lpId, rid)
+      }
+    }
+
+    for (let i = 0; i < selected.value.length; i++) {
+      const r = selected.value[i]
+      await addResourceToMyLearningPath(lpId, {
+        resource_type: (r.resource_kind === 'unknown' ? 'link' : r.resource_kind) as any,
+        resource_id: r.id,
+        title: r.title,
+        description: r.description || undefined,
+        position: i + 1,
+      })
+    }
+  } catch (e: any) {
+    alert(String(e?.response?.data?.detail || e?.message || '保存路径内容失败'))
+    return
+  }
 
   router.push({ name: 'my-paths' })
 }
 
-onMounted(async () => {
-  await loadCategories()
+async function load() {
+  loaded.value = false
+  exists.value = false
 
   if (!meta.coverImageUrl) selectCover(defaultCoverUrls[0] || '')
 
-  const id = String(route.params.id || '')
-  const local = id ? getMyLearningPath(id) : null
-  exists.value = Boolean(local)
-
-  // Prefer DB meta fields when possible.
-  if (Number.isFinite(idNum.value)) {
-    try {
-      const db = await getMyLearningPathDetail(idNum.value)
-      if (db) {
-        exists.value = true
-        meta.title = String(db.title || '')
-        meta.description = String(db.description || '')
-        meta.isPublic = Boolean(db.is_public)
-        meta.categoryId = (db.category_id ?? null) as any
-        const cover = String((db as any)?.cover_image_url || '').trim()
-        if (cover) selectCover(cover)
-      }
-    } catch {
-      // fallback to local
-    }
+  const lpId = Number(idNum.value)
+  if (!Number.isFinite(lpId) || lpId <= 0) {
+    loaded.value = true
+    exists.value = false
+    return
   }
 
-  if (local) {
-    if (!meta.title) meta.title = local.title
-    if (!meta.description) meta.description = local.description
+  await Promise.all([loadCategories(), loadResources()])
+
+  try {
+    const db = await getMyLearningPathDetail(lpId)
+    exists.value = true
+    meta.title = String((db as any)?.title || '')
+    meta.description = String((db as any)?.description || '')
+    meta.isPublic = Boolean((db as any)?.is_public)
+    meta.categoryId = ((db as any)?.category_id ?? null) as any
+
+    const cover = String((db as any)?.cover_image_url || '').trim()
+    if (cover) selectCover(cover)
 
     const byId = new Map(allResources.value.map(r => [r.id, r]))
-    selected.value = local.resourceIds.map(rid => byId.get(rid)).filter(Boolean) as Resource[]
-  }
+    const items = Array.isArray((db as any)?.path_items) ? (db as any).path_items : []
+    const next: UiResource[] = []
+    for (const it of items) {
+      const rid = Number((it as any)?.resource_id)
+      const rdata = (it as any)?.resource_data
+      if (rdata && typeof rdata === 'object') {
+        next.push({
+          id: rid,
+          title: String((rdata as any)?.title || `Resource ${rid}`),
+          description: String((rdata as any)?.description || ''),
+          type: normalizePresentedType((rdata as any)?.resource_type),
+          resource_kind: normalizeResourceKind((rdata as any)?.resource_kind ?? (it as any)?.resource_type),
+          category: String((rdata as any)?.category_name || (rdata as any)?.category || 'Uncategorized'),
+          thumbnail: String((rdata as any)?.thumbnail_url || '').trim(),
+        })
+      } else {
+        const hit = byId.get(rid)
+        if (hit) next.push(hit)
+      }
+    }
+    selected.value = next
 
-  loaded.value = true
+    const firstThumb = String(selected.value[0]?.thumbnail || '').trim()
+    if (firstThumb) selectCover(firstThumb)
+  } catch {
+    exists.value = false
+  } finally {
+    loaded.value = true
+  }
+}
+
+onMounted(() => {
+  void load()
 })
 </script>

@@ -112,7 +112,6 @@ import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { BookOpen, Download, FileText, GraduationCap, Link as LinkIcon, Sparkles, UserRound } from 'lucide-vue-next'
 import { getMyResourceDetail, getResourceDetail, resolvePublicResourceIdByUrl, type DbResourceDetail } from '../api/resource'
 import { getMyProgressForItem, upsertMyProgress } from '../api/progress'
-import { getResourceById } from '../data/resourcesStore'
 
 const route = useRoute()
 const router = useRouter()
@@ -216,18 +215,14 @@ async function load() {
     const dbId = resourceIdNumber.value
     if (dbId == null) {
       const raw = resourceId.value
-      const legacy = getResourceById(raw)
-      const legacyUrl = legacy?.url
-      if (legacyUrl) {
-        try {
-          const resolved = await resolvePublicResourceIdByUrl(legacyUrl)
-          router.replace({ name: 'resource-document', params: { id: String(resolved.id) } })
-          return
-        } catch {
-          throw new Error('该链接使用旧的本地资源ID，但未能在数据库中找到对应资源。请到 Resources 页面重新添加该链接。')
-        }
+      const urlCandidate = decodeURIComponent(raw)
+      try {
+        const resolved = await resolvePublicResourceIdByUrl(urlCandidate)
+        router.replace({ name: 'resource-document', params: { id: String(resolved.id) } })
+        return
+      } catch {
+        throw new Error('Invalid resource id')
       }
-      throw new Error('Invalid resource id')
     }
     const isMy = String(route.path || '').startsWith('/my-resources')
     const data = isMy ? await getMyResourceDetail(dbId) : await getResourceDetail(dbId)

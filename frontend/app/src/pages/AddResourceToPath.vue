@@ -158,15 +158,7 @@
                   class="space-y-2"
                 >
                   <div
-                    :class="[
-                      'flex items-start gap-3 rounded-xl border bg-white p-3 transition cursor-grab active:cursor-grabbing',
-                      draftDragState.draggingId === it.id ? 'border-pink-200 bg-pink-50/40' : 'border-slate-200',
-                    ]"
-                    draggable="true"
-                    @dragstart="onDraftDragStart($event, it.id, idx)"
-                    @dragend="onDraftDragEnd"
-                    @dragover.prevent="onDraftDragOver(idx)"
-                    @drop.prevent="onDraftDrop($event, idx)"
+                    class="flex items-start gap-3 rounded-xl border bg-white p-3 transition border-slate-200"
                   >
                     <div class="h-7 w-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-xs font-semibold shrink-0">
                       {{ idx + 1 }}
@@ -182,12 +174,7 @@
                     </div>
                   </div>
 
-                  <div
-                    v-if="idx !== draftItems.length - 1"
-                    class="h-2"
-                    @dragover.prevent
-                    @drop.prevent="onDraftDrop($event, idx + 1)"
-                  />
+                  <div v-if="idx !== draftItems.length - 1" class="h-2" />
                 </div>
               </div>
             </div>
@@ -199,12 +186,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 import { addResourceToMyLearningPath, listMyLearningPaths, type MyLearningPath } from '../api/learningPath'
-import { getResourceById, listAllResources } from '../data/resourcesStore'
-import type { Resource } from '../data/resources'
 import { getMyResourceDetail, getResourceDetail, type DbResourceDetail } from '../api/resource'
 
 const route = useRoute()
@@ -214,17 +199,23 @@ const resourceId = computed(() => (route.params.id as string) || '')
 
 const resourceLoading = ref(false)
 const resourceError = ref('')
-const resourceFromDb = ref<Resource | null>(null)
+type UiResource = {
+  id: string
+  title: string
+  description: string
+  url: string
+  type: 'video' | 'document' | 'article'
+  category: string
+  thumbnail: string
+  duration?: string
+  pages?: number
+}
+
+const resourceFromDb = ref<UiResource | null>(null)
 const isDragging = ref(false)
 const isOverDropZone = ref(false)
 const saving = ref(false)
-const draftResourceIds = ref<string[]>([])
-
-const draftDragState = reactive({
-  draggingId: '' as string,
-  fromIndex: -1 as number,
-  overIndex: -1 as number,
-})
+const pendingAdd = ref(false)
 
 const paths = ref<MyLearningPath[]>([])
 const selectedPathId = ref<number | null>(null)
@@ -251,8 +242,8 @@ watch(
   { immediate: true },
 )
 
-const resource = computed<Resource | null>(() => {
-  return resourceFromDb.value ?? getResourceById(resourceId.value) ?? null
+const resource = computed<UiResource | null>(() => {
+  return resourceFromDb.value
 })
 
 const selectedPath = computed<MyLearningPath | null>(() => {
@@ -264,7 +255,7 @@ watch(
   selectedPathId,
   () => {
     // We don't load full existing items here; only track a pending add.
-    draftResourceIds.value = []
+    pendingAdd.value = false
   },
   { immediate: true },
 )
@@ -272,28 +263,25 @@ watch(
 const hasDraftChange = computed(() => {
   if (!selectedPath.value) return false
   if (!resource.value) return false
-  return draftResourceIds.value.includes(String(resource.value.id))
+  return pendingAdd.value
 })
 
-const draftItems = computed<Resource[]>(() => {
-  const byId = new Map(listAllResources().map(r => [r.id, r]))
-  // Ensure the “resource to add” can be displayed even when it comes from DB
-  const r = resource.value
-  if (r) byId.set(r.id, r)
-  return draftResourceIds.value.map(id => byId.get(id)).filter(Boolean) as Resource[]
+const draftItems = computed<UiResource[]>(() => {
+  if (!pendingAdd.value) return []
+  return resource.value ? [resource.value] : []
 })
 
-function normalizeUiType(raw: string): Resource['type'] {
+function normalizeUiType(raw: string): UiResource['type'] {
   const t = String(raw || '').trim().toLowerCase()
-  if (t === 'document') return 'document'
-  if (t === 'article') return 'article'
-  return 'video'
+  if (t === 'video') return 'video'
+  if (t === 'clip' || t === 'article') return 'article'
+  return 'document'
 }
 
-function mapDbToUi(detail: DbResourceDetail): Resource {
+function mapDbToUi(detail: DbResourceDetail): UiResource {
   const fallbackThumb = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=225&fit=crop'
-  const routeType = normalizeUiType(resourceType.value)
-  const uiType = normalizeUiType(detail.resource_type) || routeType
+  const kind = String((detail as any).resource_kind || detail.resource_type || '').trim()
+  const uiType = normalizeUiType(kind || resourceType.value)
   return {
     id: String(detail.id),
     title: String(detail.title || ''),
@@ -304,8 +292,6 @@ function mapDbToUi(detail: DbResourceDetail): Resource {
     thumbnail: String(detail.thumbnail_url || fallbackThumb),
     duration: undefined,
     pages: undefined,
-    addedDate: String(detail.created_at || ''),
-    source: String(detail.source || 'youtube'),
   }
 }
 
@@ -328,10 +314,7 @@ async function loadDbResourceIfNeeded() {
     resourceFromDb.value = mapDbToUi(detail)
   } catch (e: any) {
     const msg = e?.response?.data?.detail || e?.message || ''
-    // 允许 fallback 到 resourcesStore，因此这里只在完全找不到本地资源时提示错误
-    if (!getResourceById(raw)) {
-      resourceError.value = String(msg || 'Failed to load resource')
-    }
+    resourceError.value = String(msg || 'Failed to load resource')
   } finally {
     resourceLoading.value = false
   }
@@ -366,64 +349,12 @@ function onDragEnd() {
 function onDrop(e: DragEvent) {
   isOverDropZone.value = false
 
-  // 1) Reorder inside selected list: drop to empty area -> move to end
-  const reorderId = (e.dataTransfer?.getData('application/x-selected-resource-id') || '').trim()
-  const reorderFromStr = (e.dataTransfer?.getData('application/x-selected-resource-from') || '').trim()
-  if (reorderId && reorderFromStr) {
-    const fromIndex = Number(reorderFromStr)
-    if (Number.isFinite(fromIndex)) {
-      moveDraft(fromIndex, draftResourceIds.value.length - 1)
-    }
-    return
-  }
-
-  // 2) Add from left resource panel
+  // Add from left resource panel
   const rid = (e.dataTransfer?.getData('application/x-resource-id') || e.dataTransfer?.getData('text/plain') || '').trim()
   if (!rid) return
-  if (!draftResourceIds.value.includes(rid)) {
-    draftResourceIds.value = [...draftResourceIds.value, rid]
+  if (resource.value && String(resource.value.id) === rid) {
+    pendingAdd.value = true
   }
-}
-
-function moveDraft(fromIndex: number, toIndex: number) {
-  if (fromIndex === toIndex) return
-  if (fromIndex < 0 || fromIndex >= draftResourceIds.value.length) return
-  if (toIndex < 0) toIndex = 0
-  if (toIndex >= draftResourceIds.value.length) toIndex = draftResourceIds.value.length - 1
-
-  const next = [...draftResourceIds.value]
-  const [item] = next.splice(fromIndex, 1)
-  next.splice(toIndex, 0, item)
-  draftResourceIds.value = next
-}
-
-function onDraftDragStart(e: DragEvent, id: string, idx: number) {
-  draftDragState.draggingId = id
-  draftDragState.fromIndex = idx
-  draftDragState.overIndex = idx
-
-  e.dataTransfer?.setData('application/x-selected-resource-id', id)
-  e.dataTransfer?.setData('application/x-selected-resource-from', String(idx))
-  if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
-}
-
-function onDraftDragOver(idx: number) {
-  draftDragState.overIndex = idx
-}
-
-function onDraftDrop(e: DragEvent, dropIndex: number) {
-  const fromStr = (e.dataTransfer?.getData('application/x-selected-resource-from') || '').trim()
-  if (!fromStr) return
-  const fromIndex = Number(fromStr)
-  if (!Number.isFinite(fromIndex)) return
-  moveDraft(fromIndex, dropIndex)
-}
-
-function onDraftDragEnd() {
-  draftDragState.draggingId = ''
-  draftDragState.fromIndex = -1
-  draftDragState.overIndex = -1
-  isOverDropZone.value = false
 }
 
 async function confirmAddToPath() {
@@ -441,7 +372,7 @@ async function confirmAddToPath() {
       title: resource.value.title,
       description: resource.value.description,
     })
-    draftResourceIds.value = []
+    pendingAdd.value = false
     await loadPaths()
   } catch (e: any) {
     const msg = e?.response?.data?.detail || e?.message || 'Failed to add to path'

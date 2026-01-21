@@ -163,13 +163,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute, RouterLink, useRouter } from 'vue-router'
 import { BookOpen, Clock, Home as HomeIcon, Layers, Library } from 'lucide-vue-next'
-import { learningPoolPaths } from '../data/learningPool'
-import { addMyLearningPath, getMyLearningPath } from '../data/myPaths'
-import { getResourceById, listAllResources } from '../data/resourcesStore'
-import { addLearningPathComment, listLearningPathComments, type LearningPathComment } from '../data/learningPathComments'
+import { getPublicLearningPathDetail, getMyLearningPathDetail, attachPublicLearningPathToMe } from '../api/learningPath'
 
 type Module = {
   id: string
@@ -187,41 +184,55 @@ const id = computed(() => String(route.params.id || ''))
 
 const fromMyPaths = computed(() => String(route.query.from || '') === 'my-paths')
 
-const currentTab = computed(() => (route.path.startsWith('/resources') ? 'resourceLibrary' : 'learningPath'))
+const path = ref<any | null>(null)
+const modules = ref<any[]>([])
+ 
+const loading = ref(false)
+const error = ref('')
 
-const poolPath = computed(() => learningPoolPaths.find(p => p.id === id.value) || null)
+onMounted(async () => {
+  loading.value = true
+  error.value = ''
+  try {
+    const raw = String(route.params.id || '')
+    const isMy = fromMyPaths.value
+    if (/^\d+$/.test(raw)) {
+      const nid = Number(raw)
+      const detail = isMy ? await getMyLearningPathDetail(nid) : await getPublicLearningPathDetail(nid)
+      if (detail) {
+        path.value = {
+          id: detail.id,
+          title: detail.title,
+          description: detail.description,
+          thumbnail: String(detail.cover_image_url || '') || '',
+          category: detail.category_name || 'Learning Path',
+          level: detail.is_public ? 'Public' : 'Private',
+          items: Array.isArray(detail.path_items) ? detail.path_items.length : 0,
+        }
 
-const myPath = computed(() => getMyLearningPath(id.value))
-
-const path = computed(() => {
-  // If user came from My Paths list, prefer the saved path display.
-  if (fromMyPaths.value) {
-    if (!myPath.value) return null
-
-    const cover = myPath.value.resourceIds[0] ? getResourceById(myPath.value.resourceIds[0]) : null
-    return {
-      id: myPath.value.id,
-      title: myPath.value.title,
-      description: myPath.value.description,
-      thumbnail: cover?.thumbnail || '',
-      category: 'My Paths',
-      level: 'Custom',
-      items: myPath.value.resourceIds.length,
+        modules.value = (detail.path_items || []).map((it: any) => {
+          const rk = String(it?.resource_data?.resource_kind || it?.resource_data?.resource_type || it?.resource_type || '').toLowerCase()
+          const uiType: Module['type'] = rk === 'video' ? 'video' : rk === 'clip' ? 'article' : 'document'
+          return {
+          id: it.id,
+          resourceId: it.resource_id,
+          title: it.title || (it.resource_data?.title || `Resource ${it.resource_id}`),
+          description: it.description || (it.resource_data?.description || ''),
+          type: uiType,
+          duration: it.resource_data?.duration || '',
+          level: 'Beginner',
+          resource_data: it.resource_data || null,
+        }
+        })
+        loading.value = false
+        return
+      }
     }
-  }
-
-  if (poolPath.value) return poolPath.value
-  if (!myPath.value) return null
-
-  const cover = myPath.value.resourceIds[0] ? getResourceById(myPath.value.resourceIds[0]) : null
-  return {
-    id: myPath.value.id,
-    title: myPath.value.title,
-    description: myPath.value.description,
-    thumbnail: cover?.thumbnail || '',
-    category: 'My Paths',
-    level: 'Custom',
-    items: myPath.value.resourceIds.length,
+    error.value = 'Learning path not found'
+  } catch (e: any) {
+    error.value = String(e?.response?.data?.detail || e?.message || '加载失败')
+  } finally {
+    loading.value = false
   }
 })
 
@@ -245,25 +256,7 @@ function openUseThisPath() {
     startLearning()
     return
   }
-  // Pre-checks to show a friendly modal instead of alert().
-  if (myPath.value) {
-    showUseModal.value = true
-    useModalState.value = 'done'
-    useModalTitle.value = '已保存'
-    useModalMessage.value = '该路径已经在 My Paths 里了。'
-    useModalHint.value = ''
-    return
-  }
-
-  if (!poolPath.value) {
-    showUseModal.value = true
-    useModalState.value = 'error'
-    useModalTitle.value = '无法保存'
-    useModalMessage.value = '该路径暂不支持保存。'
-    useModalHint.value = ''
-    return
-  }
-
+  // Public path: confirm attach-to-me.
   showUseModal.value = true
   useModalState.value = 'confirm'
   useModalTitle.value = 'Use this path'
@@ -279,33 +272,25 @@ function closeUseModal() {
 
 async function confirmUseThisPath() {
   if (usingThisPath.value) return
-  if (!poolPath.value) return
+  const raw = String(route.params.id || '').trim()
+  if (!/^\d+$/.test(raw)) return
 
   usingThisPath.value = true
   try {
-    const title = poolPath.value.title
-    const description = poolPath.value.description
-
-    const all = listAllResources()
-    const count = Math.min(8, all.length)
-    const created = addMyLearningPath({
-      id: poolPath.value.id,
-      title,
-      description,
-      resources: all.slice(0, count),
-    })
-
+    const nid = Number(raw)
+    const res = await attachPublicLearningPathToMe(nid)
     useModalState.value = 'done'
-    useModalTitle.value = '保存成功'
-    useModalMessage.value = '已保存到 My Paths。'
+    useModalTitle.value = res?.already_exists ? '已保存' : '保存成功'
+    useModalMessage.value = res?.already_exists ? '该路径已经在 My Paths 里了。' : '已保存到 My Paths。'
     useModalHint.value = ''
-
-    // Keep previous behavior: stay on the same detail route.
-    router.push({ name: 'learningpath', params: { id: created.id } })
+    const nextId = res?.learning_path?.id
+    if (typeof nextId === 'number') {
+      router.push({ name: 'learningpath', params: { id: String(nextId) }, query: { from: 'my-paths' } })
+    }
   } catch (e: any) {
     useModalState.value = 'error'
     useModalTitle.value = '保存失败'
-    useModalMessage.value = String(e?.message || '保存失败')
+    useModalMessage.value = String(e?.response?.data?.detail || e?.message || '保存失败')
     useModalHint.value = ''
   } finally {
     usingThisPath.value = false
@@ -326,72 +311,30 @@ function typeBadge(type: Module['type']) {
 function openResource(resourceId: string, type: Module['type']) {
   if (!resourceId) return
   if (type === 'video') {
-    router.push({ name: 'resource-video', params: { id: resourceId } })
+    router.push({ name: 'resource-video', params: { id: String(resourceId) } })
     return
   }
-  router.push({ name: 'resource-document', params: { id: resourceId } })
+  router.push({ name: 'resource-document', params: { id: String(resourceId) } })
 }
-
-const modules = computed<Module[]>(() => {
-  // MyPaths：优先展示真实资源列表
-  if (myPath.value) {
-    const levels: Module['level'][] = ['Beginner', 'Intermediate', 'Advanced']
-    return myPath.value.resourceIds
-      .map((rid, idx) => {
-        const r = getResourceById(rid)
-        if (!r) return null
-        return {
-          id: `${id.value}-${rid}`,
-          resourceId: rid,
-          title: r.title,
-          description: r.description,
-          type: r.type,
-          duration: r.duration || (typeof r.pages === 'number' ? `${r.pages} pages` : '—'),
-          level: levels[Math.min(levels.length - 1, Math.floor(idx / 3))],
-        } as Module
-      })
-      .filter(Boolean) as Module[]
-  }
-
-  // LearningPool：用资源库里的真实资源填充，保证点击可直接学习
-  const resources = listAllResources()
-  const levels: Module['level'][] = ['Beginner', 'Intermediate', 'Advanced']
-  const count = Math.min(8, resources.length)
-  return Array.from({ length: count }).map((_, idx) => {
-    const r = resources[idx]
-    return {
-      id: `${id.value}-${r.id}`,
-      resourceId: r.id,
-      title: r.title,
-      description: r.description,
-      type: r.type,
-      duration: r.duration || (typeof r.pages === 'number' ? `${r.pages} pages` : '—'),
-      level: levels[Math.min(levels.length - 1, Math.floor(idx / 3))],
-    }
-  })
-})
-
+// Comments (in-memory only; no local mock data dependency)
+type LearningPathComment = { id: string; text: string; createdAt: string }
 const commentDraft = ref('')
 const comments = ref<LearningPathComment[]>([])
 
 watch(
   id,
-  (nextId) => {
-    comments.value = nextId ? listLearningPathComments(nextId) : []
+  () => {
+    comments.value = []
     commentDraft.value = ''
   },
   { immediate: true },
 )
 
 function submitComment() {
-  if (!id.value) return
-  try {
-    addLearningPathComment(id.value, commentDraft.value)
-    comments.value = listLearningPathComments(id.value)
-    commentDraft.value = ''
-  } catch {
-    // ignore empty
-  }
+  const text = String(commentDraft.value || '').trim()
+  if (!text) return
+  comments.value = [{ id: `${Date.now()}`, text, createdAt: new Date().toISOString() }, ...comments.value]
+  commentDraft.value = ''
 }
 
 function formatTime(iso: string) {

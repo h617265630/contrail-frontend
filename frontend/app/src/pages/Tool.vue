@@ -11,14 +11,6 @@
               <button
                 type="button"
                 class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold"
-                :class="activeTab === 'resource' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
-                @click="selectTab('resource')"
-              >
-                Resource
-              </button>
-              <button
-                type="button"
-                class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold"
                 :class="activeTab === 'category' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
                 @click="selectTab('category')"
               >
@@ -27,10 +19,34 @@
               <button
                 type="button"
                 class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold"
+                :class="activeTab === 'resource' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
+                @click="selectTab('resource')"
+              >
+                Resource
+              </button>
+                 <button
+                type="button"
+                class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold"
                 :class="activeTab === 'learningpath' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
                 @click="selectTab('learningpath')"
               >
                 LearningPath
+              </button>
+              <button
+                type="button"
+                class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold"
+                :class="activeTab === 'myresource' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
+                @click="selectTab('myresource')"
+              >
+                MyResource
+              </button>
+              <button
+                type="button"
+                class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold"
+                :class="activeTab === 'mylearningpath' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
+                @click="selectTab('mylearningpath')"
+              >
+                MyPath
               </button>
             </div>
           </div>
@@ -63,7 +79,7 @@
           </div>
 
           <div v-else class="mt-4 rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-            <div v-if="activeTab === 'resource'">
+            <div v-if="activeTab === 'resource' || activeTab === 'myresource'">
               <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
                   <thead class="text-left text-slate-500">
@@ -148,10 +164,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { listCategories, type Category } from '../api/category'
-import { listPublicLearningPaths, type PublicLearningPath } from '../api/learningPath'
-import { listResources, type DbResource } from '../api/resource'
+import { listMyLearningPaths, listPublicLearningPaths, type PublicLearningPath } from '../api/learningPath'
+import { listMyResources, listResources, type DbResource } from '../api/resource'
 
-type Tab = 'resource' | 'category' | 'learningpath'
+type Tab = 'resource' | 'myresource' | 'category' | 'learningpath' | 'mylearningpath'
 
 const activeTab = ref<Tab>('resource')
 const loading = ref(false)
@@ -163,18 +179,21 @@ const learningPaths = ref<PublicLearningPath[]>([])
 
 const title = computed(() => {
   if (activeTab.value === 'resource') return 'Resources'
+  if (activeTab.value === 'myresource') return 'My Resources'
   if (activeTab.value === 'category') return 'Categories'
-  return 'LearningPaths'
+  if (activeTab.value === 'learningpath') return 'LearningPaths'
+  return 'My LearningPaths'
 })
 
 const subtitle = computed(() => {
   if (activeTab.value === 'resource') return `共 ${resources.value.length} 条`
+  if (activeTab.value === 'myresource') return `共 ${resources.value.length} 条`
   if (activeTab.value === 'category') return `共 ${categories.value.length} 条`
   return `共 ${learningPaths.value.length} 条`
 })
 
 async function loadResources() {
-  const data = await listResources()
+  const data = await (activeTab.value === 'myresource' ? listMyResources() : listResources())
   resources.value = Array.isArray(data) ? data : []
 }
 
@@ -184,7 +203,7 @@ async function loadCategories() {
 }
 
 async function loadLearningPaths() {
-  const data = await listPublicLearningPaths()
+  const data = await (activeTab.value === 'mylearningpath' ? listMyLearningPaths() : listPublicLearningPaths())
   learningPaths.value = Array.isArray(data) ? data : []
 }
 
@@ -192,7 +211,7 @@ async function loadTab(tab: Tab) {
   loading.value = true
   error.value = ''
   try {
-    if (tab === 'resource') {
+    if (tab === 'resource' || tab === 'myresource') {
       await loadResources()
     } else if (tab === 'category') {
       await loadCategories()

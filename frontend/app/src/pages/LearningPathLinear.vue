@@ -290,12 +290,6 @@ import {
 import { getMyLearningPathDetail, type MyLearningPathDetail } from '../api/learningPath'
 import { getMyResourceDetail, type DbResourceDetail } from '../api/resource'
 import { listMyProgressForLearningPath, type ProgressRow } from '../api/progress'
-import {
-  getMyPathResourceEntry,
-  loadMyPathResourceState,
-  saveMyPathResourceState,
-  setMyPathResourceEntry,
-} from '../data/myPathResourceState'
 
 type PathItem = {
   id: number
@@ -363,7 +357,7 @@ const path = computed(() => {
   }
 })
 
-const resourceState = ref(loadMyPathResourceState())
+const notesByPathItemId = ref<Record<number, string>>({})
 
 const editingNotes = ref<number | null>(null)
 const noteDraft = ref('')
@@ -392,7 +386,6 @@ const learningPath = computed<LearningPathData>(() => {
       const pid = Number(it.id)
       const progress = progressByPathItemId.value[pid] ?? 0
 
-      const entry = getMyPathResourceEntry(resourceState.value, String(lp.value?.id || ''), String(pid))
       return {
         id: pid,
         resourceId: Number(it.resource_id),
@@ -401,7 +394,7 @@ const learningPath = computed<LearningPathData>(() => {
         type,
         duration: type === 'video' ? '—' : '—',
         progress,
-        notes: entry.note ?? '',
+        notes: notesByPathItemId.value[pid] ?? '',
         completed: progress >= 100,
         thumbnail: (res?.thumbnail_url || '').trim() || 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=225&fit=crop',
       }
@@ -422,18 +415,14 @@ const learningPath = computed<LearningPathData>(() => {
 
 function startEdit(itemId: number) {
   editingNotes.value = itemId
-  const entry = getMyPathResourceEntry(resourceState.value, String(lp.value?.id || ''), String(itemId))
-  noteDraft.value = entry.note || ''
+  noteDraft.value = notesByPathItemId.value[itemId] || ''
 }
 
 function saveNotes(itemId: number) {
-  const current = getMyPathResourceEntry(resourceState.value, String(lp.value?.id || ''), String(itemId))
-  const next = setMyPathResourceEntry(resourceState.value, String(lp.value?.id || ''), String(itemId), {
-    ...current,
-    note: noteDraft.value,
-  })
-  resourceState.value = next
-  saveMyPathResourceState(next)
+  notesByPathItemId.value = {
+    ...notesByPathItemId.value,
+    [itemId]: noteDraft.value,
+  }
   editingNotes.value = null
   noteDraft.value = ''
 }

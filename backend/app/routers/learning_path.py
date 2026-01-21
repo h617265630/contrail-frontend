@@ -51,11 +51,15 @@ def _present_resource_type(obj: Resource) -> str:
 
 
 def _to_resource_response(obj: Resource) -> ResourceResponse:
+	rt = getattr(obj, "resource_type", None)
+	raw_kind = rt.value if hasattr(rt, "value") else (str(rt) if rt is not None else "")
+	raw_kind = (raw_kind or "").strip().lower() or "unknown"
 	return ResourceResponse(
 		id=obj.id,
 		title=obj.title,
 		description=getattr(obj, "description", None),
 		resource_type=_present_resource_type(obj),
+		resource_kind=raw_kind,
 		is_public=bool(getattr(obj, "is_public", True)),
 		url=getattr(obj, "url", None),
 		source=getattr(obj, "source", None),

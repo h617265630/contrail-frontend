@@ -22,6 +22,8 @@ class LearningPath(Base):
     users = relationship("User",back_populates="learning_paths",secondary="user_learning_paths")
     #path_items -learnging_paths 多对多关系
     path_items = relationship("PathItem", back_populates="learning_path",order_by="PathItem.position")
+    # 评论关系
+    comments = relationship("LearningPathComment", back_populates="learning_path", cascade="all, delete-orphan")
 
 
     def __repr__(self):

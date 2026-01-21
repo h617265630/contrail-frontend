@@ -27,6 +27,9 @@ class ResourceResponse(BaseModel):
     title: str
     description: Optional[str] = None
     resource_type: str
+    # Raw resource type stored in DB (video/clip/link). Frontend should use this
+    # when interacting with learning-path item APIs.
+    resource_kind: Optional[str] = None
 
     is_public: bool = True
 

@@ -50,15 +50,6 @@
               <Search class="w-4 h-4" />
               Search
             </button>
-
-            <button
-              type="button"
-              @click="openCreateModal"
-              class="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors flex items-center gap-2"
-            >
-              <Plus class="w-4 h-4" />
-              Add Resource
-            </button>
           </div>
         </div>
       </div>

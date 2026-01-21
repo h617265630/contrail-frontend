@@ -19,6 +19,8 @@ export interface DbResource {
   title: string
   description?: string | null
   resource_type: string
+  // Raw type stored in DB (video/clip/link). Use this when calling learning-path item APIs.
+  resource_kind?: string | null
 
   is_public?: boolean
   url?: string | null

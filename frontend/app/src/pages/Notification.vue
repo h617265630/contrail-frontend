@@ -97,19 +97,31 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { computed } from 'vue'
-import { RouterLink } from 'vue-router'
-import { learningPoolPaths, type LearningPoolPath } from '../data/learningPool'
 
-const hottest = computed<LearningPoolPath>(() => {
-  return [...learningPoolPaths].sort((a, b) => b.hotScore - a.hotScore)[0]
+<script setup lang="ts">
+import { ref } from 'vue'
+import { RouterLink } from 'vue-router'
+
+const hottest = ref({
+  id: '1',
+  title: 'AI Engineer Starter',
+  description: '入门 AI 工程师的系统路径',
+  thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=900&h=506&fit=crop',
+  category: 'AI',
+  level: 'Beginner',
+  items: 8,
+  hotScore: 99,
 })
 
-// Simplest definition of "stable" with existing data: the most complete path (max items).
-// Tie-breaker: higher hotScore.
-const stable = computed<LearningPoolPath>(() => {
-  return [...learningPoolPaths].sort((a, b) => (b.items - a.items) || (b.hotScore - a.hotScore))[0]
+const stable = ref({
+  id: '2',
+  title: 'Frontend Mastery',
+  description: '现代前端开发全栈路线',
+  thumbnail: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=900&h=506&fit=crop',
+  category: 'Frontend',
+  level: 'Intermediate',
+  items: 12,
+  hotScore: 88,
 })
 
 type NewsItem = {

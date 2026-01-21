@@ -60,16 +60,27 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
-import { learningPoolPaths, type LearningPoolPath } from '../data/learningPool'
 import Card from '../components/ui/Card.vue'
 import { listPublicLearningPaths, type PublicLearningPath } from '../api/learningPath'
 
 const route = useRoute()
 const category = computed(() => decodeURIComponent(String(route.params.category || '')))
 
-const dynamicPaths = ref<LearningPoolPath[]>([])
+type PoolCard = {
+  id: string
+  title: string
+  description: string
+  category: string
+  level: string
+  items: number
+  thumbnail: string
+  hotScore: number
+  isAI: boolean
+}
 
-function inferCategoryFromText(text: string): LearningPoolPath['category'] {
+const dynamicPaths = ref<PoolCard[]>([])
+
+function inferCategoryFromText(text: string): string {
   const t = text.toLowerCase()
   if (t.includes('ai') || t.includes('llm') || t.includes('rag') || t.includes('agent')) return 'AI'
   if (t.includes('front') || t.includes('vue') || t.includes('react') || t.includes('css')) return 'Frontend'
@@ -82,10 +93,10 @@ function inferCategoryFromText(text: string): LearningPoolPath['category'] {
   return 'Backend'
 }
 
-function mapDbToPool(p: PublicLearningPath): LearningPoolPath {
+function mapDbToPool(p: PublicLearningPath): PoolCard {
   const title = String(p.title || '').trim() || `Path ${p.id}`
   const description = String(p.description || '').trim()
-  const cat = inferCategoryFromText(`${title}\n${description}`)
+  const cat = String(p.category_name || '').trim() || inferCategoryFromText(`${title}\n${description}`)
   return {
     id: String(p.id),
     title,
@@ -109,9 +120,6 @@ onMounted(async () => {
 })
 
 const filteredPaths = computed(() => {
-  const combined = [...learningPoolPaths, ...dynamicPaths.value]
-  const byId = new Map<string, LearningPoolPath>()
-  for (const p of combined) byId.set(p.id, p)
-  return Array.from(byId.values()).filter(p => p.category === category.value)
+  return dynamicPaths.value.filter(p => p.category === category.value)
 })
 </script>

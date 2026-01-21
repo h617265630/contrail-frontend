@@ -7,9 +7,8 @@
           alt="Contrail"
           class="h-9 w-9"
         />
-        <span class="text-lg tracking-tight">
-          <span class="font-extrabold italic text-blue-600">C</span>
-          <span class="font-medium tracking-[0.12em] text-gray-900">ontrail</span>
+        <span class="text-lg font-semibold tracking-tight text-gray-900">
+          <span class="text-blue-600 font-bold">C</span><span>ontrail</span>
         </span>
       </RouterLink>
       <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-700">

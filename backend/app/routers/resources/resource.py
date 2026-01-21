@@ -11,6 +11,12 @@ from app.schemas.resources.resource import ResourceAttachResponse, ResourceCreat
 router = APIRouter(prefix="/resources", tags=["Resources"])
 
 
+def _raw_resource_kind(obj: Resource) -> str:
+    rt = getattr(obj, "resource_type", None)
+    val = rt.value if hasattr(rt, "value") else (str(rt) if rt is not None else "")
+    return (val or "").strip().lower() or "unknown"
+
+
 def _present_resource_type(obj: Resource) -> str:
     rt = getattr(obj, "resource_type", None)
     val = rt.value if hasattr(rt, "value") else (str(rt) if rt is not None else "")
@@ -95,7 +101,8 @@ def get_my_resource_detail(resource_id: int, db: Session = Depends(get_db_dep), 
         id=obj.id,
         title=obj.title,
         description=getattr(obj, "description", None),
-            resource_type=_present_resource_type(obj),
+        resource_type=_present_resource_type(obj),
+        resource_kind=_raw_resource_kind(obj),
         is_public=bool(getattr(obj, "is_public", True)),
         url=url,
         source=getattr(obj, "source", None),
@@ -119,7 +126,8 @@ def list_my_resources(db: Session = Depends(get_db_dep), current_user=Depends(ge
             id=r.id,
             title=r.title,
             description=getattr(r, "description", None),
-                resource_type=_present_resource_type(r),
+            resource_type=_present_resource_type(r),
+            resource_kind=_raw_resource_kind(r),
             is_public=bool(getattr(r, "is_public", True)),
             url=getattr(r, "url", None),
             source=getattr(r, "source", None),
@@ -141,7 +149,8 @@ def list_resources(db: Session = Depends(get_db_dep)):
             id=r.id,
             title=r.title,
             description=getattr(r, "description", None),
-                resource_type=_present_resource_type(r),
+            resource_type=_present_resource_type(r),
+            resource_kind=_raw_resource_kind(r),
             is_public=bool(getattr(r, "is_public", True)),
             url=getattr(r, "url", None),
             source=getattr(r, "source", None),
@@ -176,7 +185,8 @@ def get_resource_detail(resource_id: int, db: Session = Depends(get_db_dep)):
         id=obj.id,
         title=obj.title,
         description=getattr(obj, "description", None),
-            resource_type=_present_resource_type(obj),
+        resource_type=_present_resource_type(obj),
+        resource_kind=_raw_resource_kind(obj),
         is_public=bool(getattr(obj, "is_public", True)),
         url=url,
         source=getattr(obj, "source", None),
@@ -216,6 +226,7 @@ def create_my_resource(payload: ResourceCreateFromUrl, db: Session = Depends(get
         title=obj.title,
         description=getattr(obj, "description", None),
         resource_type=_present_resource_type(obj),
+        resource_kind=_raw_resource_kind(obj),
         is_public=bool(getattr(obj, "is_public", True)),
         url=getattr(obj, "url", None),
         source=getattr(obj, "source", None),
@@ -248,7 +259,8 @@ def add_public_resource_to_my_resources(
         id=obj.id,
         title=obj.title,
         description=getattr(obj, "description", None),
-            resource_type=_present_resource_type(obj),
+        resource_type=_present_resource_type(obj),
+        resource_kind=_raw_resource_kind(obj),
         is_public=bool(getattr(obj, "is_public", True)),
         url=getattr(obj, "url", None),
         source=getattr(obj, "source", None),
@@ -288,7 +300,8 @@ def add_public_resource_to_my_resources_with_status(
             id=obj.id,
             title=obj.title,
             description=getattr(obj, "description", None),
-                resource_type=_present_resource_type(obj),
+            resource_type=_present_resource_type(obj),
+            resource_kind=_raw_resource_kind(obj),
             is_public=bool(getattr(obj, "is_public", True)),
             url=getattr(obj, "url", None),
             source=getattr(obj, "source", None),
@@ -349,6 +362,7 @@ def update_my_resource(
         title=obj.title,
         description=getattr(obj, "description", None),
         resource_type=_present_resource_type(obj),
+        resource_kind=_raw_resource_kind(obj),
         is_public=bool(getattr(obj, "is_public", True)),
         url=getattr(obj, "url", None),
         source=getattr(obj, "source", None),

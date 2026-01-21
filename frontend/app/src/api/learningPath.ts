@@ -1,5 +1,5 @@
 import request from '../utils/request'
-import type { DbResourceDetail } from './resource'
+import type { DbResource } from './resource'
 
 export type PublicLearningPath = {
   id: number
@@ -21,7 +21,7 @@ export type PublicLearningPathDetail = PublicLearningPath & {
     title: string
     position: number
     description?: string | null
-    resource_data?: DbResourceDetail | null
+    resource_data?: DbResource | null
   }>
 }
 
@@ -90,4 +90,8 @@ export function addResourceToMyLearningPath(
   },
 ) {
   return request.post(`/learning-paths/${learningPathId}/items`, payload)
+}
+
+export function removeResourceFromMyLearningPath(learningPathId: number, resourceId: number) {
+  return request.delete(`/learning-paths/${learningPathId}/items/${resourceId}`)
 }

@@ -52,7 +52,7 @@
         :key="path.id"
         as="article"
         :hoverable="true"
-        className="rounded-2xl p-3 cursor-pointer"
+        className="rounded-2xl p-0 overflow-hidden cursor-pointer"
         @click="openDetail(path.id)"
       >
         <div class="rounded-xl overflow-hidden bg-gray-100 aspect-video relative">
@@ -60,7 +60,7 @@
             v-if="coverFor(path.id)"
             :src="coverFor(path.id)"
             :alt="path.title"
-            class="w-full h-full object-cover object-left-top"
+            class="w-full h-full object-cover object-top-left"
             loading="lazy"
           />
           <div
@@ -74,12 +74,12 @@
           </div>
         </div>
 
-        <div class="mt-3 min-w-0">
+        <div class="p-3 min-w-0">
           <h2 class="text-sm font-semibold text-gray-900 line-clamp-1">{{ path.title }}</h2>
           <p class="mt-1 text-gray-600 text-xs line-clamp-3">{{ path.description || '（无介绍）' }}</p>
         </div>
 
-        <div class="mt-3 flex items-center gap-2" @click.stop>
+        <div class="px-3 pb-3 flex items-center gap-2" @click.stop>
           <RouterLink
             :to="{ name: 'learningpath-edit', params: { id: String(path.id) } }"
             class="flex-1 px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-semibold text-center"
@@ -103,16 +103,16 @@
         :key="path.id"
         as="article"
         :hoverable="true"
-        className="rounded-2xl p-4 cursor-pointer"
+        className="rounded-2xl p-0 overflow-hidden cursor-pointer"
         @click="openDetail(path.id)"
       >
-        <div class="flex gap-4">
-          <div class="w-32 shrink-0 rounded-xl overflow-hidden bg-gray-100 aspect-video relative">
+        <div class="flex">
+          <div class="w-32 shrink-0 bg-gray-100 aspect-video relative">
             <img
               v-if="coverFor(path.id)"
               :src="coverFor(path.id)"
               :alt="path.title"
-              class="w-full h-full object-cover object-left-top"
+              class="w-full h-full object-cover object-top-left"
               loading="lazy"
             />
             <div
@@ -123,7 +123,7 @@
             </div>
           </div>
 
-          <div class="min-w-0 flex-1">
+          <div class="min-w-0 flex-1 p-4">
             <h2 class="text-base font-semibold text-gray-900 line-clamp-1">{{ path.title }}</h2>
             <p class="mt-1 text-gray-600 text-sm line-clamp-2">{{ path.description || '（无介绍）' }}</p>
 

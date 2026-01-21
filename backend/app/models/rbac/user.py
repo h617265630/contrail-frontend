@@ -3,8 +3,11 @@ from sqlalchemy.orm import relationship
 from app.db.database import Base
 from datetime import datetime
 
+
 class User(Base):
     __tablename__ = "users"
+    # 学习路径评论
+    learning_path_comments = relationship("LearningPathComment", back_populates="user", cascade="all, delete-orphan")
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, index=True, nullable=False)
@@ -96,5 +99,8 @@ class User(Base):
     @property
     def video_count(self):
         return len(self.videos)
+
+# 延迟导入，解决循环依赖导致的 LearningPathComment 未找到问题
+from app.models.learning_path_comment import LearningPathComment
 
 
