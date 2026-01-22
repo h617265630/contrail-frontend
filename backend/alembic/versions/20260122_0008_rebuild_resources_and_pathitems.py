@@ -76,7 +76,7 @@ def upgrade() -> None:
     # Keep using the existing postgres enum name 'resourcetype' if present.
     if bind.dialect.name == "postgresql":
         # Ensure the enum type exists (create only if missing).
-        # Also ensure new values exist (e.g. 'clip').
+        # Also ensure required values exist (enum is case-sensitive in Postgres).
         try:
             op.execute(
                 """
@@ -92,10 +92,12 @@ END$$;
             pass
 
         # Best-effort: add missing enum values when type already exists.
-        try:
-            op.execute("ALTER TYPE resourcetype ADD VALUE IF NOT EXISTS 'clip'")
-        except Exception:
-            pass
+        # (In legacy DBs, the enum may exist but miss some of these values or use different casing.)
+        for val in ("video", "document", "article", "link", "clip"):
+            try:
+                op.execute(f"ALTER TYPE resourcetype ADD VALUE IF NOT EXISTS '{val}'")
+            except Exception:
+                pass
 
         # IMPORTANT: use dialect ENUM + create_type=False so SQLAlchemy won't emit CREATE TYPE.
         resourcetype = postgresql.ENUM(

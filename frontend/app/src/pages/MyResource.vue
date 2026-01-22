@@ -263,16 +263,19 @@
 
         <div class="p-6 space-y-4">
           <div>
-            <label class="block text-gray-700 mb-2">Resource URL *</label>
-            <div class="relative">
-              <LinkIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="url"
-                placeholder="Paste YouTube URL"
-                v-model="urlInput"
-                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            <label class="block text-gray-700 mb-2">支持的平台（任选其一填写链接）</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div v-for="p in supportedPlatforms" :key="p.key" class="rounded-lg border border-gray-200 bg-white p-3">
+                <div class="text-xs font-semibold text-gray-700 mb-2">{{ p.label }}</div>
+                <input
+                  type="url"
+                  :placeholder="p.placeholder"
+                  v-model="(platformUrlInputs as any)[p.key]"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
+            <p class="mt-2 text-xs text-gray-500">已自动选择第一个非空输入作为解析与提交的 URL。</p>
             <p v-if="extractError" class="mt-2 text-sm text-red-600">{{ extractError }}</p>
           </div>
 
@@ -414,7 +417,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { BookOpen, ChevronDown, FileText, Grid3x3, Link as LinkIcon, List, Plus, Search, Tag, Video, X } from 'lucide-vue-next'
 import { createMyResourceFromUrl, deleteMyResource, extractVideoMetadata, listMyResources, type DbResource, type UrlExtractResponse } from '../api/resource'
@@ -455,7 +458,33 @@ const deleteTarget = ref<UiResource | null>(null)
 const deleteError = ref('')
 
 const showAddModal = ref(false)
-const urlInput = ref('')
+const platformUrlInputs = reactive({
+  youtube: '',
+  bilibili: '',
+  github: '',
+  medium: '',
+  reddit: '',
+  substack: '',
+  devto: '',
+})
+
+const supportedPlatforms = [
+  { key: 'youtube', label: 'YouTube', placeholder: 'https://www.youtube.com/watch?v=...' },
+  { key: 'bilibili', label: 'Bilibili', placeholder: 'https://www.bilibili.com/video/...' },
+  { key: 'github', label: 'GitHub', placeholder: 'https://github.com/... (repo / issue / doc)' },
+  { key: 'medium', label: 'Medium', placeholder: 'https://medium.com/.../...' },
+  { key: 'reddit', label: 'Reddit', placeholder: 'https://www.reddit.com/r/.../comments/...' },
+  { key: 'substack', label: 'Substack', placeholder: 'https://xxx.substack.com/p/...' },
+  { key: 'devto', label: 'Dev.to', placeholder: 'https://dev.to/.../...' },
+]
+
+const urlInput = computed(() => {
+  for (const p of supportedPlatforms) {
+    const v = String((platformUrlInputs as any)[p.key] || '').trim()
+    if (v) return v
+  }
+  return ''
+})
 const extracting = ref(false)
 const extractError = ref('')
 const extractedMeta = ref<UrlExtractResponse | null>(null)
@@ -560,7 +589,9 @@ function setView(mode: 'grid' | 'list') {
 
 function openAddModal() {
   showAddModal.value = true
-  urlInput.value = ''
+  for (const p of supportedPlatforms) {
+    ;(platformUrlInputs as any)[p.key] = ''
+  }
   if (!addCategoryId.value) {
     const other = dbCategories.value.find(c => String(c.code).toLowerCase() === 'other')
     addCategoryId.value = other ? String(other.id) : ''
@@ -572,7 +603,9 @@ function openAddModal() {
 
 function closeAddModal() {
   showAddModal.value = false
-  urlInput.value = ''
+  for (const p of supportedPlatforms) {
+    ;(platformUrlInputs as any)[p.key] = ''
+  }
   addCategoryId.value = ''
   extractedMeta.value = null
   extractError.value = ''
@@ -609,8 +642,8 @@ watch(
       extractTimer = null
     }
 
-    const url = (nextUrl || '').trim()
-    if (!url) {
+    const raw = String(nextUrl || '').trim()
+    if (!raw) {
       extracting.value = false
       return
     }
@@ -618,9 +651,7 @@ watch(
     extracting.value = true
     extractTimer = window.setTimeout(async () => {
       try {
-        // eslint-disable-next-line no-new
-        new URL(url)
-        const data = await extractVideoMetadata(url)
+        const data = await extractVideoMetadata(raw)
         extractedMeta.value = {
           ...data,
           title: (data?.title || '').trim(),
@@ -643,7 +674,7 @@ watch(
         extracting.value = false
       }
     }, 500)
-  }
+  },
 )
 
 function typeIcon(type: string) {

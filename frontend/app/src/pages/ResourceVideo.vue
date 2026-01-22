@@ -9,9 +9,49 @@
         <div class="space-y-3">
           <div class="rounded-2xl bg-black overflow-hidden shadow-sm">
             <div class="relative w-full aspect-video">
-              <div v-if="videoId" ref="playerEl" class="absolute inset-0 h-full w-full" />
+              <iframe
+                v-if="isYouTubeUrl(resource.source_url)"
+                :src="toYouTubeEmbed(resource.source_url)"
+                class="absolute inset-0 h-full w-full"
+                title="YouTube Video Player"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+              />
+              <div v-else-if="embedUrl"
+                :src="embedUrl"
+                class="absolute inset-0 h-full w-full"
+                title="Video preview"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+              />
               <div v-else class="absolute inset-0 flex items-center justify-center text-white/80">
                 Video preview is unavailable
+              </div>
+function isYouTubeUrl(url) {
+  if (!url) return false;
+  return /youtube\.com\/watch\?v=|youtu\.be\//.test(url);
+}
+
+function toYouTubeEmbed(url) {
+  if (!url) return '';
+  const match = url.match(/(?:youtube\\.com\/watch\\?v=|youtu\\.be\/)([\w-]+)/);
+  return match ? `https://www.youtube.com/embed/${match[1]}` : url;
+}
+
+              <div
+                v-if="playerFailed"
+                class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/50 px-6 text-center"
+              >
+                <div class="text-white/90 text-sm">
+                  Unable to load the embedded player. This is usually caused by network restrictions or browser extensions.
+                </div>
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-2 rounded-lg bg-white/90 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-white"
+                  @click="openSource"
+                >
+                  Open Source URL
+                </button>
               </div>
             </div>
           </div>
@@ -90,6 +130,17 @@
 </template>
 
 <script setup lang="ts">
+// --- YouTube iframe 强制播放工具函数 ---
+function isYouTubeUrl(url: string | undefined | null): boolean {
+  if (!url) return false;
+  return /youtube\.com\/watch\?v=|youtu\.be\//.test(url);
+}
+
+function toYouTubeEmbed(url: string | undefined | null): string {
+  if (!url) return '';
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+  return match ? `https://www.youtube.com/embed/${match[1]}` : url;
+}
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Calendar, Clock, Download, Link as LinkIcon, Play, UserRound } from 'lucide-vue-next'
@@ -102,7 +153,7 @@ const router = useRouter()
 const loading = ref(false)
 const error = ref('')
 
-const resource = ref<DbResourceDetail>({ id: 0, resource_type: 'video', title: '' })
+const resource = ref<DbResourceDetail>({ id: 0, resource_type: 'video', title: '', category_id: 0 })
 
 const startSeconds = ref(0)
 
@@ -128,6 +179,7 @@ declare global {
 
 const playerEl = ref<HTMLElement | null>(null)
 let ytPlayer: any | null = null
+const playerFailed = ref(false)
 
 function stopProgressTimer() {
   if (progressTimer != null) {
@@ -236,16 +288,34 @@ function formatDate(iso?: string | null) {
 const publishedText = computed(() => formatDate(resource.value.article?.published_at || null))
 const addedText = computed(() => formatDate(resource.value.created_at || null))
 
-const videoId = computed(() => String(resource.value.video?.video_id || '').trim())
+const videoId = computed(() => {
+  const fromDb = String(resource.value.video?.video_id || '').trim()
+  if (fromDb) return fromDb
+  const fromUrl = extractYouTubeId(String(resource.value.source_url || ''))
+  return String(fromUrl || '').trim()
+})
+
+const embedUrl = computed(() => {
+  const vid = String(videoId.value || '').trim()
+  if (vid) {
+    const start = Math.max(0, Number(startSeconds.value || 0))
+    const qs = start ? `?start=${start}&rel=0` : '?rel=0'
+    return `https://www.youtube.com/embed/${encodeURIComponent(vid)}${qs}`
+  }
+  const raw = String(resource.value.source_url || '').trim()
+  return raw || ''
+})
 
 function ensureYouTubeApi(): Promise<void> {
   if (window.YT && window.YT.Player) return Promise.resolve()
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error('YouTube iframe API load timeout')), 6000)
     const existing = document.querySelector('script[data-youtube-iframe-api="1"]') as HTMLScriptElement | null
     if (existing) {
       const prev = window.onYouTubeIframeAPIReady
       window.onYouTubeIframeAPIReady = () => {
         prev?.()
+        window.clearTimeout(timeout)
         resolve()
       }
       return
@@ -255,30 +325,54 @@ function ensureYouTubeApi(): Promise<void> {
     script.src = 'https://www.youtube.com/iframe_api'
     script.async = true
     script.setAttribute('data-youtube-iframe-api', '1')
+    script.onerror = () => {
+      window.clearTimeout(timeout)
+      reject(new Error('YouTube iframe API load error'))
+    }
     document.head.appendChild(script)
-    window.onYouTubeIframeAPIReady = () => resolve()
+    window.onYouTubeIframeAPIReady = () => {
+      window.clearTimeout(timeout)
+      resolve()
+    }
   })
 }
 
 async function initPlayer() {
   if (!playerEl.value) return
   if (!videoId.value) return
-  await ensureYouTubeApi()
-  if (!window.YT?.Player) return
+  playerFailed.value = false
+  try {
+    await ensureYouTubeApi()
+  } catch {
+    playerFailed.value = true
+    return
+  }
+  if (!window.YT?.Player) {
+    playerFailed.value = true
+    return
+  }
 
   try {
     ytPlayer?.destroy?.()
   } catch {
     // ignore
   }
-  ytPlayer = new window.YT.Player(playerEl.value, {
-    videoId: videoId.value,
-    playerVars: {
-      start: Math.max(0, startSeconds.value || 0),
-      rel: 0,
-      modestbranding: 1,
-    },
-  })
+  try {
+    ytPlayer = new window.YT.Player(playerEl.value, {
+      videoId: videoId.value,
+      playerVars: {
+        start: Math.max(0, startSeconds.value || 0),
+        rel: 0,
+      },
+      events: {
+        onReady: () => {
+          void startProgressTimer()
+        },
+      },
+    })
+  } catch {
+    playerFailed.value = true
+  }
 }
 
 async function load() {

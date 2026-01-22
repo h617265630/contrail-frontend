@@ -88,6 +88,7 @@
                       <th class="py-2 pr-3">Title</th>
                       <th class="py-2 pr-3">Type</th>
                       <th class="py-2 pr-3">Platform</th>
+                      <th class="py-2 pr-3">Category</th>
                       <th class="py-2 pr-3">Summary</th>
                       <th class="py-2 pr-3">Source URL</th>
                     </tr>
@@ -98,6 +99,7 @@
                       <td class="py-2 pr-3">{{ r.title }}</td>
                       <td class="py-2 pr-3 whitespace-nowrap">{{ r.resource_type }}</td>
                       <td class="py-2 pr-3 whitespace-nowrap">{{ r.platform || '—' }}</td>
+                      <td class="py-2 pr-3 whitespace-nowrap">{{ r.category_name || r.category_id || '—' }}</td>
                       <td class="py-2 pr-3">{{ r.summary || '—' }}</td>
                       <td class="py-2 pr-3">
                         <a v-if="r.source_url" :href="r.source_url" target="_blank" class="text-blue-600 hover:underline break-all">{{ r.source_url }}</a>
