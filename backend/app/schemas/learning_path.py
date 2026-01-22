@@ -1,16 +1,14 @@
-from typing import Optional, Union, List
+from typing import Optional, List
 from enum import Enum
 from pydantic import BaseModel
 
-from app.schemas.resources.video import VideoResponse
-from app.schemas.resources.clip import ClipResponse
 from app.schemas.resources.resource import ResourceResponse
 
 
 class ResourceKind(str, Enum):
     video = "video"
-    clip = "clip"
-    link = "link"
+    document = "document"
+    article = "article"
 
 
 class LearningPathBase(BaseModel):
@@ -18,7 +16,7 @@ class LearningPathBase(BaseModel):
     description: Optional[str] = None
     is_public: bool = False
     cover_image_url: Optional[str] = None
-    category_id: Optional[int] = None
+    category_id: int
     category_name: Optional[str] = None
 
     model_config = {
@@ -50,10 +48,13 @@ class PathItemInLearningPathResponse(BaseModel):
     resource_id: int
     resource_type: ResourceKind
     title: str
-    position: int
-    description: Optional[str] = None
+    order_index: int
+    stage: Optional[str] = None
+    purpose: Optional[str] = None
+    estimated_time: Optional[int] = None
+    is_optional: bool = False
     # 按需返回嵌入的资源详情
-    resource_data: Optional[Union[VideoResponse, ClipResponse, ResourceResponse]] = None
+    resource_data: Optional[ResourceResponse] = None
 
     model_config = {
         "from_attributes": True
@@ -78,11 +79,12 @@ class LearningPathDetailResponse(LearningPathResponse):
 
 
 class AddResourceToLearningPathRequest(BaseModel):
-    resource_type: ResourceKind
     resource_id: int
-    title: Optional[str] = None
-    description: Optional[str] = None
-    position: Optional[int] = None
+    order_index: Optional[int] = None
+    stage: Optional[str] = None
+    purpose: Optional[str] = None
+    estimated_time: Optional[int] = None
+    is_optional: Optional[bool] = None
 
     model_config = {
         "from_attributes": True

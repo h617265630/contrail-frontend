@@ -8,7 +8,7 @@ from app import auth
 from app.curd.rbac.user_curd import UserCURD
 from app.core.config import settings
 from app.models.rbac.user import User
-from typing import  List
+from typing import List, Sequence
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 
@@ -51,8 +51,8 @@ def credentials_exception():
 # 权限检查依赖
 
 class PermissionChecker:
-    def __init__(self, required_permissions: str):
-        self.required_permissions = required_permissions
+    def __init__(self, required_permissions: Sequence[str]):
+        self.required_permissions = list(required_permissions)
 
     def __call__(self, current_user: User = Depends(get_current_user)):
         # 超级管理员拥有所有权限

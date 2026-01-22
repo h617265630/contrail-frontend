@@ -61,7 +61,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import Card from '../components/ui/Card.vue'
-import { listPublicLearningPaths, type PublicLearningPath } from '../api/learningPath'
+import { listPublicLearningPaths, mapPublicLearningPathToDisplayBase } from '../api/learningPath'
 
 const route = useRoute()
 const category = computed(() => decodeURIComponent(String(route.params.category || '')))
@@ -93,18 +93,20 @@ function inferCategoryFromText(text: string): string {
   return 'Backend'
 }
 
-function mapDbToPool(p: PublicLearningPath): PoolCard {
-  const title = String(p.title || '').trim() || `Path ${p.id}`
-  const description = String(p.description || '').trim()
-  const cat = String(p.category_name || '').trim() || inferCategoryFromText(`${title}\n${description}`)
+function mapDbToPool(p: any): PoolCard {
+  const base = mapPublicLearningPathToDisplayBase(p as any)
+  const title = base.title
+  const description = base.description
+  const cat = base.categoryName || inferCategoryFromText(`${title}\n${description}`)
+  const thumbnail = base.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=900&h=506&fit=crop'
   return {
-    id: String(p.id),
+    id: base.id,
     title,
     description: description || '（无介绍）',
     category: cat,
     level: 'Beginner',
     items: 0,
-    thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=900&h=506&fit=crop',
+    thumbnail,
     hotScore: 50,
     isAI: cat === 'AI',
   }

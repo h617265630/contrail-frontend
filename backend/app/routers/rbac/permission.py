@@ -1,22 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from app.core.deps import get_db, get_current_user, PermissionChecker, RoleChecker
+from app.core.deps import get_db_dep, get_current_user, PermissionChecker
 from app.models.rbac.user import User
-from app.schemas.rbac.role import RoleCreate, RoleUpdate, RoleResponse
-   
-from app.schemas.rbac.user_role import UserRoleAssign, UserWithRoles
 from app.schemas.rbac.permission import PermissionCreate, PermissionUpdate, PermissionResponse
-from app.curd.rbac.role_curd import RoleCURD
 from app.curd.rbac.permission_curd import PermissionCURD
-from app.curd.rbac.user_curd import UserCURD
 
 router = APIRouter(prefix="/permission", tags=["Permission"])
 
 # 权限管理
 @router.get("/permissions", response_model=List[PermissionResponse])
 async def get_permissions(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_dep),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     module: Optional[str] = None,
@@ -30,7 +25,7 @@ async def get_permissions(
 @router.get("/permissions/{permission_id}", response_model=PermissionResponse)
 async def get_permission(
     permission_id: int,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_dep),
     current_user: User = Depends(PermissionChecker(["permission.read"]))
 ):
     """获取权限详情"""
@@ -42,7 +37,7 @@ async def get_permission(
 @router.post("/permissions", response_model=PermissionResponse, status_code=status.HTTP_201_CREATED)
 async def create_permission(
     permission_in: PermissionCreate,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_dep),
     current_user: User = Depends(PermissionChecker(["permission.create"]))
 ):
     """创建权限"""
@@ -57,7 +52,7 @@ async def create_permission(
 async def update_permission(
     permission_id: int,
     permission_update: PermissionUpdate,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_dep),
     current_user: User = Depends(PermissionChecker(["permission.update"]))
 ):
     """更新权限"""
@@ -69,7 +64,7 @@ async def update_permission(
 @router.delete("/permissions/{permission_id}")
 async def delete_permission(
     permission_id: int,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_dep),
     current_user: User = Depends(PermissionChecker(["permission.delete"]))
 ):
     """删除权限"""

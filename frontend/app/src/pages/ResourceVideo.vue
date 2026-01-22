@@ -9,16 +9,7 @@
         <div class="space-y-3">
           <div class="rounded-2xl bg-black overflow-hidden shadow-sm">
             <div class="relative w-full aspect-video">
-              <iframe
-                v-if="embedUrl"
-                :key="iframeKey"
-                class="absolute inset-0 h-full w-full"
-                :src="embedUrl"
-                title="YouTube video player"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen
-              />
+              <div v-if="videoId" ref="playerEl" class="absolute inset-0 h-full w-full" />
               <div v-else class="absolute inset-0 flex items-center justify-center text-white/80">
                 Video preview is unavailable
               </div>
@@ -31,7 +22,7 @@
             <div class="flex flex-wrap items-center gap-3 text-sm text-slate-600">
               <span class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1">
                 <UserRound class="h-4 w-4" />
-                {{ resource.author || 'Unknown author' }}
+                {{ resource.video?.channel || 'Unknown author' }}
               </span>
               <span v-if="publishedText" class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1">
                 <Calendar class="h-4 w-4" />
@@ -52,6 +43,15 @@
                 Save to path
               </button>
               <button
+                v-if="pathItemId != null"
+                type="button"
+                class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm hover:bg-blue-700 disabled:opacity-50"
+                :disabled="progressUpdating"
+                @click="markComplete"
+              >
+                Mark as complete
+              </button>
+              <button
                 type="button"
                 class="p-2 rounded-lg bg-white text-slate-900 shadow-sm hover:bg-slate-50"
                 :aria-label="'Open source URL'"
@@ -67,35 +67,7 @@
           <div class="lg:col-span-2 space-y-6">
             <div class="rounded-2xl bg-white p-5 shadow-sm space-y-2">
               <h2 class="text-lg font-semibold text-slate-900">Description</h2>
-              <p class="text-slate-700 whitespace-pre-wrap leading-relaxed">{{ resource.description || '—' }}</p>
-            </div>
-
-            <div class="rounded-2xl bg-white p-5 shadow-sm space-y-3">
-              <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-slate-900">Chapters</h3>
-                <span class="text-xs rounded-full bg-slate-100 px-2 py-1 text-slate-600">{{ resource.chapters.length }} sections</span>
-              </div>
-
-              <div v-if="resource.chapters.length === 0" class="text-sm text-slate-600">No chapters found in the description.</div>
-
-              <div v-else class="space-y-2">
-                <button
-                  v-for="(ch, idx) in resource.chapters"
-                  :key="ch.start_seconds + ':' + ch.title"
-                  type="button"
-                  class="w-full text-left flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3 hover:bg-slate-100"
-                  @click="seekTo(ch.start_seconds)"
-                >
-                  <div class="h-10 w-10 shrink-0 rounded-lg bg-blue-100 text-blue-700 font-semibold flex items-center justify-center">
-                    {{ idx + 1 }}
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <p class="font-semibold text-slate-900 truncate">{{ ch.title }}</p>
-                    <p v-if="ch.description" class="text-sm text-slate-600 line-clamp-2">{{ ch.description }}</p>
-                  </div>
-                  <span class="shrink-0 text-xs text-slate-500">{{ ch.timestamp }}</span>
-                </button>
-              </div>
+              <p class="text-slate-700 whitespace-pre-wrap leading-relaxed">{{ resource.summary || '—' }}</p>
             </div>
           </div>
 
@@ -105,7 +77,7 @@
               <div class="space-y-2 text-sm text-slate-700">
                 <div class="flex items-center gap-2">
                   <LinkIcon class="w-4 h-4 text-slate-500" />
-                  <a v-if="resource.url" :href="resource.url" target="_blank" class="text-blue-600 hover:underline break-all">{{ resource.url }}</a>
+                  <a v-if="resource.source_url" :href="resource.source_url" target="_blank" class="text-blue-600 hover:underline break-all">{{ resource.source_url }}</a>
                   <span v-else>—</span>
                 </div>
               </div>
@@ -121,7 +93,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Calendar, Clock, Download, Link as LinkIcon, Play, UserRound } from 'lucide-vue-next'
-import { getMyResourceDetail, getResourceDetail, resolvePublicResourceIdByUrl, type DbResourceDetail } from '../api/resource'
+import { getMyResourceDetail, getResourceDetail, type DbResourceDetail } from '../api/resource'
 import { getMyProgressForItem, upsertMyProgress } from '../api/progress'
 
 const route = useRoute()
@@ -130,21 +102,7 @@ const router = useRouter()
 const loading = ref(false)
 const error = ref('')
 
-const resource = ref<DbResourceDetail>({
-  id: 0,
-  title: '',
-  description: null,
-  resource_type: 'link',
-  url: null,
-  source: null,
-  category: null,
-  thumbnail_url: null,
-  created_at: null,
-  author: null,
-  publish_date: null,
-  video_id: null,
-  chapters: [],
-})
+const resource = ref<DbResourceDetail>({ id: 0, resource_type: 'video', title: '' })
 
 const startSeconds = ref(0)
 
@@ -159,6 +117,17 @@ const pathItemId = computed(() => {
 const trackedProgress = ref(0)
 let progressTimer: number | null = null
 const progressUpdating = ref(false)
+const lastSentProgress = ref(0)
+
+declare global {
+  interface Window {
+    YT?: any
+    onYouTubeIframeAPIReady?: () => void
+  }
+}
+
+const playerEl = ref<HTMLElement | null>(null)
+let ytPlayer: any | null = null
 
 function stopProgressTimer() {
   if (progressTimer != null) {
@@ -179,21 +148,49 @@ async function startProgressTimer() {
     trackedProgress.value = 0
   }
 
+  lastSentProgress.value = trackedProgress.value
+
   progressTimer = window.setInterval(async () => {
     const pid = pathItemId.value
     if (pid == null) return
+    if (!ytPlayer) return
     if (progressUpdating.value) return
+
+    let duration = 0
+    try {
+      const d = Number(ytPlayer.getDuration?.())
+      duration = Number.isFinite(d) ? d : 0
+    } catch {
+      duration = 0
+    }
+    if (!duration) {
+      const fallback = Number(resource.value.video?.duration)
+      duration = Number.isFinite(fallback) ? fallback : 0
+    }
+    if (!duration) return
+
+    let current = 0
+    try {
+      const c = Number(ytPlayer.getCurrentTime?.())
+      current = Number.isFinite(c) ? c : 0
+    } catch {
+      current = 0
+    }
+
+    const pct = Math.min(100, Math.max(0, Math.round((current / duration) * 100)))
+    if (pct <= lastSentProgress.value) return
+
     progressUpdating.value = true
     try {
-      const next = Math.min(Math.max(0, trackedProgress.value) + 5, 95)
-      trackedProgress.value = next
-      await upsertMyProgress({ path_item_id: pid, progress_percentage: next })
+      trackedProgress.value = pct
+      lastSentProgress.value = pct
+      await upsertMyProgress({ path_item_id: pid, progress_percentage: pct })
     } catch {
       // ignore
     } finally {
       progressUpdating.value = false
     }
-  }, 15_000)
+  }, 10_000)
 }
 
 const resourceIdRaw = computed(() => String(route.params.id || '').trim())
@@ -236,24 +233,53 @@ function formatDate(iso?: string | null) {
   return d.toLocaleDateString()
 }
 
-const publishedText = computed(() => formatDate(resource.value.publish_date || null))
+const publishedText = computed(() => formatDate(resource.value.article?.published_at || null))
 const addedText = computed(() => formatDate(resource.value.created_at || null))
 
-const canEmbedPreview = computed(() => true)
+const videoId = computed(() => String(resource.value.video?.video_id || '').trim())
 
-const embedUrl = computed(() => {
-  if (!canEmbedPreview.value) return ''
-  const vid = (resource.value.video_id || '').trim()
-  if (!vid) return ''
-  const params = new URLSearchParams({
-    start: String(Math.max(0, startSeconds.value || 0)),
-    rel: '0',
-    modestbranding: '1',
+function ensureYouTubeApi(): Promise<void> {
+  if (window.YT && window.YT.Player) return Promise.resolve()
+  return new Promise((resolve) => {
+    const existing = document.querySelector('script[data-youtube-iframe-api="1"]') as HTMLScriptElement | null
+    if (existing) {
+      const prev = window.onYouTubeIframeAPIReady
+      window.onYouTubeIframeAPIReady = () => {
+        prev?.()
+        resolve()
+      }
+      return
+    }
+
+    const script = document.createElement('script')
+    script.src = 'https://www.youtube.com/iframe_api'
+    script.async = true
+    script.setAttribute('data-youtube-iframe-api', '1')
+    document.head.appendChild(script)
+    window.onYouTubeIframeAPIReady = () => resolve()
   })
-  return `https://www.youtube.com/embed/${encodeURIComponent(vid)}?${params.toString()}`
-})
+}
 
-const iframeKey = computed(() => `${resource.value.video_id || 'no-video'}:${startSeconds.value}`)
+async function initPlayer() {
+  if (!playerEl.value) return
+  if (!videoId.value) return
+  await ensureYouTubeApi()
+  if (!window.YT?.Player) return
+
+  try {
+    ytPlayer?.destroy?.()
+  } catch {
+    // ignore
+  }
+  ytPlayer = new window.YT.Player(playerEl.value, {
+    videoId: videoId.value,
+    playerVars: {
+      start: Math.max(0, startSeconds.value || 0),
+      rel: 0,
+      modestbranding: 1,
+    },
+  })
+}
 
 async function load() {
   error.value = ''
@@ -263,25 +289,15 @@ async function load() {
     if (!raw) throw new Error('Invalid resource id')
 
     const dbId = resourceIdNumber.value
-    if (dbId == null) {
-      // If route param is not numeric, treat it as a URL and resolve to a DB id.
-      const urlCandidate = decodeURIComponent(raw)
-      try {
-        const resolved = await resolvePublicResourceIdByUrl(urlCandidate)
-        router.replace({ name: 'resource-video', params: { id: String(resolved.id) } })
-        return
-      } catch {
-        throw new Error('Invalid resource id')
-      }
-    }
+    if (dbId == null) throw new Error('Invalid resource id')
 
     const isMy = String(route.path || '').startsWith('/my-resources')
     const data = isMy ? await getMyResourceDetail(dbId) : await getResourceDetail(dbId)
     resource.value = {
       ...data,
-      chapters: Array.isArray(data.chapters) ? data.chapters : [],
     }
     startSeconds.value = 0
+    await initPlayer()
   } catch (e: any) {
     error.value = String(e?.response?.data?.detail || e?.message || 'Failed to load resource')
   } finally {
@@ -291,11 +307,33 @@ async function load() {
 
 function seekTo(seconds: number) {
   startSeconds.value = Math.max(0, Number(seconds) || 0)
+  try {
+    ytPlayer?.seekTo?.(startSeconds.value, true)
+  } catch {
+    // ignore
+  }
 }
 
 function openSource() {
-  if (!resource.value.url) return
-  window.open(String(resource.value.url), '_blank')
+  const url = String(resource.value.source_url || '').trim()
+  if (!url) return
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+async function markComplete() {
+  const pid = pathItemId.value
+  if (pid == null) return
+  if (progressUpdating.value) return
+  progressUpdating.value = true
+  try {
+    trackedProgress.value = 100
+    lastSentProgress.value = 100
+    await upsertMyProgress({ path_item_id: pid, progress_percentage: 100 })
+  } catch {
+    // ignore
+  } finally {
+    progressUpdating.value = false
+  }
 }
 
 function goSaveToPath() {
@@ -321,5 +359,11 @@ watch(pathItemId, () => {
 
 onBeforeUnmount(() => {
   stopProgressTimer()
+  try {
+    ytPlayer?.destroy?.()
+  } catch {
+    // ignore
+  }
+  ytPlayer = null
 })
 </script>

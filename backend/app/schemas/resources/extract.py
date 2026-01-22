@@ -24,5 +24,7 @@ class UrlExtractResponse(BaseModel):
     author: Optional[str] = None
     publish_date: Optional[date] = None
     video_id: Optional[str] = None
+    duration_seconds: Optional[int] = None
+    platform: Optional[str] = None
     chapters: list[ChapterItem] = []
     model_config = ConfigDict(from_attributes=True)

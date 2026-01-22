@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.models.path_item import PathItem
 from app.models.learning_path import LearningPath
-from app.models.resource import Resource, ResourceType
+from app.models.resource import Resource
 
 
 class PathItemCURD:
@@ -30,7 +30,7 @@ class PathItemCURD:
         return (
             db.query(PathItem)
             .filter(PathItem.learning_path_id == learning_path_id)
-            .order_by(PathItem.position.asc())
+            .order_by(PathItem.order_index.asc())
             .offset(skip)
             .limit(limit)
             .all()
@@ -39,53 +39,47 @@ class PathItemCURD:
     # ---------- Create ----------
     @staticmethod
     def _ensure_learning_path_and_resource(
-        db: Session, learning_path_id: int, resource_id: int, resource_type: ResourceType | str
-    ) -> Tuple[LearningPath, Resource, ResourceType]:
+        db: Session, learning_path_id: int, resource_id: int
+    ) -> Tuple[LearningPath, Resource]:
         lp = db.query(LearningPath).filter(LearningPath.id == learning_path_id).first()
         if not lp:
             raise ValueError("LearningPath not found")
 
-        if isinstance(resource_type, str):
-            try:
-                resource_type = ResourceType(resource_type)
-            except Exception:
-                raise ValueError("Invalid resource_type")
-
         res = db.query(Resource).filter(Resource.id == resource_id).first()
         if not res:
             raise ValueError("Resource not found")
-        if res.resource_type != resource_type:
-            raise ValueError("Resource type mismatch")
 
-        return lp, res, resource_type
+        return lp, res
 
     @staticmethod
     def create(
         db: Session,
         learning_path_id: int,
         resource_id: int,
-        resource_type: ResourceType | str,
         *,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        position: Optional[int] = None,
+        order_index: Optional[int] = None,
+        stage: Optional[str] = None,
+        purpose: Optional[str] = None,
+        estimated_time: Optional[int] = None,
+        is_optional: Optional[bool] = None,
     ) -> PathItem:
-        lp, res, resource_type = PathItemCURD._ensure_learning_path_and_resource(
-            db, learning_path_id, resource_id, resource_type
-        )
+        PathItemCURD._ensure_learning_path_and_resource(db, learning_path_id, resource_id)
 
-        # 如果没有给 position，使用当前路径的最大 position + 1
-        if position is None:
-            max_pos = db.query(func.max(PathItem.position)).filter(
+        # 如果没有给 order_index，使用当前路径的最大 order_index + 1
+        if order_index is None:
+            max_pos = db.query(func.max(PathItem.order_index)).filter(
                 PathItem.learning_path_id == learning_path_id
             ).scalar()
-            position = (max_pos or 0) + 1
+            order_index = (max_pos or 0) + 1
 
         item = PathItem(
             learning_path_id=learning_path_id,
             resource_id=resource_id,
-            description=description,
-            position=position,
+            order_index=order_index,
+            stage=stage,
+            purpose=purpose,
+            estimated_time=estimated_time,
+            is_optional=bool(is_optional) if is_optional is not None else False,
         )
         db.add(item)
         try:
@@ -94,38 +88,8 @@ class PathItemCURD:
         except IntegrityError:
             db.rollback()
             # 可能是位置冲突或资源重复添加
-            raise ValueError("Duplicate path item: position or resource already exists in this learning path")
+            raise ValueError("Duplicate path item: order_index or resource already exists in this learning path")
         return item
-
-    @staticmethod
-    def register_clip(
-        db: Session,
-        learning_path_id: int,
-        clip_id: int,
-        **kwargs,
-    ) -> PathItem:
-        return PathItemCURD.create(
-            db=db,
-            learning_path_id=learning_path_id,
-            resource_id=clip_id,
-            resource_type=ResourceType.CLIP,
-            **kwargs,
-        )
-
-    @staticmethod
-    def register_video(
-        db: Session,
-        learning_path_id: int,
-        video_id: int,
-        **kwargs,
-    ) -> PathItem:
-        return PathItemCURD.create(
-            db=db,
-            learning_path_id=learning_path_id,
-            resource_id=video_id,
-            resource_type=ResourceType.VIDEO,
-            **kwargs,
-        )
 
     # ---------- Update ----------
     @staticmethod
@@ -133,26 +97,33 @@ class PathItemCURD:
         db: Session,
         path_item_id: int,
         *,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        position: Optional[int] = None,
+        order_index: Optional[int] = None,
+        stage: Optional[str] = None,
+        purpose: Optional[str] = None,
+        estimated_time: Optional[int] = None,
+        is_optional: Optional[bool] = None,
     ) -> Optional[PathItem]:
         item = PathItemCURD.get(db, path_item_id)
         if not item:
             return None
 
-        if description is not None:
-            item.description = description
-        if position is not None:
-            item.position = position
+        if order_index is not None:
+            item.order_index = order_index
+        if stage is not None:
+            item.stage = stage
+        if purpose is not None:
+            item.purpose = purpose
+        if estimated_time is not None:
+            item.estimated_time = estimated_time
+        if is_optional is not None:
+            item.is_optional = bool(is_optional)
 
         try:
             db.commit()
             db.refresh(item)
         except IntegrityError:
             db.rollback()
-            # 可能是 position 冲突
-            raise ValueError("Duplicate position in this learning path")
+            raise ValueError("Duplicate order_index in this learning path")
         return item
 
     # ---------- Delete ----------

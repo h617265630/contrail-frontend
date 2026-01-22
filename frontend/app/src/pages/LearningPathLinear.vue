@@ -94,7 +94,7 @@
                     <!-- 标题和描述 -->
                     <div class="mb-4">
                       <h3 class="text-gray-900 mb-2">{{ item.title }}</h3>
-                      <p class="text-gray-600">{{ item.description }}</p>
+                      <p class="text-gray-600">{{ item.summary }}</p>
                     </div>
 
                     <!-- Continue Learning 按钮 -->
@@ -295,7 +295,7 @@ type PathItem = {
   id: number
   resourceId: number
   title: string
-  description: string
+  summary: string
   type: 'video' | 'document' | 'article'
   duration: string
   progress: number
@@ -350,7 +350,7 @@ const path = computed(() => {
     id: lp.value.id,
     title: lp.value.title,
     description: lp.value.description || '',
-    thumbnail: (cover?.thumbnail_url || '').trim(),
+    thumbnail: (cover?.thumbnail || '').trim(),
     category: lp.value.category_name || 'My Paths',
     level: lp.value.is_public ? 'Public' : 'Private',
     items: (lp.value.path_items || []).length,
@@ -377,7 +377,7 @@ const learningPath = computed<LearningPathData>(() => {
 
   const items: PathItem[] = (lp.value?.path_items || [])
     .slice()
-    .sort((a, b) => (a.position || 0) - (b.position || 0))
+    .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
     .map((it) => {
       const embedded = getEmbeddedResource(it as any)
       const res = embedded || resourcesById.value[it.resource_id]
@@ -390,13 +390,13 @@ const learningPath = computed<LearningPathData>(() => {
         id: pid,
         resourceId: Number(it.resource_id),
         title: String(res?.title || it.title || `Resource ${it.resource_id}`),
-        description: String(res?.description || it.description || ''),
+        summary: String(res?.summary || ''),
         type,
         duration: type === 'video' ? '—' : '—',
         progress,
         notes: notesByPathItemId.value[pid] ?? '',
         completed: progress >= 100,
-        thumbnail: (res?.thumbnail_url || '').trim() || 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=225&fit=crop',
+        thumbnail: (res?.thumbnail || '').trim() || 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=225&fit=crop',
       }
     })
 

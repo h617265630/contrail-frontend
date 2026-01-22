@@ -5,7 +5,7 @@ from app.models.learning_path import LearningPath
 from app.models.category import Category
 from app.models.user_learning_path import UserLearningPath
 from app.models.path_item import PathItem
-from app.models.resource import Resource, ResourceType
+from app.models.resource import Resource
 
 class LearningPathCURD:
     @staticmethod
@@ -17,12 +17,14 @@ class LearningPathCURD:
         *,
         is_public: bool = False,
         cover_image_url: str | None = None,
-        category_id: int | None = None,
+        category_id: int,
     ) -> LearningPath:
-        if category_id is not None:
-            hit = db.query(Category).filter(Category.id == category_id).first()
-            if not hit:
-                raise ValueError("Category not found")
+        if category_id is None:
+            raise ValueError("category_id is required")
+
+        hit = db.query(Category).filter(Category.id == category_id).first()
+        if not hit:
+            raise ValueError("Category not found")
 
         learning_path = LearningPath(
             title=title,
@@ -88,58 +90,51 @@ class LearningPathCURD:
         db: Session,
         learning_path_id: int,
         resource_id: int,
-        resource_type: ResourceType | str,
         *,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        position: Optional[int] = None,
+        order_index: Optional[int] = None,
+        stage: Optional[str] = None,
+        purpose: Optional[str] = None,
+        estimated_time: Optional[int] = None,
+        is_optional: Optional[bool] = None,
     ) -> PathItem:
         # 校验学习路径存在
         lp = db.query(LearningPath).filter(LearningPath.id == learning_path_id).first()
         if not lp:
             raise ValueError("LearningPath not found")
 
-        # 允许 resource_type 传入字符串（例如 "video"/"clip"）
-        if isinstance(resource_type, str):
-            try:
-                resource_type = ResourceType(resource_type)
-            except Exception:
-                raise ValueError("Invalid resource_type")
-
-        # 校验资源存在且类型匹配
+        # 校验资源存在
         res = db.query(Resource).filter(Resource.id == resource_id).first()
         if not res:
             raise ValueError("Resource not found")
-        if res.resource_type != resource_type:
-            raise ValueError("Resource type mismatch")
 
-        # 计算 position（若未提供，则取该路径现有最大 position + 1）
-        if position is None:
+        # 计算 order_index（若未提供，则取该路径现有最大 order_index + 1）
+        if order_index is None:
             max_pos = (
-                db.query(PathItem.position)
+                db.query(PathItem.order_index)
                 .filter(PathItem.learning_path_id == learning_path_id)
-                .order_by(PathItem.position.desc())
+                .order_by(PathItem.order_index.desc())
                 .first()
             )
-            position = (max_pos[0] + 1) if max_pos else 1
-
-        # 如果未提供标题，默认用资源的标题（Resource 有 title 字段）
-        if title is None:
-            title = getattr(res, "title", f"Resource {res.id}")
+            order_index = (max_pos[0] + 1) if max_pos else 1
 
         item = PathItem(
             learning_path_id=learning_path_id,
             resource_id=resource_id,
-            position=position,
-            description=description,
+            order_index=order_index,
+            stage=stage,
+            purpose=purpose,
+            estimated_time=estimated_time,
+            is_optional=bool(is_optional) if is_optional is not None else False,
         )
+
         db.add(item)
         try:
             db.commit()
             db.refresh(item)
         except IntegrityError:
             db.rollback()
-            raise ValueError("Duplicate path item: position or resource already exists in this learning path")
+            raise ValueError("Duplicate path item: order_index or resource already exists in this learning path")
+
         except Exception as e:
             db.rollback()
             raise ValueError(f"Failed to add resource to learning path: {e}")
@@ -169,7 +164,7 @@ class LearningPathCURD:
     def get_learning_path_with_items(
         db: Session, learning_path_id: int
     ) -> Optional[LearningPath]:
-        # 预加载 path_items 以及资源对象，按照 position 排序
+        # 预加载 path_items 以及资源对象，按照 order_index 排序
         lp = (
             db.query(LearningPath)
             .options(
@@ -179,34 +174,3 @@ class LearningPathCURD:
             .first()
         )
         return lp
-
-    # 语义化封装：注册 clip/video 为 pathitem
-    @staticmethod
-    def register_clip(
-        db: Session,
-        learning_path_id: int,
-        clip_id: int,
-        **kwargs,
-    ) -> PathItem:
-        return LearningPathCURD.add_resource_to_learning_path(
-            db,
-            learning_path_id=learning_path_id,
-            resource_id=clip_id,
-            resource_type=ResourceType.CLIP,
-            **kwargs,
-        )
-
-    @staticmethod
-    def register_video(
-        db: Session,
-        learning_path_id: int,
-        video_id: int,
-        **kwargs,
-    ) -> PathItem:
-        return LearningPathCURD.add_resource_to_learning_path(
-            db,
-            learning_path_id=learning_path_id,
-            resource_id=video_id,
-            resource_type=ResourceType.VIDEO,
-            **kwargs,
-        )

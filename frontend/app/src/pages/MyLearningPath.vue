@@ -226,11 +226,11 @@ async function loadPaths() {
           const detail = await getMyLearningPathDetail(p.id)
           const items = Array.isArray(detail.path_items) ? detail.path_items : []
 
-          // “第一个 resource”：优先按 position 最小的 path item；如果 position 异常则按返回顺序。
+          // “第一个 resource”：优先按 order_index 最小的 path item；如果 order_index 异常则按返回顺序。
           let first = items[0] || null
           for (const it of items) {
-            const a = Number((first as any)?.position)
-            const b = Number((it as any)?.position)
+            const a = Number((first as any)?.order_index)
+            const b = Number((it as any)?.order_index)
             const aOk = Number.isFinite(a)
             const bOk = Number.isFinite(b)
             if (!first) {
@@ -242,7 +242,7 @@ async function loadPaths() {
             }
           }
 
-          let thumb = String((first as any)?.resource_data?.thumbnail_url || '').trim()
+          let thumb = String((first as any)?.resource_data?.thumbnail || '').trim()
 
           // 如果学习路径详情里没带缩略图，则回退去拉一次 resource 详情（先 public，再 my）。
           if (!thumb) {
@@ -250,11 +250,11 @@ async function loadPaths() {
             if (Number.isFinite(rid) && rid > 0) {
               try {
                 const r = await getResourceDetail(rid)
-                thumb = String(r?.thumbnail_url || '').trim()
+                thumb = String(r?.thumbnail || '').trim()
               } catch {
                 try {
                   const r = await getMyResourceDetail(rid)
-                  thumb = String(r?.thumbnail_url || '').trim()
+                  thumb = String(r?.thumbnail || '').trim()
                 } catch {
                   // ignore
                 }

@@ -87,9 +87,9 @@
                       <th class="py-2 pr-3">ID</th>
                       <th class="py-2 pr-3">Title</th>
                       <th class="py-2 pr-3">Type</th>
-                      <th class="py-2 pr-3">Public</th>
-                      <th class="py-2 pr-3">Category</th>
-                      <th class="py-2 pr-3">URL</th>
+                      <th class="py-2 pr-3">Platform</th>
+                      <th class="py-2 pr-3">Summary</th>
+                      <th class="py-2 pr-3">Source URL</th>
                     </tr>
                   </thead>
                   <tbody class="text-slate-900">
@@ -97,10 +97,10 @@
                       <td class="py-2 pr-3 whitespace-nowrap">{{ r.id }}</td>
                       <td class="py-2 pr-3">{{ r.title }}</td>
                       <td class="py-2 pr-3 whitespace-nowrap">{{ r.resource_type }}</td>
-                      <td class="py-2 pr-3 whitespace-nowrap">{{ r.is_public ? 'true' : 'false' }}</td>
-                      <td class="py-2 pr-3 whitespace-nowrap">{{ (r as any).category_name || r.category || '—' }}</td>
+                      <td class="py-2 pr-3 whitespace-nowrap">{{ r.platform || '—' }}</td>
+                      <td class="py-2 pr-3">{{ r.summary || '—' }}</td>
                       <td class="py-2 pr-3">
-                        <a v-if="r.url" :href="r.url" target="_blank" class="text-blue-600 hover:underline break-all">{{ r.url }}</a>
+                        <a v-if="r.source_url" :href="r.source_url" target="_blank" class="text-blue-600 hover:underline break-all">{{ r.source_url }}</a>
                         <span v-else>—</span>
                       </td>
                     </tr>

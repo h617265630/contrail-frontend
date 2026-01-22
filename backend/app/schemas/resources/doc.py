@@ -3,8 +3,9 @@ from pydantic import BaseModel, ConfigDict
 
 
 class DocBase(BaseModel):
-    name: str
+    title: str
     description: Optional[str] = None
+    url: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 class DocCreate(DocBase):
@@ -17,8 +18,9 @@ class DocUpdate(BaseModel):
 
 class DocResponse(DocBase):
     id: int
-    name: str
+    title: str
     description: Optional[str] = None
+    url: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 

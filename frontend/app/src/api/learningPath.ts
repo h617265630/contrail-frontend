@@ -12,6 +12,29 @@ export type PublicLearningPath = {
   category_name?: string | null
 }
 
+export type LearningPathDisplayBase = {
+  id: string
+  title: string
+  description: string
+  thumbnail: string
+  categoryName: string
+}
+
+export function mapPublicLearningPathToDisplayBase(p: PublicLearningPath): LearningPathDisplayBase {
+  const id = String(p.id)
+  const title = String(p.title || '').trim() || `Path ${id}`
+  const description = String(p.description || '').trim()
+  const thumbnail = String(p.cover_image_url || '').trim()
+  const categoryName = String(p.category_name || '').trim()
+  return {
+    id,
+    title,
+    description,
+    thumbnail,
+    categoryName,
+  }
+}
+
 export type PublicLearningPathDetail = PublicLearningPath & {
   path_items: Array<{
     id: number
@@ -19,8 +42,11 @@ export type PublicLearningPathDetail = PublicLearningPath & {
     resource_id: number
     resource_type: string
     title: string
-    position: number
-    description?: string | null
+    order_index: number
+    stage?: string | null
+    purpose?: string | null
+    estimated_time?: number | null
+    is_optional: boolean
     resource_data?: DbResource | null
   }>
 }
@@ -82,11 +108,12 @@ export function deleteMyLearningPath(id: number) {
 export function addResourceToMyLearningPath(
   learningPathId: number,
   payload: {
-    resource_type: 'video' | 'clip' | 'link'
     resource_id: number
-    title?: string
-    description?: string
-    position?: number
+    order_index?: number
+    stage?: string | null
+    purpose?: string | null
+    estimated_time?: number | null
+    is_optional?: boolean
   },
 ) {
   return request.post(`/learning-paths/${learningPathId}/items`, payload)

@@ -70,11 +70,9 @@
                     <h3 class="text-gray-900 font-semibold text-sm line-clamp-1" :title="r.title">{{ r.title }}</h3>
                     <span class="px-2 py-1 rounded-full text-xs font-semibold" :class="typeBadge(r.type)">{{ r.type }}</span>
                   </div>
-                  <p class="text-gray-600 text-xs mt-1 line-clamp-2">{{ r.description }}</p>
+                  <p class="text-gray-600 text-xs mt-1 line-clamp-2">{{ r.summary }}</p>
                   <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
-                    <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ r.category }}</span>
-                    <span v-if="r.duration" class="px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ r.duration }}</span>
-                    <span v-if="r.pages" class="px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ r.pages }} pages</span>
+                    <span v-if="r.platform" class="px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ r.platform }}</span>
                   </div>
                 </div>
               </div>
@@ -279,9 +277,9 @@
                         <X class="w-4 h-4" />
                       </button>
                     </div>
-                    <p class="text-gray-600 text-xs mt-1 line-clamp-2">{{ r.description }}</p>
+                    <p class="text-gray-600 text-xs mt-1 line-clamp-2">{{ r.summary }}</p>
                     <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
-                      <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ r.category }}</span>
+                      <span v-if="r.platform" class="px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ r.platform }}</span>
                       <span class="px-2 py-1 rounded-full text-xs font-semibold" :class="typeBadge(r.type)">{{ r.type }}</span>
                     </div>
                   </div>
@@ -331,17 +329,15 @@ type PathMeta = {
   coverImageUrl: string
 }
 
-type ResourceKind = 'video' | 'clip' | 'link' | 'unknown'
 type ResourceType = 'video' | 'document' | 'article' | 'clip' | 'link'
 
 type UiResource = {
   id: number
   title: string
-  description: string
-  url: string | null
+  summary: string
+  source_url: string | null
   type: ResourceType
-  resource_kind: ResourceKind
-  category: string
+  platform: string
   thumbnail: string
 }
 
@@ -357,13 +353,13 @@ const newResourceLoading = ref(false)
 const filteredResources = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
   if (!q) return allResources.value
-  return allResources.value.filter(r => r.title.toLowerCase().includes(q) || r.description.toLowerCase().includes(q))
+  return allResources.value.filter(r => r.title.toLowerCase().includes(q) || r.summary.toLowerCase().includes(q))
 })
 
 const selected = ref<UiResource[]>([])
 
 const selectedDragState = reactive({
-  draggingId: '' as string,
+  draggingId: -1 as number,
   fromIndex: -1 as number,
   overIndex: -1 as number,
 })
@@ -436,6 +432,10 @@ async function loadCategories() {
   try {
     const res = await listCategories()
     categories.value = res ?? []
+    if (pathMeta.categoryId == null) {
+      const other = categories.value.find(c => String(c.code).toLowerCase() === 'other')
+      if (other) pathMeta.categoryId = other.id
+    }
   } catch (e: any) {
     categories.value = []
     categoriesError.value = e?.message || '分类加载失败'
@@ -475,24 +475,15 @@ function normalizePresentedType(raw: unknown): ResourceType {
   return 'article'
 }
 
-function normalizeResourceKind(raw: unknown): ResourceKind {
-  const t = String(raw || '').trim().toLowerCase()
-  if (t === 'video') return 'video'
-  if (t === 'clip') return 'clip'
-  if (t === 'link') return 'link'
-  return 'unknown'
-}
-
 function toUiResource(r: DbResource): UiResource {
   return {
     id: Number(r.id),
     title: String(r.title || '').trim() || `Resource ${r.id}`,
-    description: String(r.description || '').trim(),
-    url: (r.url ?? null) as any,
-    type: normalizePresentedType(r.resource_type),
-    resource_kind: normalizeResourceKind((r as any).resource_kind ?? null),
-    category: String((r as any)?.category_name || r.category || 'Uncategorized'),
-    thumbnail: String((r as any)?.thumbnail_url || '').trim(),
+    summary: String((r as any).summary || '').trim(),
+    source_url: ((r as any).source_url ?? null) as any,
+    type: normalizePresentedType((r as any).resource_type),
+    platform: String((r as any).platform || '').trim(),
+    thumbnail: String((r as any).thumbnail || '').trim(),
   }
 }
 
@@ -523,7 +514,7 @@ async function createResourceFromUrl() {
     return
   }
 
-  const exists = allResources.value.some(r => (r.url || '') === parsed.toString())
+  const exists = allResources.value.some(r => (r.source_url || '') === parsed.toString())
   if (exists) {
     newResourceError.value = '该链接已存在于资源列表'
     return
@@ -531,7 +522,10 @@ async function createResourceFromUrl() {
 
   newResourceLoading.value = true
   try {
-    await createMyResourceFromUrl(parsed.toString())
+    if (pathMeta.categoryId == null) {
+      throw new Error('请选择分类')
+    }
+    await createMyResourceFromUrl(parsed.toString(), { category_id: pathMeta.categoryId })
     newResourceUrl.value = ''
     await loadResources()
   } catch (e: any) {
@@ -598,12 +592,12 @@ function moveSelected(fromIndex: number, toIndex: number) {
   selected.value = next
 }
 
-function onSelectedDragStart(e: DragEvent, id: string, idx: number) {
+function onSelectedDragStart(e: DragEvent, id: number, idx: number) {
   selectedDragState.draggingId = id
   selectedDragState.fromIndex = idx
   selectedDragState.overIndex = idx
 
-  e.dataTransfer?.setData('application/x-selected-resource-id', id)
+  e.dataTransfer?.setData('application/x-selected-resource-id', String(id))
   e.dataTransfer?.setData('application/x-selected-resource-from', String(idx))
   if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
 }
@@ -623,7 +617,7 @@ function onSelectedDrop(e: DragEvent, dropIndex: number) {
 }
 
 function onSelectedDragEnd() {
-  selectedDragState.draggingId = ''
+  selectedDragState.draggingId = -1
   selectedDragState.fromIndex = -1
   selectedDragState.overIndex = -1
 }
@@ -631,6 +625,10 @@ function onSelectedDragEnd() {
 async function createLearningPath() {
   if (!pathMeta.title.trim()) return
   if (selected.value.length === 0) return
+  if (pathMeta.categoryId == null) {
+    alert('请选择分类')
+    return
+  }
 
   // Rule: cover_image_url always uses the first resource thumbnail.
   const coverUrl = String(selected.value[0]?.thumbnail || '').trim() || null
@@ -651,11 +649,9 @@ async function createLearningPath() {
     for (let i = 0; i < selected.value.length; i++) {
       const r = selected.value[i]
       await addResourceToMyLearningPath(lpId, {
-        resource_type: (r.resource_kind === 'unknown' ? 'link' : r.resource_kind) as any,
         resource_id: r.id,
-        title: r.title,
-        description: r.description || undefined,
-        position: i + 1,
+        order_index: i + 1,
+        is_optional: false,
       })
     }
 

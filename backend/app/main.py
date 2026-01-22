@@ -5,7 +5,7 @@ from pathlib import Path
 from app.routers import learning_path
 from app.routers import progress
 from app.routers import category
-from app.routers.rbac import role,user,permission
+from app.routers.rbac import role, user, permission, user_role, role_permission
 
 
 
@@ -21,12 +21,13 @@ import app.models.rbac.permission
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.database import SessionLocal
 from app.core.initial_data import init_default_data
-from app.routers.resources import clip, doc, product, video, resource
+from app.routers.resources import product, resource
 
 # Ensure generic resource models are imported before create_all
 import app.models.user_resource
-import app.models.resources.link
 import app.models.resources.video
+import app.models.resources.doc
+import app.models.resources.article
 import app.models.resource
 import app.models.learning_path
 import app.models.path_item
@@ -68,16 +69,15 @@ def custom_swagger_ui():
         swagger_css_url="/static/swagger/swagger-ui.css",
     )
 app.include_router(user.router)
-app.include_router(video.router)
-app.include_router(clip.router)
 app.include_router(learning_path.router)
 app.include_router(progress.router)
 app.include_router(category.router)
 app.include_router(product.router)
-app.include_router(doc.router)
 app.include_router(resource.router)
 app.include_router(role.router)
-app.include_router(permission.router)   
+app.include_router(permission.router)
+app.include_router(user_role.router)
+app.include_router(role_permission.router)
 
 @app.on_event("startup")
 async def startup_event():

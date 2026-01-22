@@ -6,59 +6,23 @@ from app.curd.resources.resource_curd import ResourceCURD
 from app.models.resource import Resource
 from app.models.user_resource import UserResource
 from app.schemas.resources.extract import ChapterItem, UrlExtractRequest, UrlExtractResponse
-from app.schemas.resources.resource import ResourceAttachResponse, ResourceCreateFromUrl, ResourceDetailResponse, ResourceResponse, ResourceUpdateRequest
+from app.schemas.resources.resource import (
+    ArticleInfo,
+    DocInfo,
+    ResourceAttachResponse,
+    ResourceCreateFromUrl,
+    ResourceDetailResponse,
+    ResourceResponse,
+    ResourceUpdateRequest,
+    VideoInfo,
+)
 
 router = APIRouter(prefix="/resources", tags=["Resources"])
 
 
-def _raw_resource_kind(obj: Resource) -> str:
+def _resource_type_value(obj: Resource) -> str:
     rt = getattr(obj, "resource_type", None)
-    val = rt.value if hasattr(rt, "value") else (str(rt) if rt is not None else "")
-    return (val or "").strip().lower() or "unknown"
-
-
-def _present_resource_type(obj: Resource) -> str:
-    rt = getattr(obj, "resource_type", None)
-    val = rt.value if hasattr(rt, "value") else (str(rt) if rt is not None else "")
-    val = (val or "").strip().lower()
-
-    if val == "link":
-        url = (getattr(obj, "url", None) or "").strip()
-        lower = url.lower()
-        host = ""
-        try:
-            from urllib.parse import urlparse
-
-            host = (urlparse(url).hostname or "").lower()
-        except Exception:
-            host = ""
-
-        if host.endswith("youtube.com") or host.endswith("youtu.be"):
-            return "video"
-        if lower.split("?", 1)[0].endswith(".pdf"):
-            return "document"
-        return "article"
-
-    return val or "unknown"
-
-
-@router.get("/resolve")
-def resolve_public_resource_id_by_url(url: str, db: Session = Depends(get_db_dep)):
-    """Resolve a public resource by its URL.
-
-    This is primarily for front-end compatibility when an old UI deep-links with
-    a non-numeric local id (e.g. u_...). The caller can provide the original URL
-    and get back the canonical DB id.
-    """
-    raw = (url or "").strip()
-    if not raw:
-        raise HTTPException(status_code=400, detail="url is required")
-
-    obj = db.query(Resource).filter(Resource.url == raw).first()
-    if not obj or not bool(getattr(obj, "is_public", True)):
-        raise HTTPException(status_code=404, detail="resource not found")
-
-    return {"id": obj.id}
+    return (rt.value if hasattr(rt, "value") else str(rt or "")).strip().lower()
 
 
 @router.post("/extract", response_model=UrlExtractResponse)
@@ -77,44 +41,40 @@ def extract_from_url(payload: UrlExtractRequest):
         author=meta.get("author"),
         publish_date=meta.get("publish_date"),
         video_id=meta.get("video_id"),
+        duration_seconds=meta.get("duration_seconds"),
+        platform=meta.get("platform"),
         chapters=[ChapterItem(**c) for c in (meta.get("chapters") or [])],
     )
 
 
 @router.get("/me/{resource_id}", response_model=ResourceDetailResponse)
 def get_my_resource_detail(resource_id: int, db: Session = Depends(get_db_dep), current_user=Depends(get_current_user)):
-    # Ensure the resource belongs to current user
-    items = ResourceCURD.list_for_user(db, user_id=current_user.id)
-    obj = next((r for r in items if r.id == resource_id), None)
+    obj = (
+        db.query(Resource)
+        .join(UserResource, UserResource.resource_id == Resource.id)
+        .filter(UserResource.user_id == current_user.id, Resource.id == resource_id)
+        .first()
+    )
     if not obj:
         raise HTTPException(status_code=404, detail="resource not found")
 
-    url = getattr(obj, "url", None)
-    meta = {}
-    if url:
-        try:
-            meta = ResourceCURD.extract_from_url(str(url))
-        except Exception:
-            meta = {}
-
     return ResourceDetailResponse(
         id=obj.id,
+        resource_type=_resource_type_value(obj),
+        platform=getattr(obj, "platform", None),
         title=obj.title,
-        description=getattr(obj, "description", None),
-        resource_type=_present_resource_type(obj),
-        resource_kind=_raw_resource_kind(obj),
-        is_public=bool(getattr(obj, "is_public", True)),
-        url=url,
-        source=getattr(obj, "source", None),
-        category=getattr(obj, "category", None),
+        summary=getattr(obj, "summary", None),
+        source_url=getattr(obj, "source_url", None),
+        thumbnail=getattr(obj, "thumbnail", None),
         category_id=getattr(obj, "category_id", None),
-        category_name=getattr(getattr(obj, "category_ref", None), "name", None),
-        thumbnail_url=getattr(obj, "thumbnail_url", None),
+        category_name=getattr(obj, "category_name", None),
+        difficulty=getattr(obj, "difficulty", None),
+        tags=getattr(obj, "tags", None),
+        raw_meta=getattr(obj, "raw_meta", None),
         created_at=getattr(obj, "created_at", None),
-        author=meta.get("author"),
-        publish_date=meta.get("publish_date"),
-        video_id=meta.get("video_id"),
-        chapters=[ChapterItem(**c) for c in (meta.get("chapters") or [])],
+        video=VideoInfo.model_validate(obj.video) if getattr(obj, "video", None) else None,
+        doc=DocInfo.model_validate(obj.doc) if getattr(obj, "doc", None) else None,
+        article=ArticleInfo.model_validate(obj.article) if getattr(obj, "article", None) else None,
     )
 
 
@@ -124,17 +84,17 @@ def list_my_resources(db: Session = Depends(get_db_dep), current_user=Depends(ge
     return [
         ResourceResponse(
             id=r.id,
+            resource_type=_resource_type_value(r),
+            platform=getattr(r, "platform", None),
             title=r.title,
-            description=getattr(r, "description", None),
-            resource_type=_present_resource_type(r),
-            resource_kind=_raw_resource_kind(r),
-            is_public=bool(getattr(r, "is_public", True)),
-            url=getattr(r, "url", None),
-            source=getattr(r, "source", None),
-            category=getattr(r, "category", None),
+            summary=getattr(r, "summary", None),
+            source_url=getattr(r, "source_url", None),
+            thumbnail=getattr(r, "thumbnail", None),
             category_id=getattr(r, "category_id", None),
-            category_name=getattr(getattr(r, "category_ref", None), "name", None),
-            thumbnail_url=getattr(r, "thumbnail_url", None),
+            category_name=getattr(r, "category_name", None),
+            difficulty=getattr(r, "difficulty", None),
+            tags=getattr(r, "tags", None),
+            raw_meta=getattr(r, "raw_meta", None),
             created_at=getattr(r, "created_at", None),
         )
         for r in items
@@ -143,21 +103,21 @@ def list_my_resources(db: Session = Depends(get_db_dep), current_user=Depends(ge
 
 @router.get("", response_model=list[ResourceResponse])
 def list_resources(db: Session = Depends(get_db_dep)):
-    items = ResourceCURD.list_public(db)
+    items = ResourceCURD.list_all(db)
     return [
         ResourceResponse(
             id=r.id,
+            resource_type=_resource_type_value(r),
+            platform=getattr(r, "platform", None),
             title=r.title,
-            description=getattr(r, "description", None),
-            resource_type=_present_resource_type(r),
-            resource_kind=_raw_resource_kind(r),
-            is_public=bool(getattr(r, "is_public", True)),
-            url=getattr(r, "url", None),
-            source=getattr(r, "source", None),
-            category=getattr(r, "category", None),
+            summary=getattr(r, "summary", None),
+            source_url=getattr(r, "source_url", None),
+            thumbnail=getattr(r, "thumbnail", None),
             category_id=getattr(r, "category_id", None),
-            category_name=getattr(getattr(r, "category_ref", None), "name", None),
-            thumbnail_url=getattr(r, "thumbnail_url", None),
+            category_name=getattr(r, "category_name", None),
+            difficulty=getattr(r, "difficulty", None),
+            tags=getattr(r, "tags", None),
+            raw_meta=getattr(r, "raw_meta", None),
             created_at=getattr(r, "created_at", None),
         )
         for r in items
@@ -170,35 +130,23 @@ def get_resource_detail(resource_id: int, db: Session = Depends(get_db_dep)):
     if not obj:
         raise HTTPException(status_code=404, detail="resource not found")
 
-    if not bool(getattr(obj, "is_public", True)):
-        raise HTTPException(status_code=404, detail="resource not found")
-
-    url = getattr(obj, "url", None)
-    meta = {}
-    if url:
-        try:
-            meta = ResourceCURD.extract_from_url(str(url))
-        except Exception:
-            meta = {}
-
     return ResourceDetailResponse(
         id=obj.id,
+        resource_type=_resource_type_value(obj),
+        platform=getattr(obj, "platform", None),
         title=obj.title,
-        description=getattr(obj, "description", None),
-        resource_type=_present_resource_type(obj),
-        resource_kind=_raw_resource_kind(obj),
-        is_public=bool(getattr(obj, "is_public", True)),
-        url=url,
-        source=getattr(obj, "source", None),
-        category=getattr(obj, "category", None),
+        summary=getattr(obj, "summary", None),
+        source_url=getattr(obj, "source_url", None),
+        thumbnail=getattr(obj, "thumbnail", None),
         category_id=getattr(obj, "category_id", None),
-        category_name=getattr(getattr(obj, "category_ref", None), "name", None),
-        thumbnail_url=getattr(obj, "thumbnail_url", None),
+        category_name=getattr(obj, "category_name", None),
+        difficulty=getattr(obj, "difficulty", None),
+        tags=getattr(obj, "tags", None),
+        raw_meta=getattr(obj, "raw_meta", None),
         created_at=getattr(obj, "created_at", None),
-        author=meta.get("author"),
-        publish_date=meta.get("publish_date"),
-        video_id=meta.get("video_id"),
-        chapters=[ChapterItem(**c) for c in (meta.get("chapters") or [])],
+        video=VideoInfo.model_validate(obj.video) if getattr(obj, "video", None) else None,
+        doc=DocInfo.model_validate(obj.doc) if getattr(obj, "doc", None) else None,
+        article=ArticleInfo.model_validate(obj.article) if getattr(obj, "article", None) else None,
     )
 
 
@@ -209,7 +157,6 @@ def create_my_resource(payload: ResourceCreateFromUrl, db: Session = Depends(get
             db,
             user_id=current_user.id,
             url=str(payload.url),
-            category=payload.category,
             category_id=payload.category_id,
         )
         db.commit()
@@ -223,17 +170,17 @@ def create_my_resource(payload: ResourceCreateFromUrl, db: Session = Depends(get
 
     return ResourceResponse(
         id=obj.id,
+        resource_type=_resource_type_value(obj),
+        platform=getattr(obj, "platform", None),
         title=obj.title,
-        description=getattr(obj, "description", None),
-        resource_type=_present_resource_type(obj),
-        resource_kind=_raw_resource_kind(obj),
-        is_public=bool(getattr(obj, "is_public", True)),
-        url=getattr(obj, "url", None),
-        source=getattr(obj, "source", None),
-        category=getattr(obj, "category", None),
+        summary=getattr(obj, "summary", None),
+        source_url=getattr(obj, "source_url", None),
+        thumbnail=getattr(obj, "thumbnail", None),
         category_id=getattr(obj, "category_id", None),
-        category_name=getattr(getattr(obj, "category_ref", None), "name", None),
-        thumbnail_url=getattr(obj, "thumbnail_url", None),
+        category_name=getattr(obj, "category_name", None),
+        difficulty=getattr(obj, "difficulty", None),
+        tags=getattr(obj, "tags", None),
+        raw_meta=getattr(obj, "raw_meta", None),
         created_at=getattr(obj, "created_at", None),
     )
 
@@ -245,7 +192,7 @@ def add_public_resource_to_my_resources(
     current_user=Depends(get_current_user),
 ):
     obj = db.query(Resource).filter(Resource.id == resource_id).first()
-    if not obj or not bool(getattr(obj, "is_public", True)):
+    if not obj:
         raise HTTPException(status_code=404, detail="resource not found")
 
     try:
@@ -257,15 +204,17 @@ def add_public_resource_to_my_resources(
 
     return ResourceResponse(
         id=obj.id,
+        resource_type=_resource_type_value(obj),
+        platform=getattr(obj, "platform", None),
         title=obj.title,
-        description=getattr(obj, "description", None),
-        resource_type=_present_resource_type(obj),
-        resource_kind=_raw_resource_kind(obj),
-        is_public=bool(getattr(obj, "is_public", True)),
-        url=getattr(obj, "url", None),
-        source=getattr(obj, "source", None),
-        category=getattr(obj, "category", None),
-        thumbnail_url=getattr(obj, "thumbnail_url", None),
+        summary=getattr(obj, "summary", None),
+        source_url=getattr(obj, "source_url", None),
+        thumbnail=getattr(obj, "thumbnail", None),
+        category_id=getattr(obj, "category_id", None),
+        category_name=getattr(obj, "category_name", None),
+        difficulty=getattr(obj, "difficulty", None),
+        tags=getattr(obj, "tags", None),
+        raw_meta=getattr(obj, "raw_meta", None),
         created_at=getattr(obj, "created_at", None),
     )
 
@@ -277,7 +226,7 @@ def add_public_resource_to_my_resources_with_status(
     current_user=Depends(get_current_user),
 ):
     obj = db.query(Resource).filter(Resource.id == resource_id).first()
-    if not obj or not bool(getattr(obj, "is_public", True)):
+    if not obj:
         raise HTTPException(status_code=404, detail="resource not found")
 
     already_exists = (
@@ -298,15 +247,17 @@ def add_public_resource_to_my_resources_with_status(
         already_exists=already_exists,
         resource=ResourceResponse(
             id=obj.id,
+            resource_type=_resource_type_value(obj),
+            platform=getattr(obj, "platform", None),
             title=obj.title,
-            description=getattr(obj, "description", None),
-            resource_type=_present_resource_type(obj),
-            resource_kind=_raw_resource_kind(obj),
-            is_public=bool(getattr(obj, "is_public", True)),
-            url=getattr(obj, "url", None),
-            source=getattr(obj, "source", None),
-            category=getattr(obj, "category", None),
-            thumbnail_url=getattr(obj, "thumbnail_url", None),
+            summary=getattr(obj, "summary", None),
+            source_url=getattr(obj, "source_url", None),
+            thumbnail=getattr(obj, "thumbnail", None),
+            category_id=getattr(obj, "category_id", None),
+            category_name=getattr(obj, "category_name", None),
+            difficulty=getattr(obj, "difficulty", None),
+            tags=getattr(obj, "tags", None),
+            raw_meta=getattr(obj, "raw_meta", None),
             created_at=getattr(obj, "created_at", None),
         ),
     )
@@ -339,11 +290,14 @@ def update_my_resource(
             db,
             user_id=current_user.id,
             resource_id=resource_id,
-            url=str(payload.url) if payload.url else None,
             title=payload.title,
-            description=payload.description,
-            is_public=payload.is_public,
-            category_id=payload.category_id,
+            summary=payload.summary,
+            platform=payload.platform,
+            thumbnail=payload.thumbnail,
+            category_id=getattr(payload, "category_id", None),
+            difficulty=payload.difficulty,
+            tags=payload.tags,
+            raw_meta=payload.raw_meta,
         )
         db.commit()
         db.refresh(obj)
@@ -359,17 +313,17 @@ def update_my_resource(
 
     return ResourceResponse(
         id=obj.id,
+        resource_type=_resource_type_value(obj),
+        platform=getattr(obj, "platform", None),
         title=obj.title,
-        description=getattr(obj, "description", None),
-        resource_type=_present_resource_type(obj),
-        resource_kind=_raw_resource_kind(obj),
-        is_public=bool(getattr(obj, "is_public", True)),
-        url=getattr(obj, "url", None),
-        source=getattr(obj, "source", None),
-        category=getattr(obj, "category", None),
+        summary=getattr(obj, "summary", None),
+        source_url=getattr(obj, "source_url", None),
+        thumbnail=getattr(obj, "thumbnail", None),
         category_id=getattr(obj, "category_id", None),
-        category_name=getattr(getattr(obj, "category_ref", None), "name", None),
-        thumbnail_url=getattr(obj, "thumbnail_url", None),
+        category_name=getattr(obj, "category_name", None),
+        difficulty=getattr(obj, "difficulty", None),
+        tags=getattr(obj, "tags", None),
+        raw_meta=getattr(obj, "raw_meta", None),
         created_at=getattr(obj, "created_at", None),
     )
 

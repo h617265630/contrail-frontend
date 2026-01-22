@@ -11,8 +11,13 @@ router = APIRouter(prefix="/documents", tags=["Documents"])
 
 @router.post("/", response_model=DocResponse, status_code=status.HTTP_201_CREATED)
 def create_doc(doc_in: DocCreate, db: Session = Depends(get_db_dep)):
-    doc = DocCURD.create_doc(db,doc_in)
-    # user = curd.user.create_user(db, username=user_in.username, email=user_in.email, password=hashed) 作比较
+    try:
+        doc = DocCURD.create_doc(db, doc_in)
+        db.commit()
+        db.refresh(doc)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"创建失败: {e}")
     return doc
 
 @router.get("/", response_model=List[DocResponse])
@@ -45,5 +50,10 @@ def delete_doc(doc_id: int, db: Session = Depends(get_db_dep)):
     doc = DocCURD.get_doc(db, doc_id)
     if not doc:
         raise HTTPException(status_code=404, detail="doc not found")
-    DocCURD.delete_doc(db, doc)
+    try:
+        DocCURD.delete_doc(db, doc)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"删除失败: {e}")
     return None

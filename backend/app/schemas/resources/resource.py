@@ -1,54 +1,68 @@
-from datetime import date, datetime
-from typing import Optional
+from datetime import datetime
+from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, HttpUrl
-
-from app.schemas.resources.extract import ChapterItem
 
 
 class ResourceCreateFromUrl(BaseModel):
     url: HttpUrl
-    category: Optional[str] = None
-    category_id: Optional[int] = None
+    category_id: int
     model_config = ConfigDict(from_attributes=True)
 
 
 class ResourceUpdateRequest(BaseModel):
-    url: Optional[HttpUrl] = None
     title: Optional[str] = None
-    description: Optional[str] = None
-    is_public: Optional[bool] = None
+    summary: Optional[str] = None
+    platform: Optional[str] = None
+    thumbnail: Optional[str] = None
     category_id: Optional[int] = None
+    difficulty: Optional[int] = None
+    tags: Optional[dict[str, Any]] = None
+    raw_meta: Optional[dict[str, Any]] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class VideoInfo(BaseModel):
+    duration: Optional[int] = None
+    channel: Optional[str] = None
+    video_id: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DocInfo(BaseModel):
+    doc_type: Optional[str] = None
+    version: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ArticleInfo(BaseModel):
+    publisher: Optional[str] = None
+    published_at: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
 
 
 class ResourceResponse(BaseModel):
     id: int
-    title: str
-    description: Optional[str] = None
     resource_type: str
-    # Raw resource type stored in DB (video/clip/link). Frontend should use this
-    # when interacting with learning-path item APIs.
-    resource_kind: Optional[str] = None
-
-    is_public: bool = True
-
-    url: Optional[str] = None
-    source: Optional[str] = None
-    category: Optional[str] = None
-    category_id: Optional[int] = None
+    platform: Optional[str] = None
+    title: str
+    summary: Optional[str] = None
+    source_url: str
+    thumbnail: Optional[str] = None
+    category_id: int
     category_name: Optional[str] = None
-    thumbnail_url: Optional[str] = None
+    difficulty: Optional[int] = None
+    tags: Optional[dict[str, Any]] = None
+    raw_meta: Optional[dict[str, Any]] = None
 
     created_at: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
 
 
 class ResourceDetailResponse(ResourceResponse):
-    author: Optional[str] = None
-    publish_date: Optional[date] = None
-    video_id: Optional[str] = None
-    chapters: list[ChapterItem] = []
+    video: Optional[VideoInfo] = None
+    doc: Optional[DocInfo] = None
+    article: Optional[ArticleInfo] = None
 
 
 class ResourceAttachResponse(BaseModel):

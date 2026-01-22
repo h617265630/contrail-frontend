@@ -88,11 +88,10 @@
                 </div>
               </div>
 
-
               <div class="absolute bottom-3 left-3">
                 <div class="px-2 py-1 rounded-full bg-black bg-opacity-60 text-white text-xs flex items-center gap-1">
                   <LinkIcon class="w-3 h-3" />
-                  {{ resource.source }}
+                  {{ resource.platform }}
                 </div>
               </div>
             </div>
@@ -102,13 +101,18 @@
                 <h3 class="text-gray-900 flex-1 font-semibold text-sm truncate">{{ resource.title }}</h3>
               </div>
 
-              <p class="text-gray-600 text-sm mb-3 line-clamp-3">{{ resource.description }}</p>
+              <p class="text-gray-600 text-sm mb-3 line-clamp-3">{{ resource.summary }}</p>
 
               <div class="flex items-center gap-4 text-xs text-gray-500">
                 <div class="flex items-center gap-1">
                   <Tag class="w-3 h-3" />
                   {{ resource.category }}
                 </div>
+                <div class="flex items-center gap-1">
+                  <LinkIcon class="w-3 h-3" />
+                  {{ resource.platform }}
+                </div>
+                <div>Added {{ resource.addedDate }}</div>
               </div>
 
               <div class="mt-auto pt-4">
@@ -117,17 +121,16 @@
                     type="button"
                     class="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     @click.stop="togglePublic(resource)"
-                    :disabled="publicUpdatingId === resource.id"
                     aria-label="Toggle public/private"
                   >
-                    <span>{{ resource.isPublic ? 'Public' : 'Private' }}</span>
+                    <span>—</span>
                     <span
                       class="relative h-5 w-9 rounded-full transition-colors"
-                      :class="resource.isPublic ? 'bg-blue-600' : 'bg-gray-300'"
+                      :class="'bg-gray-300'"
                     >
                       <span
                         class="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform"
-                        :class="resource.isPublic ? 'translate-x-0' : 'translate-x-4'"
+                        :class="'translate-x-4'"
                       />
                     </span>
                   </button>
@@ -176,7 +179,7 @@
                 <div class="flex items-start justify-between gap-4 mb-2">
                   <div class="flex-1">
                     <h3 class="text-gray-900 mb-1">{{ resource.title }}</h3>
-                    <p class="text-gray-600 text-sm line-clamp-2">{{ resource.description }}</p>
+                    <p class="text-gray-600 text-sm line-clamp-2">{{ resource.summary }}</p>
                   </div>
                   <div :class="['px-2 py-1 rounded-full flex items-center gap-1', getTypeColor(resource.type), 'shrink-0']">
                     <component :is="typeIcon(resource.type)" class="w-4 h-4" />
@@ -191,7 +194,7 @@
                   </div>
                   <div class="flex items-center gap-1">
                     <LinkIcon class="w-3 h-3" />
-                    {{ resource.source }}
+                    {{ resource.platform }}
                   </div>
                   <div>Added {{ resource.addedDate }}</div>
                 </div>
@@ -207,14 +210,14 @@
                       :disabled="publicUpdatingId === resource.id"
                       aria-label="Toggle public/private"
                     >
-                      <span>{{ resource.isPublic ? 'Public' : 'Private' }}</span>
+                      <span>—</span>
                       <span
                         class="relative h-5 w-9 rounded-full transition-colors"
-                        :class="resource.isPublic ? 'bg-blue-600' : 'bg-gray-300'"
+                        :class="'bg-gray-300'"
                       >
                         <span
                           class="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform"
-                          :class="resource.isPublic ? 'translate-x-0' : 'translate-x-4'"
+                          :class="'translate-x-4'"
                         />
                       </span>
                     </button>
@@ -414,7 +417,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { BookOpen, ChevronDown, FileText, Grid3x3, Link as LinkIcon, List, Plus, Search, Tag, Video, X } from 'lucide-vue-next'
-import { createMyResourceFromUrl, deleteMyResource, extractVideoMetadata, listMyResources, updateMyResource, type DbResource, type UrlExtractResponse } from '../api/resource'
+import { createMyResourceFromUrl, deleteMyResource, extractVideoMetadata, listMyResources, type DbResource, type UrlExtractResponse } from '../api/resource'
 import { listCategories, type Category } from '../api/category'
 
 const router = useRouter()
@@ -422,13 +425,12 @@ const router = useRouter()
 type UiResource = {
   id: number
   title: string
-  description: string
+  summary: string
   category: string
-  source: string
+  platform: string
   thumbnail: string
   type: 'video' | 'document' | 'article'
   addedDate?: string
-  isPublic: boolean
 }
 
 const resources = ref<UiResource[]>([])
@@ -480,46 +482,41 @@ function formatExtractDate(iso?: string | null) {
 }
 
 function mapDbToUi(r: DbResource): UiResource {
-  const source = (r.source || '').trim() || 'youtube'
+  const platform = String((r as any).platform || '').trim() || '—'
   const rawType = String((r as any).resource_type || '').trim().toLowerCase()
   const type: UiResource['type'] = rawType === 'document' || rawType === 'article' ? rawType : 'video'
   return {
     id: r.id,
     title: r.title,
-    description: (r.description || '').trim(),
-    category: (r.category_name || r.category || '').trim() || 'Other',
-    source,
-    thumbnail: (r.thumbnail_url || '').trim() || fallbackThumb,
+    summary: String((r as any).summary || '').trim(),
+    category: String((r as any).category_name || '').trim() || '其他',
+    platform,
+    thumbnail: String((r as any).thumbnail || '').trim() || fallbackThumb,
     type,
     addedDate: formatDate(r.created_at),
-    isPublic: r.is_public ?? true,
   }
 }
 
 async function togglePublic(resource: UiResource) {
-  if (publicUpdatingId.value !== null) return
-  publicUpdatingId.value = resource.id
-  const next = !resource.isPublic
-  try {
-    await updateMyResource(resource.id, { is_public: next })
-    resource.isPublic = next
-  } catch (e: any) {
-    // keep UX minimal: rely on global 401 handler, otherwise show a simple message
-    const msg = e?.response?.data?.detail || e?.message || 'Failed to update public status'
-    alert(String(msg))
-  } finally {
-    publicUpdatingId.value = null
-  }
+  alert('当前版本不支持 Public/Private 切换（新 schema 已移除 is_public）。')
 }
 
 async function load() {
-  const data = await listMyResources()
-  resources.value = (data || []).map(mapDbToUi)
+  try {
+    const data = await listMyResources()
+    resources.value = (data || []).map(mapDbToUi)
+  } catch (e: any) {
+    const msg = e?.response?.data?.detail || e?.message || 'Failed to load my resources'
+    alert(String(msg))
+    resources.value = []
+  }
 }
 
 async function loadCategories() {
   try {
     dbCategories.value = await listCategories()
+    const other = dbCategories.value.find(c => String(c.code).toLowerCase() === 'other')
+    if (other && !addCategoryId.value) addCategoryId.value = String(other.id)
   } catch {
     dbCategories.value = []
   }
@@ -540,9 +537,9 @@ const filteredResources = computed(() => {
     if (!q) return true
     return (
       r.title.toLowerCase().includes(q) ||
-      r.description.toLowerCase().includes(q) ||
+      r.summary.toLowerCase().includes(q) ||
       r.category.toLowerCase().includes(q) ||
-      r.source.toLowerCase().includes(q)
+      r.platform.toLowerCase().includes(q)
     )
   })
 })
@@ -564,7 +561,10 @@ function setView(mode: 'grid' | 'list') {
 function openAddModal() {
   showAddModal.value = true
   urlInput.value = ''
-  addCategoryId.value = ''
+  if (!addCategoryId.value) {
+    const other = dbCategories.value.find(c => String(c.code).toLowerCase() === 'other')
+    addCategoryId.value = other ? String(other.id) : ''
+  }
   extractedMeta.value = null
   extractError.value = ''
   submitError.value = ''
@@ -584,9 +584,9 @@ async function confirmAdd() {
   submitError.value = ''
   submitting.value = true
   try {
-    const catId = addCategoryId.value ? Number(addCategoryId.value) : null
-    const catName = catId ? (dbCategories.value.find(c => c.id === catId)?.name || undefined) : undefined
-    await createMyResourceFromUrl(urlInput.value, { category: catName, category_id: catId })
+    const catId = addCategoryId.value ? Number(addCategoryId.value) : NaN
+    if (!Number.isFinite(catId)) throw new Error('请选择分类')
+    await createMyResourceFromUrl(urlInput.value, { category_id: catId })
     closeAddModal()
     await load()
   } catch (e: any) {

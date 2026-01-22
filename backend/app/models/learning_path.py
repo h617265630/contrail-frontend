@@ -15,13 +15,13 @@ class LearningPath(Base):
 
     cover_image_url = Column(String(2048), nullable=True)
 
-    category_id = Column(Integer, ForeignKey("categories.id"), nullable=True, index=True)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False, index=True)
     category = relationship("Category")
     # relationships 
     #users - learning_paths 多对多关系
     users = relationship("User",back_populates="learning_paths",secondary="user_learning_paths")
     #path_items -learnging_paths 多对多关系
-    path_items = relationship("PathItem", back_populates="learning_path",order_by="PathItem.position")
+    path_items = relationship("PathItem", back_populates="learning_path",order_by="PathItem.order_index")
     # 评论关系
     comments = relationship("LearningPathComment", back_populates="learning_path", cascade="all, delete-orphan")
 

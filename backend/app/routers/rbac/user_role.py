@@ -1,20 +1,18 @@
 # 用户角色管理
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.core.deps import get_db, PermissionChecker
-from app.models.rbac import User
-from app.schemas.rbac import (
-    UserRoleAssign, UserWithRoles
-)
-from app.curd.rbac import RoleCURD
-from backend.app.curd.rbac.user_curd import UserCURD
+from app.core.deps import get_db_dep, PermissionChecker
+from app.models.rbac.user import User
+from app.schemas.rbac.user_role import UserRoleAssign, UserWithRoles
+from app.curd.rbac.role_curd import RoleCURD
+from app.curd.rbac.user_curd import UserCURD
 
 router = APIRouter(prefix="/user-role", tags=["UserRole"])
 
 @router.get("/users/{user_id}/roles", response_model=UserWithRoles)
 async def get_user_roles(
     user_id: int,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_dep),
     current_user: User = Depends(PermissionChecker(["user.role.read"]))
 ):
     """获取用户的角色"""
@@ -27,7 +25,7 @@ async def get_user_roles(
 async def assign_user_roles(
     user_id: int,
     assign_data: UserRoleAssign,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_dep),
     current_user: User = Depends(PermissionChecker(["user.role.assign"]))
 ):
     """为用户分配角色"""

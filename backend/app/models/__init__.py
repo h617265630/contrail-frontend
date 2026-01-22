@@ -8,13 +8,8 @@ e.g., `from app.models.user import User` in your code.
 
 __all__ = [
     "User",
-    "WatchHistory",
     "Category",
-    "Video",
-    "Clip",
     "LearningPath",
     "PathItem",
-    "VideoCategory",
-    "UserVideo",
     "UserLearningPath",
 ]

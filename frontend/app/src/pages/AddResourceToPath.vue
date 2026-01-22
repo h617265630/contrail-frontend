@@ -35,17 +35,11 @@
             </div>
             <div class="space-y-1">
               <div class="text-slate-900 font-semibold">{{ resource.title }}</div>
-              <div class="text-sm text-slate-600 line-clamp-3">{{ resource.description }}</div>
+              <div class="text-sm text-slate-600 line-clamp-3">{{ resource.summary }}</div>
             </div>
             <div class="flex flex-wrap gap-2">
-              <span class="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ resource.category }}</span>
+              <span class="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ resource.platform || '—' }}</span>
               <span class="px-2 py-1 rounded-full bg-slate-100 text-slate-700 text-xs">{{ resource.type }}</span>
-              <span v-if="resource.type === 'video' && resource.duration" class="px-2 py-1 rounded-full bg-slate-100 text-slate-700 text-xs">
-                {{ resource.duration }}
-              </span>
-              <span v-if="resource.type !== 'video' && resource.pages" class="px-2 py-1 rounded-full bg-slate-100 text-slate-700 text-xs">
-                {{ resource.pages }} pages
-              </span>
             </div>
 
             <div
@@ -61,7 +55,7 @@
               @dragend="onDragEnd"
             >
               <div class="font-semibold text-slate-900 text-sm truncate">{{ resource.title }}</div>
-              <div class="text-xs text-slate-600 truncate">{{ resource.url }}</div>
+              <div class="text-xs text-slate-600 truncate">{{ resource.source_url }}</div>
             </div>
           </div>
 
@@ -166,9 +160,9 @@
                     <img :src="it.thumbnail" :alt="it.title" class="h-14 w-14 rounded-lg object-cover bg-slate-100 shrink-0" />
                     <div class="min-w-0 flex-1">
                       <div class="font-semibold text-slate-900 line-clamp-1">{{ it.title }}</div>
-                      <div class="text-xs text-slate-600 line-clamp-2">{{ it.description }}</div>
+                      <div class="text-xs text-slate-600 line-clamp-2">{{ it.summary }}</div>
                       <div class="mt-1 flex flex-wrap gap-2">
-                        <span class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ it.category }}</span>
+                        <span class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ it.platform || '—' }}</span>
                         <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs">{{ it.type }}</span>
                       </div>
                     </div>
@@ -202,13 +196,11 @@ const resourceError = ref('')
 type UiResource = {
   id: string
   title: string
-  description: string
-  url: string
+  summary: string
+  source_url: string
   type: 'video' | 'document' | 'article'
-  category: string
+  platform: string
   thumbnail: string
-  duration?: string
-  pages?: number
 }
 
 const resourceFromDb = ref<UiResource | null>(null)
@@ -274,24 +266,23 @@ const draftItems = computed<UiResource[]>(() => {
 function normalizeUiType(raw: string): UiResource['type'] {
   const t = String(raw || '').trim().toLowerCase()
   if (t === 'video') return 'video'
-  if (t === 'clip' || t === 'article') return 'article'
-  return 'document'
+  if (t === 'document') return 'document'
+  if (t === 'article') return 'article'
+  return 'article'
 }
 
 function mapDbToUi(detail: DbResourceDetail): UiResource {
   const fallbackThumb = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=225&fit=crop'
-  const kind = String((detail as any).resource_kind || detail.resource_type || '').trim()
+  const kind = String(detail.resource_type || '').trim()
   const uiType = normalizeUiType(kind || resourceType.value)
   return {
     id: String(detail.id),
     title: String(detail.title || ''),
-    description: String(detail.description || ''),
-    url: String(detail.url || ''),
+    summary: String((detail as any).summary || ''),
+    source_url: String((detail as any).source_url || ''),
     type: uiType,
-    category: String(detail.category || 'Other'),
-    thumbnail: String(detail.thumbnail_url || fallbackThumb),
-    duration: undefined,
-    pages: undefined,
+    platform: String((detail as any).platform || ''),
+    thumbnail: String((detail as any).thumbnail || fallbackThumb),
   }
 }
 
@@ -364,13 +355,10 @@ async function confirmAddToPath() {
 
   saving.value = true
   try {
-    const rt = String(resourceType.value || '').toLowerCase()
-    const backendType = rt === 'video' ? 'video' : rt === 'clip' ? 'clip' : 'link'
     await addResourceToMyLearningPath(selectedPath.value.id, {
-      resource_type: backendType,
       resource_id: Number(resource.value.id),
-      title: resource.value.title,
-      description: resource.value.description,
+      order_index: 1,
+      is_optional: false,
     })
     pendingAdd.value = false
     await loadPaths()

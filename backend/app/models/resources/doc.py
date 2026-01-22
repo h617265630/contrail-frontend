@@ -1,21 +1,17 @@
-from sqlalchemy import Column, Integer, String,DateTime,Boolean,Text
-# from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
+
 from app.db.database import Base
+
 
 class Doc(Base):
     __tablename__ = "docs"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), unique=True, index=True, nullable=False)
-    description = Column(Text, nullable=True)
-    #relationships
+    resource_id = Column(Integer, ForeignKey("resources.id", ondelete="CASCADE"), primary_key=True)
+    doc_type = Column(String(50), nullable=True)
+    version = Column(String(50), nullable=True)
 
-    #learning_paths
-    #permissions
-
-
-    def __repr__(self):
-        return f"<Doc(id={self.id}, name={self.name})>"
+    resource = relationship("Resource", back_populates="doc", uselist=False)
     
 
 

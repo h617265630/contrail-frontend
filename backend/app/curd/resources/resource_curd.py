@@ -13,9 +13,11 @@ from sqlalchemy.orm import Session
 from pytube import YouTube
 
 from app.models.resource import Resource
-from app.models.resources.link import LinkResource
-from app.models.user_resource import UserResource
 from app.models.category import Category
+from app.models.resources.video import Video
+from app.models.resources.doc import Doc
+from app.models.resources.article import Article
+from app.models.user_resource import UserResource
 
 
 class ResourceCURD:
@@ -47,6 +49,15 @@ class ResourceCURD:
             if len(parts) >= 2 and parts[0] in {"embed", "shorts"}:
                 return parts[1]
         return None
+
+    @staticmethod
+    def _youtube_thumbnail(video_id: str | None) -> str | None:
+        if not video_id:
+            return None
+        vid = (video_id or "").strip()
+        if not vid:
+            return None
+        return f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
 
     @staticmethod
     def _parse_chapters_from_description(description: Optional[str]) -> list[dict]:
@@ -109,6 +120,61 @@ class ResourceCURD:
         return host.endswith("youtube.com") or host.endswith("youtu.be")
 
     @staticmethod
+    def _normalize_platform(host: str | None, site_name: str | None = None) -> str | None:
+        raw_host = (host or "").lower().removeprefix("www.")
+        if not raw_host and site_name:
+            raw_host = site_name.strip().lower().replace(" ", "")
+
+        # Normalize common platforms
+        if raw_host.endswith("bilibili.com"):
+            return "bilibili"
+        if raw_host.endswith("xiaohongshu.com") or raw_host.endswith("xhslink.com"):
+            return "xiaohongshu"
+        if raw_host.endswith("medium.com"):
+            return "medium"
+        if raw_host.endswith("reddit.com"):
+            return "reddit"
+        if raw_host.endswith("github.com"):
+            return "github"
+        if raw_host.endswith("substack.com"):
+            return "substack"
+
+        return raw_host or None
+
+    @staticmethod
+    def _infer_resource_type(url: str, meta: dict) -> str:
+        raw = (url or "").strip()
+        base = raw.lower().split("?", 1)[0]
+        if base.endswith(".pdf"):
+            return "document"
+
+        host = (urlparse(raw).hostname or "").lower().removeprefix("www.")
+
+        # Known video platforms
+        if ResourceCURD._is_youtube(raw):
+            return "video"
+        if host.endswith("bilibili.com"):
+            return "video"
+        if host.endswith("xiaohongshu.com") or host.endswith("xhslink.com"):
+            # xiaohongshu links can be video or图文; default video for better UX
+            return "video"
+
+        og_type = str(meta.get("og_type") or "").strip().lower()
+        if og_type.startswith("video"):
+            return "video"
+
+        # If page provides an embeddable player, treat as video
+        if meta.get("og_video") or meta.get("twitter_player"):
+            return "video"
+
+        # GitHub is usually docs/technical content
+        if host.endswith("github.com"):
+            return "document"
+
+        # Default
+        return "article"
+
+    @staticmethod
     def _guess_title_from_url(url: str) -> str:
         try:
             parsed = urlparse(url)
@@ -144,6 +210,8 @@ class ResourceCURD:
                         "author": None,
                         "publish_date": None,
                         "video_id": None,
+                        "duration_seconds": None,
+                        "platform": (urlparse(raw).hostname or "").lower().removeprefix("www.") or None,
                         "chapters": [],
                     }
 
@@ -178,6 +246,16 @@ class ResourceCURD:
                 title = _find_title(text) or _find_meta(text, prop="og:title") or ResourceCURD._guess_title_from_url(raw)
                 description = _find_meta(text, name="description") or _find_meta(text, prop="og:description")
                 thumbnail_url = _find_meta(text, prop="og:image")
+                platform = _find_meta(text, prop="og:site_name")
+
+                og_type = _find_meta(text, prop="og:type")
+                og_video = _find_meta(text, prop="og:video") or _find_meta(text, prop="og:video:url")
+                twitter_player = _find_meta(text, name="twitter:player")
+
+                if platform:
+                    platform = platform.strip() or None
+                host = (urlparse(raw).hostname or "").lower().removeprefix("www.") or None
+                platform = ResourceCURD._normalize_platform(host, platform)
 
                 return {
                     "title": title,
@@ -186,6 +264,11 @@ class ResourceCURD:
                     "author": None,
                     "publish_date": None,
                     "video_id": None,
+                    "duration_seconds": None,
+                    "platform": platform,
+                    "og_type": og_type,
+                    "og_video": og_video,
+                    "twitter_player": twitter_player,
                     "chapters": [],
                 }
         except Exception:
@@ -197,6 +280,8 @@ class ResourceCURD:
                 "author": None,
                 "publish_date": None,
                 "video_id": None,
+                "duration_seconds": None,
+                "platform": (urlparse(raw).hostname or "").lower().removeprefix("www.") or None,
                 "chapters": [],
             }
 
@@ -240,7 +325,7 @@ class ResourceCURD:
         if not video_id:
             raise ValueError("Invalid YouTube URL")
 
-        # 1) Try pytube first (richer: description/publish_date).
+        # 1) Try pytube first (richer: description/publish_date/duration).
         try:
             yt = YouTube(url)
             title = (yt.title or "").strip()
@@ -248,9 +333,19 @@ class ResourceCURD:
             thumbnail_url = (yt.thumbnail_url or "").strip() or None
             author = (getattr(yt, "author", "") or "").strip() or None
             publish_date = getattr(yt, "publish_date", None)
+            duration_seconds = getattr(yt, "length", None)
+            try:
+                duration_seconds = int(duration_seconds) if duration_seconds is not None else None
+            except Exception:
+                duration_seconds = None
+            if duration_seconds is not None and duration_seconds < 0:
+                duration_seconds = None
             chapters = ResourceCURD._parse_chapters_from_description(description)
             if not title:
                 raise ValueError("Extraction failed: missing title")
+
+            if not thumbnail_url:
+                thumbnail_url = ResourceCURD._youtube_thumbnail(video_id)
 
             meta = {
                 "title": title,
@@ -259,6 +354,8 @@ class ResourceCURD:
                 "author": author,
                 "publish_date": publish_date,
                 "video_id": video_id,
+                "duration_seconds": duration_seconds,
+                "platform": "youtube",
                 "chapters": chapters,
             }
             if key:
@@ -270,13 +367,18 @@ class ResourceCURD:
         # 2) Fallback to oEmbed (usually more stable than pytube).
         try:
             oembed = ResourceCURD._extract_youtube_oembed(url)
+            thumbnail_url = (oembed.get("thumbnail_url") or "").strip() or None
+            if not thumbnail_url:
+                thumbnail_url = ResourceCURD._youtube_thumbnail(video_id)
             meta = {
                 "title": oembed["title"],
                 "description": None,
-                "thumbnail_url": oembed.get("thumbnail_url"),
+                "thumbnail_url": thumbnail_url,
                 "author": oembed.get("author"),
                 "publish_date": None,
                 "video_id": video_id,
+                "duration_seconds": None,
+                "platform": "youtube",
                 "chapters": [],
             }
             if key:
@@ -290,58 +392,17 @@ class ResourceCURD:
         meta = {
             "title": f"YouTube Video {video_id}",
             "description": None,
-            "thumbnail_url": f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg",
+            "thumbnail_url": ResourceCURD._youtube_thumbnail(video_id),
             "author": None,
             "publish_date": None,
             "video_id": video_id,
+            "duration_seconds": None,
+            "platform": "youtube",
             "chapters": [],
         }
         if key:
             ResourceCURD._extract_cache[key] = (time.time(), meta)
         return meta
-
-    @staticmethod
-    def _get_or_create_link_resource(
-        db: Session,
-        *,
-        url: str,
-        title: str,
-        description: Optional[str],
-        thumbnail_url: Optional[str],
-        source: Optional[str],
-        category: Optional[str],
-    ) -> LinkResource:
-        existing = db.query(LinkResource).filter(LinkResource.url == url).first()
-        if existing:
-            # update lightweight fields if missing
-            if not existing.title:
-                existing.title = title
-            if description and not existing.description:
-                existing.description = description
-            if thumbnail_url and not existing.thumbnail_url:
-                existing.thumbnail_url = thumbnail_url
-            if source and not existing.source:
-                existing.source = source
-            if category and not existing.category:
-                existing.category = category
-            db.add(existing)
-            db.flush()
-            return existing
-
-        resource = LinkResource(
-            title=title,
-            description=description,
-            resource_type=LinkResource.__mapper_args__["polymorphic_identity"],
-            # 新建资源默认公开
-            is_public=True,
-            url=url,
-            source=source,
-            category=category,
-            thumbnail_url=thumbnail_url,
-        )
-        db.add(resource)
-        db.flush()
-        return resource
 
     @staticmethod
     def attach_to_user(db: Session, *, user_id: int, resource_id: int) -> None:
@@ -370,43 +431,76 @@ class ResourceCURD:
         return db.query(Resource).order_by(Resource.id.desc()).all()
 
     @staticmethod
-    def list_public(db: Session) -> list[Resource]:
-        from app.models.resources.link import LinkResource
-        return db.query(LinkResource).filter(LinkResource.is_public.is_(True)).order_by(LinkResource.id.desc()).all()
-
-    @staticmethod
     def create_from_url(
         db: Session,
         *,
         user_id: int,
         url: str,
-        category: Optional[str] = None,
-        category_id: int | None = None,
+        category_id: int,
     ) -> Resource:
         meta = ResourceCURD.extract_from_url(url)
-        source = (urlparse(url).hostname or "").lower().removeprefix("www.") or None
+        normalized = (url or "").strip()
+        if not normalized:
+            raise ValueError("Invalid URL")
 
-        if category_id is not None:
-            hit = db.query(Category).filter(Category.id == category_id).first()
-            if not hit:
-                raise ValueError("Category not found")
+        if category_id is None:
+            raise ValueError("category_id is required")
+        cat = db.query(Category).filter(Category.id == category_id).first()
+        if not cat:
+            raise ValueError("Category not found")
 
-        link = ResourceCURD._get_or_create_link_resource(
-            db,
-            url=url,
-            title=meta["title"],
-            description=meta["description"],
-            thumbnail_url=meta["thumbnail_url"],
-            source=source,
-            category=category or "Other",
+        resource_type = ResourceCURD._infer_resource_type(normalized, meta)
+
+        platform = meta.get("platform")
+        if not platform:
+            host = (urlparse(normalized).hostname or "").lower().removeprefix("www.")
+            platform = ResourceCURD._normalize_platform(host, None)
+
+        # source_url is NOT unique per requirements.
+        obj = Resource(
+            resource_type=resource_type,
+            platform=platform,
+            title=meta.get("title") or ResourceCURD._guess_title_from_url(normalized),
+            summary=meta.get("description"),
+            source_url=normalized,
+            thumbnail=meta.get("thumbnail_url"),
+            category_id=category_id,
+            difficulty=None,
+            tags={},
+            raw_meta={
+                "author": meta.get("author"),
+                "publish_date": meta.get("publish_date"),
+                "video_id": meta.get("video_id"),
+                "duration_seconds": meta.get("duration_seconds"),
+                "chapters": meta.get("chapters") or [],
+                "og_type": meta.get("og_type"),
+                "og_video": meta.get("og_video"),
+                "twitter_player": meta.get("twitter_player"),
+            },
         )
+        db.add(obj)
+        db.flush()
 
-        # Associate to categories table (new FK) but keep legacy string category as-is.
-        if category_id is not None:
-            link.category_id = category_id
+        if resource_type == "video":
+            v = Video(
+                resource_id=obj.id,
+                duration=meta.get("duration_seconds"),
+                channel=meta.get("author"),
+                video_id=meta.get("video_id"),
+            )
+            db.add(v)
+            db.flush()
+        elif resource_type == "document":
+            d = Doc(resource_id=obj.id)
+            db.add(d)
+            db.flush()
+        else:
+            a = Article(resource_id=obj.id)
+            db.add(a)
+            db.flush()
 
-        ResourceCURD.attach_to_user(db, user_id=user_id, resource_id=link.id)
-        return link
+        ResourceCURD.attach_to_user(db, user_id=user_id, resource_id=obj.id)
+        return obj
 
     @staticmethod
     def detach_from_user(db: Session, *, user_id: int, resource_id: int) -> None:
@@ -427,27 +521,19 @@ class ResourceCURD:
         *,
         user_id: int,
         resource_id: int,
-        url: Optional[str] = None,
         title: Optional[str] = None,
-        description: Optional[str] = None,
-        is_public: Optional[bool] = None,
-        category_id: int | None = None,
+        summary: Optional[str] = None,
+        platform: Optional[str] = None,
+        thumbnail: Optional[str] = None,
+        category_id: Optional[int] = None,
+        difficulty: Optional[int] = None,
+        tags: Optional[dict] = None,
+        raw_meta: Optional[dict] = None,
     ) -> Resource:
         items = ResourceCURD.list_for_user(db, user_id=user_id)
         obj = next((r for r in items if r.id == resource_id), None)
         if not obj:
             raise ValueError("resource not found")
-
-        current_url = getattr(obj, "url", None)
-        next_url = (url or "").strip() or None
-        if next_url and next_url != current_url:
-            # url 在 link_resources 上有 unique 约束。
-            # 这里用 create_from_url 走“按 url 复用/创建资源 + 重新挂载用户”的流程，
-            # 然后把旧关联解绑（必要时会触发旧资源清理）。
-            category = getattr(obj, "category", None)
-            new_obj = ResourceCURD.create_from_url(db, user_id=user_id, url=next_url, category=category)
-            ResourceCURD.detach_from_user(db, user_id=user_id, resource_id=resource_id)
-            obj = new_obj
 
         if title is not None:
             t = title.strip()
@@ -455,18 +541,29 @@ class ResourceCURD:
                 raise ValueError("title cannot be empty")
             obj.title = t
 
-        if description is not None:
-            d = description.strip()
-            obj.description = d or None
+        if summary is not None:
+            obj.summary = summary.strip() or None
 
-        if is_public is not None:
-            obj.is_public = bool(is_public)
+        if platform is not None:
+            obj.platform = platform.strip() or None
+
+        if thumbnail is not None:
+            obj.thumbnail = thumbnail.strip() or None
 
         if category_id is not None:
-            hit = db.query(Category).filter(Category.id == category_id).first()
-            if not hit:
+            cat = db.query(Category).filter(Category.id == int(category_id)).first()
+            if not cat:
                 raise ValueError("Category not found")
-            obj.category_id = category_id
+            obj.category_id = int(category_id)
+
+        if difficulty is not None:
+            obj.difficulty = int(difficulty)
+
+        if tags is not None:
+            obj.tags = tags
+
+        if raw_meta is not None:
+            obj.raw_meta = raw_meta
 
         db.add(obj)
         db.flush()

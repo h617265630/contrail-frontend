@@ -26,61 +26,38 @@ from app.schemas.resources.resource import ResourceResponse
 router = APIRouter(prefix="/learning-paths", tags=["learning-paths"])
 
 
-def _present_resource_type(obj: Resource) -> str:
+def _resource_type_value(obj: Resource) -> str:
 	rt = getattr(obj, "resource_type", None)
 	val = rt.value if hasattr(rt, "value") else (str(rt) if rt is not None else "")
-	val = (val or "").strip().lower()
-
-	if val == "link":
-		url = (getattr(obj, "url", None) or "").strip()
-		lower = url.lower()
-		host = ""
-		try:
-			from urllib.parse import urlparse
-			host = (urlparse(url).hostname or "").lower()
-		except Exception:
-			host = ""
-
-		if host.endswith("youtube.com") or host.endswith("youtu.be"):
-			return "video"
-		if lower.split("?", 1)[0].endswith(".pdf"):
-			return "document"
-		return "article"
-
-	return val or "unknown"
+	return (val or "").strip().lower() or "unknown"
 
 
 def _to_resource_response(obj: Resource) -> ResourceResponse:
-	rt = getattr(obj, "resource_type", None)
-	raw_kind = rt.value if hasattr(rt, "value") else (str(rt) if rt is not None else "")
-	raw_kind = (raw_kind or "").strip().lower() or "unknown"
 	return ResourceResponse(
 		id=obj.id,
+		resource_type=_resource_type_value(obj),
+		platform=getattr(obj, "platform", None),
 		title=obj.title,
-		description=getattr(obj, "description", None),
-		resource_type=_present_resource_type(obj),
-		resource_kind=raw_kind,
-		is_public=bool(getattr(obj, "is_public", True)),
-		url=getattr(obj, "url", None),
-		source=getattr(obj, "source", None),
-		category=getattr(obj, "category", None),
+		summary=getattr(obj, "summary", None),
+		source_url=getattr(obj, "source_url", None),
+		thumbnail=getattr(obj, "thumbnail", None),
 		category_id=getattr(obj, "category_id", None),
-		category_name=getattr(getattr(obj, "category_ref", None), "name", None),
-		thumbnail_url=getattr(obj, "thumbnail_url", None),
+		category_name=getattr(obj, "category_name", None),
+		difficulty=getattr(obj, "difficulty", None),
+		tags=getattr(obj, "tags", None),
+		raw_meta=getattr(obj, "raw_meta", None),
 		created_at=getattr(obj, "created_at", None),
 	)
 
 
 def _to_resource_kind(obj: Resource | None) -> ResourceKind:
 	if obj is None:
-		return ResourceKind.link
-	rt = getattr(obj, "resource_type", None)
-	val = rt.value if hasattr(rt, "value") else (str(rt) if rt is not None else "")
-	val = (val or "").strip().lower()
+		return ResourceKind.article
+	val = _resource_type_value(obj)
 	try:
 		return ResourceKind(val)
 	except Exception:
-		return ResourceKind.link
+		return ResourceKind.article
 
 
 @router.post("/", response_model=LearningPathResponse, status_code=status.HTTP_201_CREATED)
@@ -125,20 +102,19 @@ def get_public_learning_path_detail(
 	items: List[PathItemInLearningPathResponse] = []
 	for it in lp.path_items:
 		res = getattr(it, "resource", None)
-		resource_data = None
-		# Public endpoint: only embed if the referenced resource is public.
-		is_public_resource = res is not None and bool(getattr(res, "is_public", False))
-		if is_public_resource:
-			resource_data = _to_resource_response(res)
+		resource_data = _to_resource_response(res) if res is not None else None
 		items.append(
 			PathItemInLearningPathResponse(
 				id=it.id,
 				learning_path_id=it.learning_path_id,
 				resource_id=it.resource_id,
-				resource_type=_to_resource_kind(res) if is_public_resource else ResourceKind.link,
-				title=(getattr(res, "title", "") if is_public_resource else ""),
-				position=it.position,
-				description=it.description,
+				resource_type=_to_resource_kind(res),
+				title=(getattr(res, "title", "") if res is not None else ""),
+				order_index=it.order_index,
+				stage=getattr(it, "stage", None),
+				purpose=getattr(it, "purpose", None),
+				estimated_time=getattr(it, "estimated_time", None),
+				is_optional=bool(getattr(it, "is_optional", False)),
 				resource_data=resource_data,
 			)
 		)
@@ -241,8 +217,11 @@ def get_learning_path_detail(
 				resource_id=it.resource_id,
 				resource_type=_to_resource_kind(res),
 				title=(getattr(res, "title", None) or f"Resource {it.resource_id}"),
-				position=it.position,
-				description=it.description,
+				order_index=it.order_index,
+				stage=getattr(it, "stage", None),
+				purpose=getattr(it, "purpose", None),
+				estimated_time=getattr(it, "estimated_time", None),
+				is_optional=bool(getattr(it, "is_optional", False)),
 				resource_data=resource_data,
 			)
 		)
@@ -310,10 +289,11 @@ def add_resource_to_learning_path(
 			db=db,
 			learning_path_id=learning_path_id,
 			resource_id=payload.resource_id,
-			resource_type=payload.resource_type.value,
-			title=payload.title,
-			description=payload.description,
-			position=payload.position,
+			order_index=payload.order_index,
+			stage=payload.stage,
+			purpose=payload.purpose,
+			estimated_time=payload.estimated_time,
+			is_optional=payload.is_optional,
 		)
 	except ValueError as e:
 		raise HTTPException(status_code=400, detail=str(e))
@@ -331,8 +311,11 @@ def add_resource_to_learning_path(
 		resource_id=item.resource_id,
 		resource_type=_to_resource_kind(res),
 		title=(getattr(res, "title", None) or f"Resource {item.resource_id}"),
-		position=item.position,
-		description=item.description,
+		order_index=item.order_index,
+		stage=getattr(item, "stage", None),
+		purpose=getattr(item, "purpose", None),
+		estimated_time=getattr(item, "estimated_time", None),
+		is_optional=bool(getattr(item, "is_optional", False)),
 		resource_data=None,
 	)
 
@@ -368,8 +351,11 @@ def list_path_items(
 			resource_id=it.resource_id,
 			resource_type=_to_resource_kind(getattr(it, "resource", None)),
 			title=(getattr(getattr(it, "resource", None), "title", None) or f"Resource {it.resource_id}"),
-			position=it.position,
-			description=it.description,
+			order_index=it.order_index,
+			stage=getattr(it, "stage", None),
+			purpose=getattr(it, "purpose", None),
+			estimated_time=getattr(it, "estimated_time", None),
+			is_optional=bool(getattr(it, "is_optional", False)),
 			resource_data=None,
 		)
 		for it in items

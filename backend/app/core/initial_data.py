@@ -22,7 +22,16 @@ def init_default_categories(db: Session):
     for cat in default_categories:
         existing = db.query(Category).filter(Category.code == cat["code"]).first()
         if not existing:
-            db.add(Category(name=cat["name"], code=cat["code"], level=0, is_leaf=True))
+            db.add(
+                Category(
+                    name=cat["name"],
+                    code=cat["code"],
+                    level=0,
+                    is_leaf=True,
+                    is_system=True,
+                    owner_user_id=None,
+                )
+            )
 
     db.commit()
     print("✅ 默认分类初始化完成")

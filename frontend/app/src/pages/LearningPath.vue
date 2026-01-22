@@ -158,7 +158,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { listPublicLearningPaths, type PublicLearningPath } from '../api/learningPath'
+import { listPublicLearningPaths, mapPublicLearningPathToDisplayBase } from '../api/learningPath'
 import { RouterLink } from 'vue-router'
 
 const categories = ['AI','Frontend','Backend','DevOps','Database','Design','Product','Career']
@@ -176,20 +176,32 @@ function inferCategoryFromText(text: string): string {
   return 'Backend'
 }
 
-const allPaths = ref<any[]>([])
+type LearningPoolPath = {
+  id: string
+  title: string
+  description: string
+  category: string
+  level: string
+  items: number
+  thumbnail: string
+  hotScore: number
+  isAI: boolean
+}
 
-function mapDbToPool(p: PublicLearningPath): LearningPoolPath {
-  const title = String(p.title || '').trim() || `Path ${p.id}`
-  const description = String(p.description || '').trim()
-  const category = inferCategoryFromText(`${title}\n${description}`)
+const allPaths = ref<LearningPoolPath[]>([])
+
+function mapDbToPool(p: any): LearningPoolPath {
+  const base = mapPublicLearningPathToDisplayBase(p)
+  const category = base.categoryName || inferCategoryFromText(`${base.title}\n${base.description}`)
+  const thumbnail = base.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=900&h=506&fit=crop'
   return {
-    id: String(p.id),
-    title,
-    description: description || '（无介绍）',
+    id: base.id,
+    title: base.title,
+    description: base.description || '（无介绍）',
     category,
     level: 'Beginner',
     items: 0,
-    thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=900&h=506&fit=crop',
+    thumbnail,
     hotScore: 50,
     isAI: category === 'AI',
   }

@@ -39,7 +39,7 @@
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
                 <h3 class="text-gray-900 font-semibold line-clamp-1" :title="m.title">{{ m.title }}</h3>
-                <p class="text-gray-600 text-sm mt-1 line-clamp-2" :title="m.description">{{ m.description }}</p>
+                <p class="text-gray-600 text-sm mt-1 line-clamp-2" :title="m.summary">{{ m.summary }}</p>
               </div>
               <span class="px-2 py-1 rounded-full text-xs font-semibold" :class="typeBadge(m.type)">
                 {{ m.type }}
@@ -70,12 +70,12 @@
 import { computed, ref, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { Clock, Layers } from 'lucide-vue-next'
-import { listPublicLearningPaths, type PublicLearningPath } from '../api/learningPath'
+import { getPublicLearningPathDetail } from '../api/learningPath'
 
 type Module = {
   id: string
   title: string
-  description: string
+  summary: string
   type: 'video' | 'document' | 'article'
   duration: string
   level: 'Beginner' | 'Intermediate' | 'Advanced'
@@ -88,8 +88,12 @@ const path = ref<any | null>(null)
 
 onMounted(async () => {
   try {
-    const db = await listPublicLearningPaths()
-    path.value = db.find((p) => String(p.id) === id.value) || null
+    if (!/^\d+$/.test(id.value)) {
+      path.value = null
+      return
+    }
+    const detail = await getPublicLearningPathDetail(Number(id.value))
+    path.value = detail || null
   } catch {
     path.value = null
   }
@@ -109,13 +113,16 @@ function typeBadge(type: Module['type']) {
 const modules = computed<Module[]>(() => {
   // 兼容无 path_items 的情况
   if (!path.value || !Array.isArray(path.value.path_items)) return []
-  return (path.value.path_items || []).map((it: any, idx: number) => {
-    const rk = String(it?.resource_data?.resource_kind || it?.resource_data?.resource_type || it?.resource_type || '').toLowerCase()
-    const uiType: Module['type'] = rk === 'video' ? 'video' : rk === 'clip' ? 'article' : 'document'
+  return (path.value.path_items || [])
+    .slice()
+    .sort((a: any, b: any) => Number(a?.order_index || 0) - Number(b?.order_index || 0))
+    .map((it: any) => {
+    const rk = String(it?.resource_data?.resource_type || it?.resource_type || '').toLowerCase()
+    const uiType: Module['type'] = rk === 'video' ? 'video' : rk === 'article' ? 'article' : 'document'
     return {
       id: String(it.id),
       title: it.title || (it.resource_data?.title || `Resource ${it.resource_id}`),
-      description: it.description || (it.resource_data?.description || ''),
+      summary: String(it.resource_data?.summary || ''),
       type: uiType,
       duration: '',
       level: 'Beginner',

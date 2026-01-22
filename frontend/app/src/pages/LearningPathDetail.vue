@@ -55,7 +55,7 @@
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
                 <h3 class="text-gray-900 font-semibold line-clamp-1" :title="m.title">{{ m.title }}</h3>
-                <p class="text-gray-600 text-sm mt-1 line-clamp-2" :title="m.description">{{ m.description }}</p>
+                <p class="text-gray-600 text-sm mt-1 line-clamp-2" :title="m.summary">{{ m.summary }}</p>
               </div>
               <span class="px-2 py-1 rounded-full text-xs font-semibold" :class="typeBadge(m.type)">
                 {{ m.type }}
@@ -167,13 +167,14 @@ import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute, RouterLink, useRouter } from 'vue-router'
 import { BookOpen, Clock, Home as HomeIcon, Layers, Library } from 'lucide-vue-next'
 import { getPublicLearningPathDetail, getMyLearningPathDetail, attachPublicLearningPathToMe } from '../api/learningPath'
+import { getMyResourceDetail, getResourceDetail, type DbResourceDetail } from '../api/resource'
 
 type Module = {
   id: string
   resourceId: string
   title: string
-  description: string
-  type: 'video' | 'document' | 'article'
+  summary: string
+  type: 'video' | 'document' | 'article' | 'clip' | 'link' | 'unknown'
   duration: string
   level: 'Beginner' | 'Intermediate' | 'Advanced'
 }
@@ -185,10 +186,82 @@ const id = computed(() => String(route.params.id || ''))
 const fromMyPaths = computed(() => String(route.query.from || '') === 'my-paths')
 
 const path = ref<any | null>(null)
-const modules = ref<any[]>([])
+const modules = ref<Module[]>([])
  
 const loading = ref(false)
 const error = ref('')
+
+const resourceCache = ref<Record<string, DbResourceDetail>>({})
+
+function _inferModuleType(item: any, r: any | null): Module['type'] {
+  const presented = String(r?.resource_type || '').trim().toLowerCase()
+  const raw = String(item?.resource_type || '').trim().toLowerCase()
+  const candidate = presented || raw
+
+  if (candidate === 'video') return 'video'
+  if (candidate === 'document') return 'document'
+  if (candidate === 'article') return 'article'
+  if (candidate === 'clip') return 'clip'
+
+  if (candidate === 'link') {
+    const url = String(r?.source_url || '').trim().toLowerCase()
+    const base = url.split('?', 1)[0]
+    if (url.includes('youtube.com') || url.includes('youtu.be')) return 'video'
+    if (base.endsWith('.pdf')) return 'document'
+    return 'article'
+  }
+
+  return 'unknown'
+}
+
+async function _fetchResourceDetail(resourceId: number) {
+  try {
+    return await getResourceDetail(resourceId)
+  } catch {
+    try {
+      return await getMyResourceDetail(resourceId)
+    } catch {
+      return null
+    }
+  }
+}
+
+async function hydrateMissingResourceData(detail: any) {
+  const items = Array.isArray(detail?.path_items) ? detail.path_items : []
+  const missing = items
+    .filter((it: any) => !it?.resource_data)
+    .map((it: any) => Number(it?.resource_id))
+    .filter((n: number) => Number.isFinite(n) && n > 0)
+
+  const uniq = Array.from(new Set(missing))
+  if (uniq.length === 0) return
+
+  await Promise.allSettled(
+    uniq.map(async (rid) => {
+      const idNumber = Number(rid)
+      if (!Number.isFinite(idNumber) || idNumber <= 0) return
+      const key = String(idNumber)
+      if (resourceCache.value[key]) return
+      const r = await _fetchResourceDetail(idNumber)
+      if (r) resourceCache.value[key] = r
+    }),
+  )
+
+  // Patch modules using fetched resource detail.
+  modules.value = modules.value.map((m) => {
+    const r = resourceCache.value[String(m.resourceId)]
+    if (!r) return m
+    const nextTitle = String(r.title || '').trim() || m.title
+    const nextSummary = String(r.summary || '').trim() || m.summary
+    const nextType = _inferModuleType({ resource_type: m.type }, r)
+    return {
+      ...m,
+      title: nextTitle,
+      summary: nextSummary,
+      type: nextType,
+    }
+  })
+}
 
 onMounted(async () => {
   loading.value = true
@@ -211,20 +284,20 @@ onMounted(async () => {
         }
 
         modules.value = (detail.path_items || []).map((it: any) => {
-          // type 显示原始 resource_kind 或 resource_type
-          const rk = String(it?.resource_data?.resource_kind || it?.resource_data?.resource_type || it?.resource_type || '').toLowerCase()
-          const uiType: Module['type'] = rk === 'video' ? 'video' : rk === 'clip' ? 'clip' : rk === 'link' ? 'link' : rk === 'document' ? 'document' : rk === 'article' ? 'article' : 'unknown'
+          const r = (it?.resource_data || null) as any
+          const uiType: Module['type'] = _inferModuleType(it, r)
           return {
-            id: it.id,
-            resourceId: it.resource_id,
-            title: it.title || (it.resource_data?.title || `Resource ${it.resource_id}`),
-            description: it.description || (it.resource_data?.description || ''),
+            id: String(it.id),
+            resourceId: String(it.resource_id),
+            title: String(it.title || r?.title || `Resource ${it.resource_id}`),
+            summary: String(r?.summary || ''),
             type: uiType,
-            duration: '', // duration 字段隐藏
+            duration: '',
             level: 'Beginner',
-            resource_data: it.resource_data || null,
           }
         })
+
+        await hydrateMissingResourceData(detail)
         loading.value = false
         return
       }
@@ -302,20 +375,33 @@ function typeBadge(type: Module['type']) {
   switch (type) {
     case 'video':
       return 'bg-purple-50 text-purple-700'
+    case 'clip':
+      return 'bg-purple-50 text-purple-700'
     case 'document':
       return 'bg-blue-50 text-blue-700'
     case 'article':
       return 'bg-green-50 text-green-700'
+    case 'link':
+      return 'bg-gray-100 text-gray-700'
+    default:
+      return 'bg-gray-100 text-gray-700'
   }
 }
 
-function openResource(resourceId: string, type: Module['type']) {
+function openResource(resourceId: string, type: Module['type'], pathItemId?: string) {
   if (!resourceId) return
-  if (type === 'video') {
-    router.push({ name: 'resource-video', params: { id: String(resourceId) } })
+  const query: Record<string, any> = {}
+  if (pathItemId) query.path_item_id = String(pathItemId)
+
+  if (type === 'video' || type === 'clip') {
+    router.push({ name: 'resource-video', params: { id: String(resourceId) }, query })
     return
   }
-  router.push({ name: 'resource-document', params: { id: String(resourceId) } })
+  if (type === 'document') {
+    router.push({ name: 'resource-document', params: { id: String(resourceId) }, query })
+    return
+  }
+  router.push({ name: 'resource-article', params: { id: String(resourceId) }, query })
 }
 // Comments (in-memory only; no local mock data dependency)
 type LearningPathComment = { id: string; text: string; createdAt: string }

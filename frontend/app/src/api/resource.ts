@@ -7,6 +7,8 @@ export interface UrlExtractResponse {
   author?: string | null
   publish_date?: string | null
   video_id?: string | null
+  duration_seconds?: number | null
+  platform?: string | null
   chapters?: ChapterItem[]
 }
 
@@ -16,21 +18,17 @@ export function extractVideoMetadata(url: string) {
 
 export interface DbResource {
   id: number
-  title: string
-  description?: string | null
   resource_type: string
-  // Raw type stored in DB (video/clip/link). Use this when calling learning-path item APIs.
-  resource_kind?: string | null
-
-  is_public?: boolean
-  url?: string | null
-  source?: string | null
-  // Legacy category string kept for backward compatibility.
-  category?: string | null
-  // New categories FK support.
-  category_id?: number | null
+  platform?: string | null
+  title: string
+  summary?: string | null
+  source_url?: string | null
+  thumbnail?: string | null
+  category_id: number
   category_name?: string | null
-  thumbnail_url?: string | null
+  difficulty?: number | null
+  tags?: Record<string, any> | null
+  raw_meta?: Record<string, any> | null
   created_at?: string | null
 }
 
@@ -42,10 +40,19 @@ export interface ChapterItem {
 }
 
 export interface DbResourceDetail extends DbResource {
-  author?: string | null
-  publish_date?: string | null
-  video_id?: string | null
-  chapters: ChapterItem[]
+  video?: {
+    duration?: number | null
+    channel?: string | null
+    video_id?: string | null
+  } | null
+  doc?: {
+    doc_type?: string | null
+    version?: string | null
+  } | null
+  article?: {
+    publisher?: string | null
+    published_at?: string | null
+  } | null
 }
 
 export function listMyResources() {
@@ -58,12 +65,9 @@ export function listResources() {
 
 export function createMyResourceFromUrl(
   url: string,
-  payload?: { category?: string; category_id?: number | null },
+  payload?: { category_id: number },
 ) {
-  const body: Record<string, any> = { url }
-  if (payload?.category) body.category = payload.category
-  if (payload?.category_id !== undefined) body.category_id = payload.category_id
-  return request.post<DbResource, DbResource>('/resources/me', body)
+  return request.post<DbResource, DbResource>('/resources/me', { url, ...(payload || {}) })
 }
 
 export function addPublicResourceToMyResources(resourceId: number) {
@@ -85,7 +89,15 @@ export function deleteMyResource(resourceId: number) {
 
 export function updateMyResource(
   resourceId: number,
-  payload: { url?: string; title?: string; description?: string; is_public?: boolean },
+  payload: {
+    title?: string
+    summary?: string | null
+    platform?: string | null
+    thumbnail?: string | null
+    difficulty?: number | null
+    tags?: Record<string, any> | null
+    raw_meta?: Record<string, any> | null
+  },
 ) {
   return request.patch<DbResource, DbResource>(`/resources/me/${resourceId}`, payload)
 }
@@ -96,12 +108,4 @@ export function getMyResourceDetail(resourceId: number) {
 
 export function getResourceDetail(resourceId: number) {
   return request.get<DbResourceDetail, DbResourceDetail>(`/resources/${resourceId}`)
-}
-
-export type ResolveResourceByUrlResponse = { id: number }
-
-export function resolvePublicResourceIdByUrl(url: string) {
-  return request.get<ResolveResourceByUrlResponse, ResolveResourceByUrlResponse>('/resources/resolve', {
-    params: { url },
-  })
 }

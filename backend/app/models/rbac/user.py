@@ -22,15 +22,9 @@ class User(Base):
     is_superuser = Column(Boolean, default=False)  # 1 for superuser, 0 for regular user
     
     #relationships
-    videos = relationship("Video",secondary="user_video",back_populates="users")
-
     user_resources = relationship("UserResource", back_populates="user", cascade="all, delete-orphan")
-   
-    user_videos = relationship("UserVideo", back_populates="user", cascade="all, delete-orphan")
     learning_paths = relationship("LearningPath", back_populates="users", secondary="user_learning_paths")
     
-
-    watch_history = relationship("WatchHistory", back_populates="user", cascade="all, delete-orphan")
     # 删除无定义的 UserItemLike 关系，避免映射初始化失败
     # likes = relationship("UserItemLike", back_populates="user")
 
@@ -43,8 +37,6 @@ class User(Base):
     # 关联对象集合：User 与 UserRole 的一对多（访问带审计字段的关联记录）
     user_roles = relationship("UserRole", back_populates="user", cascade="all, delete-orphan")
   
-    # 用户-视频点赞集合（与 relations.UserVideoLike 匹配）
-    video_likes = relationship("UserVideoLike", back_populates="user", cascade="all, delete-orphan")
     #learning_paths
     #permissions
     def to_dict(self):
@@ -92,13 +84,6 @@ class User(Base):
 
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username}, email={self.email})>"
-    
-
-
-
-    @property
-    def video_count(self):
-        return len(self.videos)
 
 # 延迟导入，解决循环依赖导致的 LearningPathComment 未找到问题
 from app.models.learning_path_comment import LearningPathComment

@@ -5,15 +5,13 @@
         <p class="text-sm uppercase tracking-wide text-blue-600 font-semibold">Document Resource</p>
         <h1 class="text-3xl font-semibold text-slate-900">{{ resource.title }}</h1>
         <div class="flex flex-wrap items-center gap-3 text-sm text-slate-600">
-          <span
-            v-if="resource.category"
-            class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-medium"
-          >
-            {{ resource.category }}
-          </span>
           <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-700">
             <FileText class="w-4 h-4" />
             {{ resource.resource_type }}
+          </span>
+          <span v-if="resource.platform" class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-700">
+            <Sparkles class="w-4 h-4" />
+            {{ resource.platform }}
           </span>
           <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700">
             <Sparkles class="w-4 h-4" />
@@ -33,7 +31,7 @@
               <button
                 type="button"
                 class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-black disabled:opacity-50"
-                :disabled="!resource.url"
+                :disabled="!resource.source_url"
                 @click="openSource"
               >
                 Start reading
@@ -41,21 +39,30 @@
               <button
                 type="button"
                 class="p-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-white disabled:opacity-50"
-                :disabled="!resource.url"
+                :disabled="!resource.source_url"
                 @click="openSource"
               >
                 <Download class="w-4 h-4" />
               </button>
+              <button
+                v-if="pathItemId != null"
+                type="button"
+                class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
+                :disabled="progressUpdating"
+                @click="markComplete"
+              >
+                Mark as complete
+              </button>
             </div>
           </div>
           <div class="aspect-4/3 bg-slate-900">
-            <iframe v-if="resource.url" :src="resource.url" class="w-full h-full" title="Document preview"></iframe>
+            <iframe v-if="resource.source_url" :src="resource.source_url" class="w-full h-full" title="Document preview"></iframe>
             <div v-else class="w-full h-full flex items-center justify-center text-white/80 text-sm">Preview is unavailable</div>
           </div>
           <div class="p-6 space-y-4">
             <div class="space-y-2">
               <h2 class="text-xl font-semibold text-slate-900">Overview</h2>
-              <p class="text-slate-700 leading-relaxed whitespace-pre-wrap">{{ resource.description || '—' }}</p>
+              <p class="text-slate-700 leading-relaxed whitespace-pre-wrap">{{ resource.summary || '—' }}</p>
             </div>
           </div>
         </div>
@@ -66,16 +73,12 @@
             <div class="space-y-2 text-sm text-slate-700">
               <div class="flex items-center gap-2">
                 <LinkIcon class="w-4 h-4 text-slate-500" />
-                <a v-if="resource.url" :href="resource.url" target="_blank" class="text-blue-600 hover:underline break-all">{{ resource.url }}</a>
+                <a v-if="resource.source_url" :href="resource.source_url" target="_blank" class="text-blue-600 hover:underline break-all">{{ resource.source_url }}</a>
                 <span v-else>—</span>
               </div>
               <div class="flex items-center gap-2">
-                <UserRound class="w-4 h-4 text-slate-500" />
-                <span>Author {{ resource.author || '—' }}</span>
-              </div>
-              <div class="flex items-center gap-2">
                 <GraduationCap class="w-4 h-4 text-slate-500" />
-                <span>Source {{ resource.source || '—' }}</span>
+                <span>Platform {{ resource.platform || '—' }}</span>
               </div>
             </div>
             <div class="grid grid-cols-2 gap-2 text-sm text-slate-800">
@@ -95,7 +98,7 @@
               >
                 Add to path
               </RouterLink>
-              <button type="button" class="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-white" @click="openSource" :disabled="!resource.url">
+              <button type="button" class="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-white" @click="openSource" :disabled="!resource.source_url">
                 Open
               </button>
             </div>
@@ -110,7 +113,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { BookOpen, Download, FileText, GraduationCap, Link as LinkIcon, Sparkles, UserRound } from 'lucide-vue-next'
-import { getMyResourceDetail, getResourceDetail, resolvePublicResourceIdByUrl, type DbResourceDetail } from '../api/resource'
+import { getMyResourceDetail, getResourceDetail, type DbResourceDetail } from '../api/resource'
 import { getMyProgressForItem, upsertMyProgress } from '../api/progress'
 
 const route = useRoute()
@@ -128,21 +131,7 @@ const resourceIdNumber = computed(() => {
   return Number.isFinite(n) ? n : null
 })
 
-const resource = ref<DbResourceDetail>({
-  id: 0,
-  title: '',
-  description: null,
-  resource_type: 'link',
-  url: null,
-  source: null,
-  category: null,
-  thumbnail_url: null,
-  created_at: null,
-  author: null,
-  publish_date: null,
-  video_id: null,
-  chapters: [],
-})
+const resource = ref<DbResourceDetail>({ id: 0, resource_type: 'document', title: '' })
 
 const pathItemId = computed(() => {
   const raw = String((route.query as any)?.path_item_id || '').trim()
@@ -155,6 +144,7 @@ const pathItemId = computed(() => {
 const trackedProgress = ref(0)
 let progressTimer: number | null = null
 const progressUpdating = ref(false)
+const lastSentProgress = ref(0)
 
 function stopProgressTimer() {
   if (progressTimer != null) {
@@ -174,21 +164,26 @@ async function startProgressTimer() {
     trackedProgress.value = 0
   }
 
+  lastSentProgress.value = trackedProgress.value
+
   progressTimer = window.setInterval(async () => {
     const pid = pathItemId.value
     if (pid == null) return
+    if (document.visibilityState !== 'visible') return
     if (progressUpdating.value) return
     progressUpdating.value = true
     try {
-      const next = Math.min(Math.max(0, trackedProgress.value) + 5, 95)
+      const next = Math.min(Math.max(0, trackedProgress.value) + 2, 95)
+      if (next <= lastSentProgress.value) return
       trackedProgress.value = next
+      lastSentProgress.value = next
       await upsertMyProgress({ path_item_id: pid, progress_percentage: next })
     } catch {
       // ignore
     } finally {
       progressUpdating.value = false
     }
-  }, 15_000)
+  }, 20_000)
 }
 
 function formatDate(iso?: string | null) {
@@ -199,13 +194,29 @@ function formatDate(iso?: string | null) {
 }
 
 const createdText = computed(() => formatDate(resource.value.created_at || null))
-const publishedText = computed(() => formatDate(resource.value.publish_date || null))
+const publishedText = computed(() => formatDate(resource.value.article?.published_at || null))
 const updatedText = computed(() => publishedText.value || createdText.value)
 
 function openSource() {
-  const url = String(resource.value.url || '').trim()
+  const url = String(resource.value.source_url || '').trim()
   if (!url) return
   window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+async function markComplete() {
+  const pid = pathItemId.value
+  if (pid == null) return
+  if (progressUpdating.value) return
+  progressUpdating.value = true
+  try {
+    trackedProgress.value = 100
+    lastSentProgress.value = 100
+    await upsertMyProgress({ path_item_id: pid, progress_percentage: 100 })
+  } catch {
+    // ignore
+  } finally {
+    progressUpdating.value = false
+  }
 }
 
 async function load() {
@@ -213,23 +224,10 @@ async function load() {
   loading.value = true
   try {
     const dbId = resourceIdNumber.value
-    if (dbId == null) {
-      const raw = resourceId.value
-      const urlCandidate = decodeURIComponent(raw)
-      try {
-        const resolved = await resolvePublicResourceIdByUrl(urlCandidate)
-        router.replace({ name: 'resource-document', params: { id: String(resolved.id) } })
-        return
-      } catch {
-        throw new Error('Invalid resource id')
-      }
-    }
+    if (dbId == null) throw new Error('Invalid resource id')
     const isMy = String(route.path || '').startsWith('/my-resources')
     const data = isMy ? await getMyResourceDetail(dbId) : await getResourceDetail(dbId)
-    resource.value = {
-      ...data,
-      chapters: Array.isArray(data.chapters) ? data.chapters : [],
-    }
+    resource.value = { ...data }
   } catch (e: any) {
     error.value = String(e?.response?.data?.detail || e?.message || 'Failed to load resource')
   } finally {

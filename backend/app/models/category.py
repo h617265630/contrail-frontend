@@ -1,7 +1,6 @@
 # 生成一个Categories模型的示例代码
-from sqlalchemy import Column, Integer, String, Text, Boolean,ForeignKey,DateTime
+from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
-from app.models.video_category import VideoCategory
 from datetime import datetime
 from app.db.database import Base    
 class Category(Base):
@@ -14,12 +13,12 @@ class Category(Base):
     level = Column(Integer, default=0)  # 0表示顶级分类
     description = Column(Text, nullable=True)
     is_leaf = Column(Boolean, default=1)  # 1表示是叶子节点，0表示不是叶子节点
+    is_system = Column(Boolean, default=True, nullable=False)
+    owner_user_id = Column(Integer, ForeignKey('users.id'), nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.now)
 
     parent = relationship("Category", remote_side=[id], backref="children")
-
-    # 使用明确的关联表对象，避免因导入顺序导致的表名解析错误
-    videos = relationship("Video", secondary=VideoCategory.__table__, back_populates="categories")
+    owner = relationship("User", foreign_keys=[owner_user_id])
 
     def __repr__(self):
         return f"<Category(id={self.id}, name='{self.name}', level={self.level})>"

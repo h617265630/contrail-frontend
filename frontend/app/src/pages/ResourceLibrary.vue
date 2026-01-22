@@ -83,7 +83,7 @@
             @click="viewResource(resource)"
           >
             <div class="relative h-32">
-              <img :src="resource.thumbnail_url || fallbackThumb" :alt="resource.title" class="w-full h-full object-cover" />
+              <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="w-full h-full object-cover" />
 
               <div class="absolute top-3 right-3">
                 <div
@@ -98,14 +98,14 @@
               <div class="absolute bottom-3 left-3">
                 <div class="px-2 py-1 rounded-full bg-black bg-opacity-60 text-white text-xs flex items-center gap-1">
                   <LinkIcon class="w-3 h-3" />
-                  {{ resource.source || 'link' }}
+                  {{ resource.platform || '—' }}
                 </div>
               </div>
             </div>
 
             <div class="p-4 flex flex-col flex-1 min-h-0">
               <h3 class="text-gray-900 font-semibold text-sm truncate mb-2">{{ resource.title }}</h3>
-              <p class="text-gray-600 text-sm mb-3 line-clamp-3">{{ resource.description || '' }}</p>
+              <p class="text-gray-600 text-sm mb-3 line-clamp-3">{{ resource.summary || '' }}</p>
 
               <div class="space-y-1 text-xs text-gray-600 mb-3">
                 <div class="flex items-center justify-between gap-3">
@@ -163,13 +163,13 @@
             @click="viewResource(resource)"
           >
             <div class="flex gap-4">
-              <img :src="resource.thumbnail_url || fallbackThumb" :alt="resource.title" class="w-32 h-28 object-cover rounded-lg shrink-0" />
+              <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="w-32 h-28 object-cover rounded-lg shrink-0" />
 
               <div class="flex-1 min-w-0">
                 <div class="flex items-start justify-between gap-4 mb-2">
                   <div class="flex-1">
                     <h3 class="text-gray-900 mb-1">{{ resource.title }}</h3>
-                    <p class="text-gray-600 text-sm line-clamp-2">{{ resource.description || '' }}</p>
+                    <p class="text-gray-600 text-sm line-clamp-2">{{ resource.summary || '' }}</p>
                   </div>
                     <div
                       class="px-2 py-1 rounded-full flex items-center gap-1 shrink-0"
@@ -187,7 +187,7 @@
                   </div>
                   <div class="flex items-center gap-1">
                     <LinkIcon class="w-3 h-3" />
-                    {{ resource.source || 'link' }}
+                    {{ resource.platform || '—' }}
                   </div>
                 </div>
               </div>
@@ -377,22 +377,18 @@ function getCardMeta(id: number) {
 }
 
 function resourceCategoryLabel(resource: DbResource) {
-  return (resource.category_name || resource.category || '其他')
+  return String((resource as any).category_name || '').trim() || '其他'
 }
 
 function normalizeResourceType(resourceType: string) {
   const t = String(resourceType || '').trim().toLowerCase()
-  return t || 'link'
+  return t || 'article'
 }
 
 function displayResourceType(resource: DbResource) {
   const raw = normalizeResourceType(resource.resource_type)
-  if (raw !== 'link') return raw
-
-  const source = String(resource.source || '').trim().toLowerCase()
-  const meta = getCardMeta(resource.id)
-  const looksLikeVideo = source === 'youtube' || !!(meta?.video_id && String(meta.video_id).trim())
-  return looksLikeVideo ? 'video' : raw
+  if (raw === 'video' || raw === 'document' || raw === 'article') return raw
+  return 'article'
 }
 
 function typeIcon(type: string) {
@@ -440,7 +436,7 @@ async function prefetchCardMetas(list: DbResource[]) {
   const targets = (list || []).filter(r => {
     if (!r?.id) return false
     if (cardMetaById.value[r.id]) return false
-    const url = String(r.url || '').trim()
+    const url = String(r.source_url || '').trim()
     return !!url
   })
 
@@ -455,7 +451,7 @@ async function prefetchCardMetas(list: DbResource[]) {
       const current = targets[idx]
       idx += 1
       try {
-        const url = String(current.url || '').trim()
+        const url = String(current.source_url || '').trim()
         if (!url) continue
         const meta = await extractVideoMetadata(url)
         cardMetaById.value = { ...cardMetaById.value, [current.id]: meta }
@@ -476,7 +472,7 @@ const filteredResources = computed(() => {
     if (!q) return matchesCategory
 
     const title = (r.title || '').toLowerCase()
-    const desc = (r.description || '').toLowerCase()
+    const desc = (r.summary || '').toLowerCase()
     return matchesCategory && (title.includes(q) || desc.includes(q))
   })
 })
@@ -488,14 +484,17 @@ function setView(mode: 'grid' | 'list') {
 function openCreateModal() {
   showCreateModal.value = true
   createUrl.value = ''
-  createCategoryId.value = ''
+  if (!createCategoryId.value) {
+    const other = dbCategories.value.find(c => String(c.code).toLowerCase() === 'other')
+    createCategoryId.value = other ? String(other.id) : ''
+  }
   createError.value = ''
 }
 
 function closeCreateModal() {
   showCreateModal.value = false
   createUrl.value = ''
-  createCategoryId.value = ''
+  // keep selected category for next create
   createError.value = ''
 }
 
@@ -505,9 +504,9 @@ async function submitCreate() {
   createError.value = ''
   creating.value = true
   try {
-    const catId = createCategoryId.value ? Number(createCategoryId.value) : null
-    const catName = catId ? (dbCategories.value.find(c => c.id === catId)?.name || undefined) : undefined
-    await createMyResourceFromUrl(url, { category: catName, category_id: catId })
+    const catId = createCategoryId.value ? Number(createCategoryId.value) : NaN
+    if (!Number.isFinite(catId)) throw new Error('请选择分类')
+    await createMyResourceFromUrl(url, { category_id: catId })
 
     closeCreateModal()
     await loadResources()
@@ -545,6 +544,8 @@ async function loadResources() {
 async function loadCategories() {
   try {
     dbCategories.value = await listCategories()
+    const other = dbCategories.value.find(c => String(c.code).toLowerCase() === 'other')
+    if (other && !createCategoryId.value) createCategoryId.value = String(other.id)
   } catch {
     dbCategories.value = []
   }

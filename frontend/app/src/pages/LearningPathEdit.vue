@@ -60,11 +60,9 @@
                     <h3 class="text-gray-900 font-semibold text-sm line-clamp-1" :title="r.title">{{ r.title }}</h3>
                     <span class="px-2 py-1 rounded-full text-xs font-semibold" :class="typeBadge(r.type)">{{ r.type }}</span>
                   </div>
-                  <p class="text-gray-600 text-xs mt-1 line-clamp-2">{{ r.description }}</p>
+                  <p class="text-gray-600 text-xs mt-1 line-clamp-2">{{ r.summary }}</p>
                   <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
                     <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ r.category }}</span>
-                    <span v-if="r.duration" class="px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ r.duration }}</span>
-                    <span v-if="r.pages" class="px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ r.pages }} pages</span>
                   </div>
                 </div>
               </div>
@@ -258,13 +256,13 @@
                   </div>
                   <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-lg bg-gray-100 shrink-0" />
                   <div class="min-w-0 flex-1">
-                    <div class="flex items-start justify-between gap-2">
+                    <div class="flex items-center justify-between gap-2">
                       <h3 class="text-gray-900 font-semibold text-sm line-clamp-1">{{ r.title }}</h3>
                       <button type="button" class="text-gray-400 hover:text-gray-700" @click="removeResource(r.id)" aria-label="Remove">
                         <X class="w-4 h-4" />
                       </button>
                     </div>
-                    <p class="text-gray-600 text-xs mt-1 line-clamp-2">{{ r.description }}</p>
+                    <p class="text-gray-600 text-xs mt-1 line-clamp-2">{{ r.summary }}</p>
                     <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
                       <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ r.category }}</span>
                       <span class="px-2 py-1 rounded-full text-xs font-semibold" :class="typeBadge(r.type)">{{ r.type }}</span>
@@ -321,15 +319,13 @@ type PathMeta = {
   coverImageUrl: string
 }
 
-type ResourceKind = 'video' | 'clip' | 'link' | 'unknown'
 type ResourceType = 'video' | 'document' | 'article' | 'clip' | 'link'
 
 type UiResource = {
   id: number
   title: string
-  description: string
+  summary: string
   type: ResourceType
-  resource_kind: ResourceKind
   category: string
   thumbnail: string
 }
@@ -350,7 +346,7 @@ const searchQuery = ref('')
 const filteredResources = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
   if (!q) return allResources.value
-  return allResources.value.filter(r => r.title.toLowerCase().includes(q) || r.description.toLowerCase().includes(q))
+  return allResources.value.filter(r => r.title.toLowerCase().includes(q) || r.summary.toLowerCase().includes(q))
 })
 
 const selected = ref<UiResource[]>([])
@@ -431,10 +427,20 @@ async function loadCategories() {
 }
 
 const selectedDragState = reactive({
-  draggingId: '' as string,
+  draggingId: -1 as number,
   fromIndex: -1 as number,
   overIndex: -1 as number,
 })
+
+function normalizePresentedType(raw: unknown): ResourceType {
+  const t = String(raw || '').trim().toLowerCase()
+  if (t === 'video') return 'video'
+  if (t === 'document') return 'document'
+  if (t === 'article') return 'article'
+  if (t === 'clip') return 'clip'
+  if (t === 'link') return 'link'
+  return 'link'
+}
 
 function typeBadge(type: UiResource['type']) {
   switch (type) {
@@ -451,40 +457,21 @@ function typeBadge(type: UiResource['type']) {
   }
 }
 
-function normalizePresentedType(raw: unknown): ResourceType {
-  const t = String(raw || '').trim().toLowerCase()
-  if (t === 'video') return 'video'
-  if (t === 'document') return 'document'
-  if (t === 'article') return 'article'
-  if (t === 'clip') return 'clip'
-  if (t === 'link') return 'link'
-  return 'article'
-}
-
-function normalizeResourceKind(raw: unknown): ResourceKind {
-  const t = String(raw || '').trim().toLowerCase()
-  if (t === 'video') return 'video'
-  if (t === 'clip') return 'clip'
-  if (t === 'link') return 'link'
-  return 'unknown'
-}
-
-function toUiResource(r: DbResource): UiResource {
+function mapDbResourceToUi(r: any): UiResource {
   return {
     id: Number(r.id),
     title: String(r.title || '').trim() || `Resource ${r.id}`,
-    description: String(r.description || '').trim(),
+    summary: String(r.summary || '').trim(),
     type: normalizePresentedType((r as any)?.resource_type),
-    resource_kind: normalizeResourceKind((r as any)?.resource_kind ?? null),
     category: String((r as any)?.category_name || r.category || 'Uncategorized'),
-    thumbnail: String((r as any)?.thumbnail_url || '').trim(),
+    thumbnail: String((r as any)?.thumbnail || '').trim(),
   }
 }
 
 async function loadResources() {
   try {
     const rows = await listMyResources()
-    allResources.value = Array.isArray(rows) ? rows.map(toUiResource) : []
+    allResources.value = Array.isArray(rows) ? rows.map(mapDbResourceToUi) : []
   } catch {
     allResources.value = []
   }
@@ -570,7 +557,7 @@ function onSelectedDrop(e: DragEvent, dropIndex: number) {
 }
 
 function onSelectedDragEnd() {
-  selectedDragState.draggingId = ''
+  selectedDragState.draggingId = -1
   selectedDragState.fromIndex = -1
   selectedDragState.overIndex = -1
 }
@@ -613,11 +600,9 @@ async function save() {
     for (let i = 0; i < selected.value.length; i++) {
       const r = selected.value[i]
       await addResourceToMyLearningPath(lpId, {
-        resource_type: (r.resource_kind === 'unknown' ? 'link' : r.resource_kind) as any,
         resource_id: r.id,
-        title: r.title,
-        description: r.description || undefined,
-        position: i + 1,
+        order_index: i + 1,
+        is_optional: false,
       })
     }
   } catch (e: any) {
@@ -664,11 +649,10 @@ async function load() {
         next.push({
           id: rid,
           title: String((rdata as any)?.title || `Resource ${rid}`),
-          description: String((rdata as any)?.description || ''),
+          summary: String((rdata as any)?.summary || ''),
           type: normalizePresentedType((rdata as any)?.resource_type),
-          resource_kind: normalizeResourceKind((rdata as any)?.resource_kind ?? (it as any)?.resource_type),
           category: String((rdata as any)?.category_name || (rdata as any)?.category || 'Uncategorized'),
-          thumbnail: String((rdata as any)?.thumbnail_url || '').trim(),
+          thumbnail: String((rdata as any)?.thumbnail || '').trim(),
         })
       } else {
         const hit = byId.get(rid)
