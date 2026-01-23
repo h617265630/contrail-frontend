@@ -405,7 +405,7 @@ class ResourceCURD:
         return meta
 
     @staticmethod
-    def attach_to_user(db: Session, *, user_id: int, resource_id: int) -> None:
+    def attach_to_user(db: Session, *, user_id: int, resource_id: int, is_public: bool = False) -> None:
         hit = (
             db.query(UserResource)
             .filter(UserResource.user_id == user_id, UserResource.resource_id == resource_id)
@@ -413,7 +413,7 @@ class ResourceCURD:
         )
         if hit:
             return
-        db.add(UserResource(user_id=user_id, resource_id=resource_id))
+        db.add(UserResource(user_id=user_id, resource_id=resource_id, is_public=is_public))
         db.flush()
 
     @staticmethod
@@ -437,6 +437,7 @@ class ResourceCURD:
         user_id: int,
         url: str,
         category_id: int,
+        is_system_public: bool = False,
     ) -> Resource:
         meta = ResourceCURD.extract_from_url(url)
         normalized = (url or "").strip()
@@ -477,6 +478,7 @@ class ResourceCURD:
                 "og_video": meta.get("og_video"),
                 "twitter_player": meta.get("twitter_player"),
             },
+            is_system_public=is_system_public,
         )
         db.add(obj)
         db.flush()
@@ -499,7 +501,7 @@ class ResourceCURD:
             db.add(a)
             db.flush()
 
-        ResourceCURD.attach_to_user(db, user_id=user_id, resource_id=obj.id)
+        ResourceCURD.attach_to_user(db, user_id=user_id, resource_id=obj.id, is_public=is_public)
         return obj
 
     @staticmethod
@@ -568,3 +570,4 @@ class ResourceCURD:
         db.add(obj)
         db.flush()
         return obj
+

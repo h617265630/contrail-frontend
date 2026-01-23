@@ -158,6 +158,7 @@ def create_my_resource(payload: ResourceCreateFromUrl, db: Session = Depends(get
             user_id=current_user.id,
             url=str(payload.url),
             category_id=payload.category_id,
+            is_system_public=payload.is_public,
         )
         db.commit()
         db.refresh(obj)
@@ -327,3 +328,4 @@ def update_my_resource(
         created_at=getattr(obj, "created_at", None),
     )
 
+

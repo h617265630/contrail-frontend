@@ -11,7 +11,7 @@ from __future__ import annotations
 from alembic import op
 
 
-revision = "20260122_0011"
+revision = "20260122_0011_fix_resourcetype_enum_values"
 down_revision = "20260122_0010"
 branch_labels = None
 depends_on = None

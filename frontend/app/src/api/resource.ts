@@ -19,18 +19,34 @@ export function extractVideoMetadata(url: string) {
 export interface DbResource {
   id: number
   resource_type: string
-  platform?: string | null
+  platform: string
   title: string
-  summary?: string | null
-  source_url?: string | null
-  thumbnail?: string | null
-  category_id: number
-  category_name?: string | null
-  difficulty?: number | null
-  tags?: Record<string, any> | null
-  raw_meta?: Record<string, any> | null
-  created_at?: string | null
+  summary: string | null
+  source_url: string
+  thumbnail: string | null
+  category_id: number | null
+  difficulty: string | null
+  tags: object
+  created_at: string
+  updated_at: string
+  category_name?: string
+  is_system_public?: boolean
 }
+
+// 添加资源的请求参数
+export interface CreateResourceRequest {
+  url: string
+  category_id: number
+  is_public: boolean
+}
+
+// 添加资源的响应
+export interface CreateResourceResponse {
+  resource: DbResource
+}
+
+// 添加资源
+
 
 export interface ChapterItem {
   start_seconds: number
@@ -65,7 +81,7 @@ export function listResources() {
 
 export function createMyResourceFromUrl(
   url: string,
-  payload?: { category_id: number },
+  payload?: { category_id: number; is_public?: boolean },
 ) {
   return request.post<DbResource, DbResource>('/resources/me', { url, ...(payload || {}) })
 }

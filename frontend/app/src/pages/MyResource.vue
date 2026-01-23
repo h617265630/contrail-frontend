@@ -1,249 +1,111 @@
 <template>
-  <div class="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-6">
-    <div class="max-w-7xl mx-auto">
-      <div class="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <h1 class="text-gray-900 mb-2">My Resources</h1>
-          <!-- http://localhost:5173/resources -->
-        </div>
-        <button
-          type="button"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
-          @click="openAddModal"
-        >
-          <Plus class="w-4 h-4" />
-          Add Resource
-        </button>
-      </div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-gray-900">我的资源</h1>
+      <button
+        @click="openAddModal"
+        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+      >
+        Add Resource
+      </button>
+    </div>
 
-      <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
-        <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-          <div class="w-full">
-            <div class="flex flex-wrap gap-2 mb-3">
-              <button
-                v-for="cat in categoryTags"
-                :key="cat"
-                type="button"
-                class="px-3 py-1.5 rounded-full text-sm font-semibold border transition-colors"
-                :class="selectedCategory === cat ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'"
-                @click="selectedCategory = cat"
-              >
-                {{ cat }}
-              </button>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          <div class="flex-1">
+            <div class="relative">
+              <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                v-model="searchKeyword"
+                placeholder="搜索资源标题..."
+                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
           </div>
-
-          <div class="relative flex-1 w-full">
-            <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search my resources..."
-              v-model="searchQuery"
-              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div class="flex gap-1 bg-gray-100 rounded-lg p-1">
-            <button @click="setView('grid')" :class="['p-2 rounded', viewMode === 'grid' ? 'bg-white shadow-sm' : 'text-gray-500']">
-              <Grid3x3 class="w-5 h-5" />
-            </button>
-            <button @click="setView('list')" :class="['p-2 rounded', viewMode === 'list' ? 'bg-white shadow-sm' : 'text-gray-500']">
-              <List class="w-5 h-5" />
-            </button>
+          <div class="flex gap-2">
+            <select
+              v-model="filterCategory"
+              class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">全部分类</option>
+              <option v-for="cat in dbCategories" :key="cat.id" :value="cat.id">
+                {{ cat.name }}
+              </option>
+            </select>
+            <select
+              v-model="filterType"
+              class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">全部类型</option>
+              <option value="video">视频</option>
+              <option value="article">文章</option>
+              <option value="document">文档</option>
+            </select>
           </div>
         </div>
       </div>
 
-      <div v-if="filteredResources.length === 0" class="text-center py-16 bg-white rounded-xl shadow-lg">
-        <BookOpen class="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h3 class="text-gray-900 mb-2">No resources yet</h3>
-        <p class="text-gray-600 mb-6">
-          {{ searchQuery ? 'Try a different keyword' : 'Go add your first resource in Resource Library' }}
-        </p>
-        <RouterLink
-          v-if="!searchQuery"
-          to="/resources"
-          class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
-        >
-          <Plus class="w-4 h-4" />
-          Add Resource
-        </RouterLink>
-      </div>
-
-      <div v-else>
-        <div v-if="viewMode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+      <div class="p-6">
+        <div v-if="loading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p class="mt-3 text-gray-600">加载中...</p>
+        </div>
+        <div v-else-if="resources.length === 0" class="text-center py-12">
+          <p class="text-gray-600">暂无资源</p>
+        </div>
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
           <div
             v-for="resource in filteredResources"
             :key="resource.id"
-            class="bg-white rounded-xl shadow-lg overflow-hidden transition-all cursor-pointer hover:shadow-xl h-90 flex flex-col"
+            class="bg-white rounded-xl shadow-lg overflow-hidden transition-all cursor-pointer h-90 flex flex-col hover:shadow-xl"
             @click="viewResource(resource)"
           >
             <div class="relative h-32">
-              <img :src="resource.thumbnail" :alt="resource.title" class="w-full h-full object-cover" />
-
+              <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="w-full h-full object-cover" />
               <div class="absolute top-3 right-3">
-                <div :class="['px-2 py-1 rounded-full flex items-center gap-1', getTypeColor(resource.type)]">
-                  <component :is="typeIcon(resource.type)" class="w-4 h-4" />
-                  <span class="text-xs capitalize">{{ resource.type }}</span>
-                </div>
+                <span class="px-2 py-1 rounded-full flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-semibold">
+                  {{ resource.type }}
+                </span>
               </div>
-
               <div class="absolute bottom-3 left-3">
-                <div class="px-2 py-1 rounded-full bg-black bg-opacity-60 text-white text-xs flex items-center gap-1">
-                  <LinkIcon class="w-3 h-3" />
-                  {{ resource.platform }}
-                </div>
+                <span class="px-2 py-1 rounded-full bg-black bg-opacity-60 text-white text-xs flex items-center gap-1">
+                  {{ resource.platform || '—' }}
+                </span>
               </div>
             </div>
-
             <div class="p-4 flex flex-col flex-1 min-h-0">
-              <div class="flex items-start justify-between mb-2">
-                <h3 class="text-gray-900 flex-1 font-semibold text-sm truncate">{{ resource.title }}</h3>
-              </div>
-
+              <h3 class="text-gray-900 font-semibold text-sm truncate mb-2">{{ resource.title }}</h3>
               <p class="text-gray-600 text-sm mb-3 line-clamp-3">{{ resource.summary }}</p>
-
-              <div class="flex items-center gap-4 text-xs text-gray-500">
-                <div class="flex items-center gap-1">
-                  <Tag class="w-3 h-3" />
-                  {{ resource.category }}
+              <div class="space-y-1 text-xs text-gray-600 mb-3">
+                <div class="flex items-center justify-between gap-3">
+                  <span class="text-gray-500">分类</span>
+                  <span class="font-semibold text-gray-700 truncate">{{ resource.category || '—' }}</span>
                 </div>
-                <div class="flex items-center gap-1">
-                  <LinkIcon class="w-3 h-3" />
-                  {{ resource.platform }}
+                <div class="flex items-center justify-between gap-3">
+                  <span class="text-gray-500">添加时间</span>
+                  <span class="font-semibold text-gray-700">{{ resource.addedDate || '—' }}</span>
                 </div>
-                <div>Added {{ resource.addedDate }}</div>
               </div>
-
-              <div class="mt-auto pt-4">
-                <div class="flex items-center gap-2">
+              <div class="mt-auto">
+                <div class="flex items-center gap-1 justify-start mb-2">
                   <button
                     type="button"
-                    class="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     @click.stop="togglePublic(resource)"
+                    :disabled="publicUpdatingId === resource.id"
                     aria-label="Toggle public/private"
                   >
-                    <span>—</span>
-                    <span
-                      class="relative h-5 w-9 rounded-full transition-colors"
-                      :class="'bg-gray-300'"
-                    >
-                      <span
-                        class="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform"
-                        :class="'translate-x-4'"
-                      />
+                    <span>{{ resource.is_public ? '公开' : '私有' }}</span>
+                    <span class="ml-1 relative h-4 w-7 rounded-full transition-colors" :class="resource.is_public ? 'bg-green-500' : 'bg-gray-300'">
+                      <span class="absolute left-0.5 top-0.5 h-3 w-3 rounded-full bg-white transition-transform" :class="resource.is_public ? 'translate-x-3' : ''" />
                     </span>
                   </button>
-
-                  <button
-                    @click.stop="viewResource(resource)"
-                    class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-                  >
-                    View
-                  </button>
                 </div>
-
-                <div class="grid grid-cols-2 gap-2 mt-2">
-                  <button
-                    type="button"
-                    class="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold"
-                    @click.stop="editResource(resource)"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    class="px-3 py-2 rounded-lg bg-pink-600 text-white hover:bg-pink-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                    :disabled="deletingId === resource.id"
-                    @click.stop="deleteResource(resource)"
-                  >
-                    {{ deletingId === resource.id ? 'Deleting…' : 'Delete' }}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div v-else class="space-y-4">
-          <div
-            v-for="resource in filteredResources"
-            :key="resource.id"
-            class="bg-white rounded-xl shadow-lg p-4 transition-all cursor-pointer hover:shadow-xl"
-            @click="viewResource(resource)"
-          >
-            <div class="flex gap-4">
-              <img :src="resource.thumbnail" :alt="resource.title" class="w-32 h-28 object-cover rounded-lg shrink-0" />
-
-              <div class="flex-1 min-w-0">
-                <div class="flex items-start justify-between gap-4 mb-2">
-                  <div class="flex-1">
-                    <h3 class="text-gray-900 mb-1">{{ resource.title }}</h3>
-                    <p class="text-gray-600 text-sm line-clamp-2">{{ resource.summary }}</p>
-                  </div>
-                  <div :class="['px-2 py-1 rounded-full flex items-center gap-1', getTypeColor(resource.type), 'shrink-0']">
-                    <component :is="typeIcon(resource.type)" class="w-4 h-4" />
-                    <span class="text-xs capitalize">{{ resource.type }}</span>
-                  </div>
-                </div>
-
-                <div class="flex items-center gap-4 text-xs text-gray-500">
-                  <div class="flex items-center gap-1">
-                    <Tag class="w-3 h-3" />
-                    {{ resource.category }}
-                  </div>
-                  <div class="flex items-center gap-1">
-                    <LinkIcon class="w-3 h-3" />
-                    {{ resource.platform }}
-                  </div>
-                  <div>Added {{ resource.addedDate }}</div>
-                </div>
-              </div>
-
-              <div class="shrink-0">
-                <div class="flex flex-col gap-2">
-                  <div class="flex items-center gap-2" @click.stop>
-                    <button
-                      type="button"
-                      class="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                      @click.stop="togglePublic(resource)"
-                      :disabled="publicUpdatingId === resource.id"
-                      aria-label="Toggle public/private"
-                    >
-                      <span>—</span>
-                      <span
-                        class="relative h-5 w-9 rounded-full transition-colors"
-                        :class="'bg-gray-300'"
-                      >
-                        <span
-                          class="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform"
-                          :class="'translate-x-4'"
-                        />
-                      </span>
-                    </button>
-
-                    <button
-                      @click.stop="viewResource(resource)"
-                      class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-                    >
-                      View
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    class="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold"
-                    @click.stop="editResource(resource)"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    class="px-3 py-2 rounded-lg bg-pink-600 text-white hover:bg-pink-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                    :disabled="deletingId === resource.id"
-                    @click.stop="deleteResource(resource)"
-                  >
-                    {{ deletingId === resource.id ? 'Deleting…' : 'Delete' }}
-                  </button>
+                <div class="flex items-center gap-1 justify-start">
+                  <button @click.stop="viewResource(resource)" class="flex-1 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xs font-semibold">View</button>
+                  <button type="button" class="flex-1 px-2 py-1 rounded bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold text-xs" @click.stop="editResource(resource)">Edit</button>
+                  <button type="button" class="flex-1 px-2 py-1 rounded bg-pink-600 text-white hover:bg-pink-700 font-semibold text-xs disabled:opacity-50 disabled:cursor-not-allowed" :disabled="deletingId === resource.id" @click.stop="deleteResource(resource)">{{ deletingId === resource.id ? 'Deleting…' : 'Delete' }}</button>
                 </div>
               </div>
             </div>
@@ -252,6 +114,7 @@
       </div>
     </div>
 
+    <!-- 添加资源模态框 -->
     <div v-if="showAddModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div class="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
@@ -291,6 +154,21 @@
                 <option v-for="c in dbCategories" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
               </select>
               <ChevronDown class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+
+          <!-- 公开/私有选项 -->
+          <div>
+            <label class="block text-gray-700 mb-2">资源状态</label>
+            <div class="flex items-center space-x-4">
+              <label class="flex items-center">
+                <input type="radio" v-model="isPublic" :value="false" class="mr-2">
+                <span>私有</span>
+              </label>
+              <label class="flex items-center">
+                <input type="radio" v-model="isPublic" :value="true" class="mr-2">
+                <span>公开</span>
+              </label>
             </div>
           </div>
 
@@ -375,6 +253,7 @@
       </div>
     </div>
 
+    <!-- 删除确认模态框 -->
     <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
         <div class="border-b border-gray-200 p-6 flex items-center justify-between">
@@ -404,11 +283,11 @@
           </button>
           <button
             type="button"
-            class="px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             @click="confirmDelete"
-            :disabled="!deleteTarget || deletingId !== null"
+            :disabled="deletingId !== null"
           >
-            {{ deletingId !== null ? 'Deleting…' : '确定' }}
+            {{ deletingId !== null ? '删除中...' : '确认删除' }}
           </button>
         </div>
       </div>
@@ -418,8 +297,8 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
-import { BookOpen, ChevronDown, FileText, Grid3x3, Link as LinkIcon, List, Plus, Search, Tag, Video, X } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { ChevronDown, Image, Search, Tag, X } from 'lucide-vue-next'
 import { createMyResourceFromUrl, deleteMyResource, extractVideoMetadata, listMyResources, type DbResource, type UrlExtractResponse } from '../api/resource'
 import { listCategories, type Category } from '../api/category'
 
@@ -434,24 +313,16 @@ type UiResource = {
   thumbnail: string
   type: 'video' | 'document' | 'article'
   addedDate?: string
+  is_public?: boolean
 }
 
 const resources = ref<UiResource[]>([])
-const searchQuery = ref('')
-const viewMode = ref<'grid' | 'list'>('grid')
+const searchKeyword = ref('')
+const filterCategory = ref('')
+const filterType = ref('')
+const loading = ref(false)
 const deletingId = ref<number | null>(null)
 const publicUpdatingId = ref<number | null>(null)
-
-const selectedCategory = ref('All')
-
-const categoryTags = computed(() => {
-  const set = new Set<string>()
-  for (const r of resources.value) {
-    const c = (r.category || '').trim() || 'Other'
-    set.add(c)
-  }
-  return ['All', ...Array.from(set).sort((a, b) => a.localeCompare(b))]
-})
 
 const showDeleteConfirm = ref(false)
 const deleteTarget = ref<UiResource | null>(null)
@@ -490,6 +361,7 @@ const extractError = ref('')
 const extractedMeta = ref<UrlExtractResponse | null>(null)
 const submitting = ref(false)
 const submitError = ref('')
+const isPublic = ref(false)
 
 const dbCategories = ref<Category[]>([])
 const addCategoryId = ref('')
@@ -523,6 +395,7 @@ function mapDbToUi(r: DbResource): UiResource {
     thumbnail: String((r as any).thumbnail || '').trim() || fallbackThumb,
     type,
     addedDate: formatDate(r.created_at),
+    is_public: (r as any).is_public,
   }
 }
 
@@ -531,6 +404,7 @@ async function togglePublic(resource: UiResource) {
 }
 
 async function load() {
+  loading.value = true;
   try {
     const data = await listMyResources()
     resources.value = (data || []).map(mapDbToUi)
@@ -538,6 +412,8 @@ async function load() {
     const msg = e?.response?.data?.detail || e?.message || 'Failed to load my resources'
     alert(String(msg))
     resources.value = []
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -546,7 +422,8 @@ async function loadCategories() {
     dbCategories.value = await listCategories()
     const other = dbCategories.value.find(c => String(c.code).toLowerCase() === 'other')
     if (other && !addCategoryId.value) addCategoryId.value = String(other.id)
-  } catch {
+  } catch (e: any) {
+    console.error('Error loading categories:', e)
     dbCategories.value = []
   }
 }
@@ -557,12 +434,14 @@ onMounted(() => {
 })
 
 const filteredResources = computed(() => {
-  const q = searchQuery.value.trim().toLowerCase()
-  const cat = selectedCategory.value
+  const q = searchKeyword.value.trim().toLowerCase()
+  const cat = filterCategory.value
+  const type = filterType.value
 
   return resources.value.filter(r => {
-    const matchCategory = cat === 'All' ? true : r.category === cat
-    if (!matchCategory) return false
+    const matchCategory = !cat || cat === '' || r.category === cat
+    const matchType = !type || type === '' || r.type === type
+    if (!matchCategory || !matchType) return false
     if (!q) return true
     return (
       r.title.toLowerCase().includes(q) ||
@@ -573,18 +452,8 @@ const filteredResources = computed(() => {
   })
 })
 
-watch(
-  categoryTags,
-  (next) => {
-    if (!next.includes(selectedCategory.value)) {
-      selectedCategory.value = 'All'
-    }
-  },
-  { immediate: true },
-)
-
 function setView(mode: 'grid' | 'list') {
-  viewMode.value = mode
+  // This function is not implemented in the template
 }
 
 function openAddModal() {
@@ -619,7 +488,11 @@ async function confirmAdd() {
   try {
     const catId = addCategoryId.value ? Number(addCategoryId.value) : NaN
     if (!Number.isFinite(catId)) throw new Error('请选择分类')
-    await createMyResourceFromUrl(urlInput.value, { category_id: catId })
+    await createMyResourceFromUrl({ 
+      url: urlInput.value, 
+      category_id: catId,
+      is_public: isPublic.value
+    })
     closeAddModal()
     await load()
   } catch (e: any) {
@@ -649,55 +522,30 @@ watch(
     }
 
     extracting.value = true
-    extractTimer = window.setTimeout(async () => {
-      try {
-        const data = await extractVideoMetadata(raw)
-        extractedMeta.value = {
-          ...data,
-          title: (data?.title || '').trim(),
-          description: (data?.description ?? null) ? String(data.description) : null,
-          thumbnail_url: (data?.thumbnail_url ?? null) ? String(data.thumbnail_url) : null,
-          author: (data?.author ?? null) ? String(data.author) : null,
-          publish_date: (data?.publish_date ?? null) ? String(data.publish_date) : null,
-          video_id: (data?.video_id ?? null) ? String(data.video_id) : null,
-          chapters: Array.isArray(data?.chapters) ? data.chapters : [],
-        }
-        if (!extractedMeta.value.title) {
-          extractError.value = 'Parse failed: missing title'
-          extractedMeta.value = null
-        }
-      } catch (e: any) {
-        const msg = e?.response?.data?.detail || e?.message || 'Parse failed'
-        extractError.value = String(msg)
-        extractedMeta.value = null
-      } finally {
-        extracting.value = false
-      }
-    }, 500)
+    extractTimer = window.setTimeout(() => {
+      extractVideoMetadata(raw)
+        .then((res) => {
+          extractedMeta.value = res
+          extracting.value = false
+        })
+        .catch((err) => {
+          const msg = err?.response?.data?.detail || err?.message || '解析失败'
+          extractError.value = String(msg)
+          extracting.value = false
+        })
+    }, 1200) as unknown as number
   },
+  { immediate: false }
 )
 
-function typeIcon(type: string) {
+function getResourceTypeClass(type: string) {
   switch (type) {
     case 'video':
-      return Video
-    case 'document':
-      return FileText
-    case 'article':
-      return BookOpen
-    default:
-      return FileText
-  }
-}
-
-function getTypeColor(type: string) {
-  switch (type) {
-    case 'video':
-      return 'bg-purple-100 text-purple-600'
-    case 'document':
       return 'bg-blue-100 text-blue-600'
     case 'article':
       return 'bg-green-100 text-green-600'
+    case 'document':
+      return 'bg-yellow-100 text-yellow-600'
     default:
       return 'bg-gray-100 text-gray-600'
   }

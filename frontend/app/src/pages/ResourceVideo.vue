@@ -27,16 +27,7 @@
               <div v-else class="absolute inset-0 flex items-center justify-center text-white/80">
                 Video preview is unavailable
               </div>
-function isYouTubeUrl(url) {
-  if (!url) return false;
-  return /youtube\.com\/watch\?v=|youtu\.be\//.test(url);
-}
 
-function toYouTubeEmbed(url) {
-  if (!url) return '';
-  const match = url.match(/(?:youtube\\.com\/watch\\?v=|youtu\\.be\/)([\w-]+)/);
-  return match ? `https://www.youtube.com/embed/${match[1]}` : url;
-}
 
               <div
                 v-if="playerFailed"
