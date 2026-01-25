@@ -12,6 +12,7 @@ const ResourceDocument = () => import('./pages/ResourceDocument.vue')
 const ResourceArticle = () => import('./pages/ResourceArticle.vue')
 const AddResourceToPath = () => import('./pages/AddResourceToPath.vue')
 const MyResource = () => import('./pages/MyResource.vue')
+const AddResource = () => import('./pages/AddResource.vue')
 const MyResourceEdit = () => import('./pages/MyResourceEdit.vue')
 const Partical = () => import('./pages/Partical.vue')
 const ParticalImage = () => import('./pages/ParticalImage.vue')
@@ -56,6 +57,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/register', name: 'register', component: Register },
   { path: '/resources', name: 'resources', component: ResourceLibrary },
   { path: '/my-resources', name: 'my-resources', component: MyResource },
+  { path: '/my-resources/add', name: 'add-resource', component: AddResource },
   // My resources (typed)
   { path: '/my-resources/video/:id', name: 'my-resource-video', component: ResourceVideo },
   { path: '/my-resources/document/:id', name: 'my-resource-document', component: ResourceDocument },

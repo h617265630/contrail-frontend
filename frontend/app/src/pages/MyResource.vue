@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold text-gray-900">我的资源</h1>
       <button
-        @click="openAddModal"
+        @click="$router.push({ name: 'add-resource' })"
         class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
       >
         Add Resource
@@ -24,15 +24,6 @@
             </div>
           </div>
           <div class="flex gap-2">
-            <select
-              v-model="filterCategory"
-              class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">全部分类</option>
-              <option v-for="cat in dbCategories" :key="cat.id" :value="cat.id">
-                {{ cat.name }}
-              </option>
-            </select>
             <select
               v-model="filterType"
               class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -96,7 +87,7 @@
                     :disabled="publicUpdatingId === resource.id"
                     aria-label="Toggle public/private"
                   >
-                    <span>{{ resource.is_public ? '公开' : '私有' }}</span>
+                    <span>{{ resource.is_system_public ? '公开' : '私有' }}</span>
                     <span class="ml-1 relative h-4 w-7 rounded-full transition-colors" :class="resource.is_public ? 'bg-green-500' : 'bg-gray-300'">
                       <span class="absolute left-0.5 top-0.5 h-3 w-3 rounded-full bg-white transition-transform" :class="resource.is_public ? 'translate-x-3' : ''" />
                     </span>
@@ -110,145 +101,6 @@
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 添加资源模态框 -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
-          <h2 class="text-gray-900">Add New Resource</h2>
-          <button type="button" @click="closeAddModal" class="text-gray-400 hover:text-gray-600">
-            <X class="w-6 h-6" />
-          </button>
-        </div>
-
-        <div class="p-6 space-y-4">
-          <div>
-            <label class="block text-gray-700 mb-2">支持的平台（任选其一填写链接）</label>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div v-for="p in supportedPlatforms" :key="p.key" class="rounded-lg border border-gray-200 bg-white p-3">
-                <div class="text-xs font-semibold text-gray-700 mb-2">{{ p.label }}</div>
-                <input
-                  type="url"
-                  :placeholder="p.placeholder"
-                  v-model="(platformUrlInputs as any)[p.key]"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            <p class="mt-2 text-xs text-gray-500">已自动选择第一个非空输入作为解析与提交的 URL。</p>
-            <p v-if="extractError" class="mt-2 text-sm text-red-600">{{ extractError }}</p>
-          </div>
-
-          <div>
-            <label class="block text-gray-700 mb-2">Category</label>
-            <div class="relative">
-              <Tag class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <select
-                v-model="addCategoryId"
-                class="w-full appearance-none pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white cursor-pointer"
-              >
-                <option value="">选择分类</option>
-                <option v-for="c in dbCategories" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
-              </select>
-              <ChevronDown class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-            </div>
-          </div>
-
-          <!-- 公开/私有选项 -->
-          <div>
-            <label class="block text-gray-700 mb-2">资源状态</label>
-            <div class="flex items-center space-x-4">
-              <label class="flex items-center">
-                <input type="radio" v-model="isPublic" :value="false" class="mr-2">
-                <span>私有</span>
-              </label>
-              <label class="flex items-center">
-                <input type="radio" v-model="isPublic" :value="true" class="mr-2">
-                <span>公开</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <div class="flex items-center justify-between gap-3 mb-2">
-              <h3 class="text-gray-900 text-sm font-semibold">Parsed Info</h3>
-              <span v-if="extracting" class="text-xs text-gray-500">Parsing…</span>
-            </div>
-
-            <div class="space-y-3">
-              <div v-if="extractedMeta?.thumbnail_url" class="rounded-lg border border-gray-200 bg-white p-2">
-                <img
-                  :src="extractedMeta.thumbnail_url"
-                  :alt="extractedMeta?.title || 'thumbnail'"
-                  class="h-28 w-full object-cover rounded-md"
-                />
-              </div>
-
-              <div>
-                <div class="text-xs text-gray-500 mb-1">Title</div>
-                <div class="text-sm text-gray-900 wrap-break-word">{{ extractedMeta?.title || '—' }}</div>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <div class="text-xs text-gray-500 mb-1">Author</div>
-                  <div class="text-sm text-gray-700 wrap-break-word">{{ extractedMeta?.author || '—' }}</div>
-                </div>
-                <div>
-                  <div class="text-xs text-gray-500 mb-1">Publish date</div>
-                  <div class="text-sm text-gray-700 wrap-break-word">{{ formatExtractDate(extractedMeta?.publish_date || null) || '—' }}</div>
-                </div>
-              </div>
-
-              <div>
-                <div class="text-xs text-gray-500 mb-1">Video ID</div>
-                <div class="text-sm text-gray-700 wrap-break-word">{{ extractedMeta?.video_id || '—' }}</div>
-              </div>
-
-              <div>
-                <div class="text-xs text-gray-500 mb-1">Description</div>
-                <div class="text-sm text-gray-700 whitespace-pre-wrap wrap-break-word max-h-48 overflow-auto">{{ extractedMeta?.description || '—' }}</div>
-              </div>
-
-              <div>
-                <div class="text-xs text-gray-500 mb-1">Chapters</div>
-                <div v-if="(extractedMeta?.chapters || []).length === 0" class="text-sm text-gray-700">—</div>
-                <div v-else class="max-h-56 overflow-auto rounded-lg border border-gray-200 bg-white">
-                  <div
-                    v-for="ch in (extractedMeta?.chapters || []).slice(0, 12)"
-                    :key="ch.start_seconds + ':' + ch.title"
-                    class="flex items-start justify-between gap-3 px-3 py-2 border-b border-gray-100 last:border-b-0"
-                  >
-                    <div class="min-w-0">
-                      <div class="text-sm text-gray-900 wrap-break-word">{{ ch.title }}</div>
-                      <div v-if="ch.description" class="text-xs text-gray-500 mt-0.5 wrap-break-word">{{ ch.description }}</div>
-                    </div>
-                    <div class="shrink-0 text-xs font-semibold text-gray-500">{{ ch.timestamp }}</div>
-                  </div>
-                </div>
-                <div v-if="(extractedMeta?.chapters || []).length > 12" class="mt-1 text-xs text-gray-500">
-                  仅展示前 12 条章节
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <p v-if="submitError" class="text-sm text-red-600">{{ submitError }}</p>
-        </div>
-
-        <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex gap-3 justify-end">
-          <button type="button" @click="closeAddModal" class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
-          <button
-            type="button"
-            @click="confirmAdd"
-            :disabled="!urlInput || extracting || !extractedMeta?.title || submitting"
-            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {{ submitting ? 'Saving…' : 'Add Resource' }}
-          </button>
         </div>
       </div>
     </div>
@@ -296,11 +148,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ChevronDown, Image, Search, Tag, X } from 'lucide-vue-next'
-import { createMyResourceFromUrl, deleteMyResource, extractVideoMetadata, listMyResources, type DbResource, type UrlExtractResponse } from '../api/resource'
-import { listCategories, type Category } from '../api/category'
+import { Search, X } from 'lucide-vue-next'
+import { deleteMyResource, listMyResources, type DbResource } from '../api/resource'
 
 const router = useRouter()
 
@@ -313,12 +164,11 @@ type UiResource = {
   thumbnail: string
   type: 'video' | 'document' | 'article'
   addedDate?: string
-  is_public?: boolean
+  is_system_public?: boolean
 }
 
 const resources = ref<UiResource[]>([])
 const searchKeyword = ref('')
-const filterCategory = ref('')
 const filterType = ref('')
 const loading = ref(false)
 const deletingId = ref<number | null>(null)
@@ -328,54 +178,9 @@ const showDeleteConfirm = ref(false)
 const deleteTarget = ref<UiResource | null>(null)
 const deleteError = ref('')
 
-const showAddModal = ref(false)
-const platformUrlInputs = reactive({
-  youtube: '',
-  bilibili: '',
-  github: '',
-  medium: '',
-  reddit: '',
-  substack: '',
-  devto: '',
-})
-
-const supportedPlatforms = [
-  { key: 'youtube', label: 'YouTube', placeholder: 'https://www.youtube.com/watch?v=...' },
-  { key: 'bilibili', label: 'Bilibili', placeholder: 'https://www.bilibili.com/video/...' },
-  { key: 'github', label: 'GitHub', placeholder: 'https://github.com/... (repo / issue / doc)' },
-  { key: 'medium', label: 'Medium', placeholder: 'https://medium.com/.../...' },
-  { key: 'reddit', label: 'Reddit', placeholder: 'https://www.reddit.com/r/.../comments/...' },
-  { key: 'substack', label: 'Substack', placeholder: 'https://xxx.substack.com/p/...' },
-  { key: 'devto', label: 'Dev.to', placeholder: 'https://dev.to/.../...' },
-]
-
-const urlInput = computed(() => {
-  for (const p of supportedPlatforms) {
-    const v = String((platformUrlInputs as any)[p.key] || '').trim()
-    if (v) return v
-  }
-  return ''
-})
-const extracting = ref(false)
-const extractError = ref('')
-const extractedMeta = ref<UrlExtractResponse | null>(null)
-const submitting = ref(false)
-const submitError = ref('')
-const isPublic = ref(false)
-
-const dbCategories = ref<Category[]>([])
-const addCategoryId = ref('')
-
 const fallbackThumb = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=225&fit=crop'
 
 function formatDate(iso?: string | null) {
-  if (!iso) return ''
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ''
-  return d.toLocaleDateString()
-}
-
-function formatExtractDate(iso?: string | null) {
   if (!iso) return ''
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return ''
@@ -417,31 +222,17 @@ async function load() {
   }
 }
 
-async function loadCategories() {
-  try {
-    dbCategories.value = await listCategories()
-    const other = dbCategories.value.find(c => String(c.code).toLowerCase() === 'other')
-    if (other && !addCategoryId.value) addCategoryId.value = String(other.id)
-  } catch (e: any) {
-    console.error('Error loading categories:', e)
-    dbCategories.value = []
-  }
-}
-
 onMounted(() => {
-  void loadCategories()
   load()
 })
 
 const filteredResources = computed(() => {
   const q = searchKeyword.value.trim().toLowerCase()
-  const cat = filterCategory.value
   const type = filterType.value
 
   return resources.value.filter(r => {
-    const matchCategory = !cat || cat === '' || r.category === cat
     const matchType = !type || type === '' || r.type === type
-    if (!matchCategory || !matchType) return false
+    if (!matchType) return false
     if (!q) return true
     return (
       r.title.toLowerCase().includes(q) ||
@@ -451,92 +242,6 @@ const filteredResources = computed(() => {
     )
   })
 })
-
-function setView(mode: 'grid' | 'list') {
-  // This function is not implemented in the template
-}
-
-function openAddModal() {
-  showAddModal.value = true
-  for (const p of supportedPlatforms) {
-    ;(platformUrlInputs as any)[p.key] = ''
-  }
-  if (!addCategoryId.value) {
-    const other = dbCategories.value.find(c => String(c.code).toLowerCase() === 'other')
-    addCategoryId.value = other ? String(other.id) : ''
-  }
-  extractedMeta.value = null
-  extractError.value = ''
-  submitError.value = ''
-}
-
-function closeAddModal() {
-  showAddModal.value = false
-  for (const p of supportedPlatforms) {
-    ;(platformUrlInputs as any)[p.key] = ''
-  }
-  addCategoryId.value = ''
-  extractedMeta.value = null
-  extractError.value = ''
-  submitError.value = ''
-}
-
-async function confirmAdd() {
-  if (!urlInput.value || !extractedMeta.value?.title) return
-  submitError.value = ''
-  submitting.value = true
-  try {
-    const catId = addCategoryId.value ? Number(addCategoryId.value) : NaN
-    if (!Number.isFinite(catId)) throw new Error('请选择分类')
-    await createMyResourceFromUrl({ 
-      url: urlInput.value, 
-      category_id: catId,
-      is_public: isPublic.value
-    })
-    closeAddModal()
-    await load()
-  } catch (e: any) {
-    const msg = e?.response?.data?.detail || e?.message || 'Failed to add resource'
-    submitError.value = String(msg)
-  } finally {
-    submitting.value = false
-  }
-}
-
-let extractTimer: number | null = null
-watch(
-  () => urlInput.value,
-  (nextUrl) => {
-    extractError.value = ''
-    extractedMeta.value = null
-
-    if (extractTimer) {
-      clearTimeout(extractTimer)
-      extractTimer = null
-    }
-
-    const raw = String(nextUrl || '').trim()
-    if (!raw) {
-      extracting.value = false
-      return
-    }
-
-    extracting.value = true
-    extractTimer = window.setTimeout(() => {
-      extractVideoMetadata(raw)
-        .then((res) => {
-          extractedMeta.value = res
-          extracting.value = false
-        })
-        .catch((err) => {
-          const msg = err?.response?.data?.detail || err?.message || '解析失败'
-          extractError.value = String(msg)
-          extracting.value = false
-        })
-    }, 1200) as unknown as number
-  },
-  { immediate: false }
-)
 
 function getResourceTypeClass(type: string) {
   switch (type) {

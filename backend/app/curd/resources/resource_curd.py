@@ -438,6 +438,7 @@ class ResourceCURD:
         url: str,
         category_id: int,
         is_system_public: bool = False,
+        is_public: bool = False,
     ) -> Resource:
         meta = ResourceCURD.extract_from_url(url)
         normalized = (url or "").strip()

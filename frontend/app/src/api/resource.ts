@@ -37,7 +37,7 @@ export interface DbResource {
 export interface CreateResourceRequest {
   url: string
   category_id: number
-  is_public: boolean
+  is_system_public: boolean
 }
 
 // 添加资源的响应
@@ -81,7 +81,7 @@ export function listResources() {
 
 export function createMyResourceFromUrl(
   url: string,
-  payload?: { category_id: number; is_public?: boolean },
+  payload?: { category_id: number; is_public: boolean },
 ) {
   return request.post<DbResource, DbResource>('/resources/me', { url, ...(payload || {}) })
 }
