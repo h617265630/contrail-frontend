@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
+  <div class="min-h-screen bg-background text-foreground flex flex-col">
     <NavBar />
     <main class="py-6 px-4 flex-1">
       <router-view />

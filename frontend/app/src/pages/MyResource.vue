@@ -88,8 +88,8 @@
                     aria-label="Toggle public/private"
                   >
                     <span>{{ resource.is_system_public ? '公开' : '私有' }}</span>
-                    <span class="ml-1 relative h-4 w-7 rounded-full transition-colors" :class="resource.is_public ? 'bg-green-500' : 'bg-gray-300'">
-                      <span class="absolute left-0.5 top-0.5 h-3 w-3 rounded-full bg-white transition-transform" :class="resource.is_public ? 'translate-x-3' : ''" />
+                    <span class="ml-1 relative h-4 w-7 rounded-full transition-colors" :class="resource.is_system_public ? 'bg-green-500' : 'bg-gray-300'">
+                      <span class="absolute left-0.5 top-0.5 h-3 w-3 rounded-full bg-white transition-transform" :class="resource.is_system_public ? 'translate-x-3' : ''" />
                     </span>
                   </button>
                 </div>
@@ -200,7 +200,7 @@ function mapDbToUi(r: DbResource): UiResource {
     thumbnail: String((r as any).thumbnail || '').trim() || fallbackThumb,
     type,
     addedDate: formatDate(r.created_at),
-    is_public: (r as any).is_public,
+    is_system_public: (r as any).is_system_public,
   }
 }
 

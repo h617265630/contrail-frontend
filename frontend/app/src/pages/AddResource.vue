@@ -168,11 +168,12 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ChevronDown, Tag } from 'lucide-vue-next'
 import { createMyResourceFromUrl, extractVideoMetadata, type UrlExtractResponse } from '../api/resource'
 import { listCategories, type Category } from '../api/category'
 
+const route = useRoute()
 const router = useRouter()
 
 const supportedPlatforms = [
@@ -203,6 +204,29 @@ const selectedPlatformPlaceholder = computed(() => {
   const platform = supportedPlatforms.find(p => p.key === selectedPlatform.value)
   return platform?.placeholder || '输入资源链接'
 })
+
+function detectPlatformFromUrl(url: string) {
+  const u = String(url || '').toLowerCase()
+  if (!u) return ''
+  if (u.includes('youtube.com') || u.includes('youtu.be')) return 'youtube'
+  if (u.includes('bilibili.com')) return 'bilibili'
+  if (u.includes('xiaohongshu.com')) return 'xiaohongshu'
+  if (u.includes('github.com')) return 'github'
+  if (u.includes('medium.com')) return 'medium'
+  if (u.includes('reddit.com')) return 'reddit'
+  if (u.includes('substack.com')) return 'substack'
+  if (u.includes('dev.to')) return 'devto'
+  return ''
+}
+
+function applyPrefillFromRoute() {
+  const q = (route.query as any)?.url
+  const next = Array.isArray(q) ? String(q[0] || '').trim() : String(q || '').trim()
+  if (!next) return
+  urlInput.value = next
+  const detected = detectPlatformFromUrl(next)
+  if (detected) selectedPlatform.value = detected
+}
 
 function formatExtractDate(iso?: string | null) {
   if (!iso) return ''
@@ -279,5 +303,13 @@ watch(
 
 onMounted(() => {
   void loadCategories()
+  applyPrefillFromRoute()
 })
+
+watch(
+  () => (route.query as any)?.url,
+  () => {
+    applyPrefillFromRoute()
+  },
+)
 </script>

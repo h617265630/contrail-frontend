@@ -81,7 +81,7 @@ export function listResources() {
 
 export function createMyResourceFromUrl(
   url: string,
-  payload?: { category_id: number; is_public: boolean },
+  payload?: { category_id: number; is_public?: boolean },
 ) {
   return request.post<DbResource, DbResource>('/resources/me', { url, ...(payload || {}) })
 }

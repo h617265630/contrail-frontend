@@ -1,7 +1,7 @@
 <template>
-	<div class="max-w-7xl mx-auto space-y-10">
+	<div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
 		<!-- Banner -->
-		<section class="relative overflow-hidden rounded-2xl text-white shadow-xl">
+		<section class="relative overflow-hidden text-white shadow-xl">
 			<img
 				aria-hidden="true"
 				src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1600&h=900&fit=crop"
@@ -22,30 +22,91 @@
 						for a quick overview.
 					</p>
 					<div class="flex flex-wrap gap-3">
-						<RouterLink
+						<Button
+							:as="RouterLinkComp"
 							to="/learningpool"
-							class="inline-flex items-center gap-2 rounded-lg bg-white text-blue-700 px-4 py-2 text-sm font-semibold shadow hover:bg-blue-50"
+							variant="default"
+							size="sm"
+							class="rounded-lg bg-white text-blue-700 hover:bg-blue-50"
 						>
 							Start now
 							<span aria-hidden>→</span>
-						</RouterLink>
-						<RouterLink
+						</Button>
+						<Button
+							:as="RouterLinkComp"
 							to="/my-paths"
-							class="inline-flex items-center gap-2 rounded-lg border border-white/30 text-white px-4 py-2 text-sm font-semibold hover:bg-white/10"
+							variant="outline"
+							size="sm"
+							class="rounded-lg border-white/30 text-white hover:bg-white/10 hover:text-white"
 						>
 							View all paths
-						</RouterLink>
-						<RouterLink
+						</Button>
+						<Button
+							:as="RouterLinkComp"
 							to="/createpath"
-							class="inline-flex items-center gap-2 rounded-lg bg-pink-600 text-white px-4 py-2 text-sm font-semibold shadow hover:bg-pink-700"
+							variant="default"
+							size="sm"
+							class="rounded-lg bg-pink-600 text-white hover:bg-pink-700"
 						>
 							Create path
-						</RouterLink>
+						</Button>
 					</div>
 				</div>
-				<div class="hidden md:block w-64 h-40 rounded-xl bg-white/10 backdrop-blur border border-white/20" aria-hidden>
+				<div class="hidden md:block w-64 h-40 bg-white/10 backdrop-blur border border-white/20" aria-hidden>
 					<div class="h-full w-full flex items-center justify-center text-white/70 text-sm">
 						Banner Illustration
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section class="border-b border-border pb-8">
+			<div class="grid gap-6 md:grid-cols-12 md:items-end">
+				<div class="md:col-span-8">
+					<p class="text-xs font-medium tracking-[0.14em] uppercase text-muted-foreground">{{ t('Contrail') }}</p>
+					<h1 class="mt-3 text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+						{{ t('Build system-level skills with structured learning paths') }}
+					</h1>
+					<p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+						{{ t('This is a Learning Path Platform: create and discover great learning paths, turn scattered knowledge into an actionable plan, and track progress as you improve over time.') }}
+					</p>
+					<p class="mt-3 text-xs text-muted-foreground">
+						Read
+						<RouterLink to="/about" class="mx-1 underline underline-offset-4 hover:text-foreground">
+							About
+						</RouterLink>
+						for a quick overview.
+					</p>
+				</div>
+				<div class="md:col-span-4 md:flex md:justify-end">
+					<div class="flex flex-wrap gap-2">
+						<Button
+							:as="RouterLinkComp"
+							to="/learningpool"
+							variant="default"
+							size="sm"
+							class="rounded-none"
+						>
+							Start now
+						</Button>
+						<Button
+							:as="RouterLinkComp"
+							to="/my-paths"
+							variant="outline"
+							size="sm"
+							class="rounded-none"
+						>
+							View all paths
+						</Button>
+						<Button
+							:as="RouterLinkComp"
+							to="/createpath"
+							variant="outline"
+							size="sm"
+							class="rounded-none bg-foreground text-background hover:bg-foreground/90 hover:text-background"
+						>
+							Create path
+						</Button>
 					</div>
 				</div>
 			</div>
@@ -55,10 +116,18 @@
 		<section class="space-y-4">
 			<div class="flex items-center justify-between">
 				<div>
-					<h2 class="text-xl font-semibold text-gray-900">Featured Learning Paths</h2>
-					<p class="text-gray-600 text-sm">5 popular paths to get started</p>
+					<h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Featured Learning Paths</h2>
+					<p class="text-sm text-muted-foreground">5 popular paths to get started</p>
 				</div>
-				<RouterLink to="/my-paths" class="text-blue-600 hover:text-blue-700 text-sm font-medium">View all</RouterLink>
+				<Button
+					:as="RouterLinkComp"
+					to="/my-paths"
+					variant="ghost"
+					size="sm"
+					class="rounded-none px-0 hover:bg-transparent"
+				>
+					View all
+				</Button>
 			</div>
 			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
 				<RouterLink
@@ -90,10 +159,18 @@
 		<section class="space-y-4">
 			<div class="flex items-center justify-between">
 				<div>
-					<h2 class="text-xl font-semibold text-gray-900">LearningPool Picks</h2>
-					<p class="text-gray-600 text-sm">Masonry layout (up to 6 columns on large screens)</p>
+					<h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">LearningPool Picks</h2>
+					<p class="text-sm text-muted-foreground">Masonry layout (up to 6 columns on large screens)</p>
 				</div>
-				<RouterLink to="/learningpool" class="text-blue-600 hover:text-blue-700 text-sm font-medium">Open LearningPool</RouterLink>
+				<Button
+					:as="RouterLinkComp"
+					to="/learningpool"
+					variant="ghost"
+					size="sm"
+					class="rounded-none px-0 hover:bg-transparent"
+				>
+					Open LearningPool
+				</Button>
 			</div>
 			<div class="columns-1 sm:columns-2 md:columns-3 lg:columns-6 gap-4">
 				<RouterLink
@@ -126,9 +203,12 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
+import { Button } from '../components/ui/button'
 import Card from '../components/ui/Card.vue'
 import { useI18n } from '../i18n'
 import { listPublicLearningPaths, type PublicLearningPath } from '../api/learningPath'
+
+const RouterLinkComp = RouterLink
 
 const { t } = useI18n()
 

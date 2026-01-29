@@ -1,78 +1,98 @@
 <template>
-  <div class="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-6">
-    <div class="max-w-7xl mx-auto">
-      <div class="mb-8">
-        <h1 class="text-gray-900 mb-2">Resource Library</h1>
-        <p class="text-gray-600">Manage your resources</p>
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+    <section class="border-b border-border pb-8">
+      <div class="grid gap-6 md:grid-cols-12 md:items-end">
+        <div class="md:col-span-8">
+          <p class="text-xs font-medium tracking-[0.14em] uppercase text-muted-foreground">Resources</p>
+          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-foreground md:text-4xl">Resource Library</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Manage your resources</p>
+        </div>
       </div>
+    </section>
 
-      <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
+    <Card as="section" :hoverable="false" class="rounded-none">
+      <div class="p-4">
         <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
           <div class="flex flex-col sm:flex-row gap-3 flex-1 w-full lg:w-auto">
             <div class="relative flex-1">
-              <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
+              <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
                 ref="searchInputEl"
                 type="text"
                 placeholder="Search resources..."
                 v-model="searchQuery"
-                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="h-10 w-full rounded-none pl-10"
               />
             </div>
 
             <div class="relative">
               <select
                 v-model="selectedCategory"
-                class="appearance-none pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white cursor-pointer"
+                class="h-10 appearance-none rounded-none border border-input bg-background pl-10 pr-10 text-sm text-foreground outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer"
               >
                 <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
               </select>
-              <Filter class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-              <ChevronDown class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+              <Filter class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             </div>
           </div>
 
           <div class="flex gap-3 w-full lg:w-auto">
-            <div class="flex gap-1 bg-gray-100 rounded-lg p-1">
-              <button @click="setView('grid')" :class="['p-2 rounded', viewMode === 'grid' ? 'bg-white shadow-sm' : 'text-gray-500']">
-                <Grid3x3 class="w-5 h-5" />
-              </button>
-              <button @click="setView('list')" :class="['p-2 rounded', viewMode === 'list' ? 'bg-white shadow-sm' : 'text-gray-500']">
-                <List class="w-5 h-5" />
-              </button>
+            <div class="flex gap-1 border border-border bg-background rounded-none p-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                class="rounded-none"
+                :class="viewMode === 'grid' ? 'bg-accent text-accent-foreground' : ''"
+                @click="setView('grid')"
+              >
+                <Grid3x3 class="w-4 h-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                class="rounded-none"
+                :class="viewMode === 'list' ? 'bg-accent text-accent-foreground' : ''"
+                @click="setView('list')"
+              >
+                <List class="w-4 h-4" />
+              </Button>
             </div>
 
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
+              class="rounded-none"
               @click="focusSearch"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
               <Search class="w-4 h-4" />
               Search
-            </button>
+            </Button>
           </div>
         </div>
       </div>
+    </Card>
 
-      <div v-if="loading" class="text-center py-16 bg-white rounded-xl shadow-lg">
-        <p class="text-gray-600">Loading…</p>
-      </div>
+    <div v-if="loading" class="text-center py-16">
+      <p class="text-sm text-muted-foreground">Loading…</p>
+    </div>
 
-      <div v-else-if="filteredResources.length === 0" class="text-center py-16 bg-white rounded-xl shadow-lg">
-        <BookOpen class="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h3 class="text-gray-900 mb-2">No resources found</h3>
-        <p class="text-gray-600 mb-6">
+    <Card v-else-if="filteredResources.length === 0" as="section" :hoverable="false" class="rounded-none">
+      <div class="py-16 text-center">
+        <BookOpen class="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+        <h3 class="text-foreground mb-2">No resources found</h3>
+        <p class="text-muted-foreground mb-6">
           {{ searchQuery || selectedCategory !== 'All' ? 'Try adjusting your filters' : 'Start by adding your first resource' }}
         </p>
-        <button
-          type="button"
-          @click="focusSearch"
-          class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
-        >
+        <Button type="button" variant="outline" size="sm" class="rounded-none" @click="focusSearch">
           <Search class="w-4 h-4" />
           Search
-        </button>
+        </Button>
       </div>
+    </Card>
 
       <div v-else>
         <div v-if="viewMode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
@@ -230,7 +250,6 @@
       </div>
     </div>
 
-  </div>
 
   <div v-if="showAddResultModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
@@ -320,6 +339,9 @@
 import { computed, onMounted, ref } from 'vue'
 import { BookOpen, ChevronDown, FileText, Filter, Grid3x3, Link as LinkIcon, List, Plus, Scissors, Search, Tag, Video, X } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import Card from '../components/ui/Card.vue'
 import {
   addPublicResourceToMyResourcesWithStatus,
   createMyResourceFromUrl,

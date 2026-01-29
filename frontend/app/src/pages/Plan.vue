@@ -1,68 +1,83 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-6">
-    <div class="max-w-5xl mx-auto space-y-8">
-    <header class="space-y-2">
-      <p class="text-sm uppercase tracking-wide text-blue-600 font-semibold">Plans</p>
-      <h1 class="text-3xl font-bold text-gray-900">Choose the plan that fits you</h1>
-      <p class="text-gray-600">Use Contrail’s core features to start learning with structure.</p>
-      <div class="inline-flex items-center gap-2 rounded-full bg-white border border-gray-200 px-3 py-1 text-sm text-gray-700">
-        <span class="font-semibold">Current plan:</span>
-        <span class="font-bold text-gray-900">{{ currentPlan }}</span>
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+    <section class="border-b border-border pb-8">
+      <div class="grid gap-6 md:grid-cols-12 md:items-end">
+        <div class="md:col-span-8">
+          <p class="text-xs font-medium tracking-[0.14em] uppercase text-muted-foreground">Plans</p>
+          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-foreground md:text-4xl">Choose the plan that fits you</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Use Contrail’s core features to start learning with structure.</p>
+        </div>
+        <div class="md:col-span-4 md:flex md:justify-end">
+          <div class="inline-flex items-center gap-2 border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
+            <span class="font-semibold text-foreground">Current plan:</span>
+            <span class="font-semibold text-foreground">{{ currentPlan }}</span>
+          </div>
+        </div>
       </div>
-    </header>
+    </section>
 
-    <div class="grid gap-4 md:grid-cols-3">
-      <article
+    <section class="grid gap-4 md:grid-cols-3">
+      <Card
         v-for="plan in plans"
         :key="plan.id"
-        class="rounded-2xl bg-white shadow-lg p-6 flex flex-col gap-4 h-full"
-        :class="[plan.highlight ? 'ring-1 ring-blue-200' : '', isCurrent(plan) ? 'ring-2 ring-blue-400' : '']"
+        as="article"
+        :hoverable="true"
+        class="rounded-none"
+        :class="[plan.highlight ? 'ring-1 ring-primary/20' : '', isCurrent(plan) ? 'ring-2 ring-primary/40' : '']"
       >
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-xl font-semibold text-gray-900">{{ plan.name }}</h2>
-            <p class="text-gray-600 text-sm">{{ plan.description }}</p>
+        <div class="p-6 flex flex-col gap-4 h-full">
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <h2 class="text-xl font-semibold text-foreground">{{ plan.name }}</h2>
+              <p class="text-muted-foreground text-sm">{{ plan.description }}</p>
+            </div>
+            <span v-if="plan.highlight" class="px-2 py-1 border border-border bg-background text-xs font-semibold text-foreground">Recommended</span>
           </div>
-          <span v-if="plan.highlight" class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">Recommended</span>
+
+          <div class="space-y-2 flex-1">
+            <p class="text-sm font-semibold text-foreground">Best for:</p>
+            <p class="text-sm text-muted-foreground">{{ plan.suitable }}</p>
+
+            <p class="text-sm font-semibold text-foreground mt-2">Includes:</p>
+            <ul class="space-y-1 text-sm text-muted-foreground list-disc list-inside">
+              <li v-for="feat in plan.features" :key="feat">{{ feat }}</li>
+            </ul>
+
+            <p v-if="plan.tagline" class="text-sm text-muted-foreground mt-2">{{ plan.tagline }}</p>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            class="rounded-none"
+            :class="isCurrent(plan) ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : ''"
+            @click="onSelectPlan(plan)"
+          >
+            {{ isCurrent(plan) ? 'Current plan' : plan.cta }}
+          </Button>
         </div>
-
-        <div class="space-y-2 flex-1">
-          <p class="text-sm font-semibold text-gray-800">Best for:</p>
-          <p class="text-sm text-gray-700">{{ plan.suitable }}</p>
-
-          <p class="text-sm font-semibold text-gray-800 mt-2">Includes:</p>
-          <ul class="space-y-1 text-sm text-gray-700 list-disc list-inside">
-            <li v-for="feat in plan.features" :key="feat">{{ feat }}</li>
-          </ul>
-
-          <p v-if="plan.tagline" class="text-sm text-gray-600 mt-2">{{ plan.tagline }}</p>
-        </div>
-
-        <button
-          class="w-full md:w-auto px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm text-gray-700 text-sm font-semibold hover:bg-gray-50 hover:border-gray-300 transition-colors"
-          type="button"
-          @click="onSelectPlan(plan)"
-        >
-          {{ isCurrent(plan) ? 'Current plan' : plan.cta }}
-        </button>
-      </article>
-    </div>
-
-    <section class="bg-white rounded-2xl shadow-lg p-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-3">Notes</h2>
-      <ul class="space-y-1 text-sm text-gray-700 list-disc list-inside">
-        <li>All plans include progress tracking</li>
-        <li>You can upgrade or downgrade anytime</li>
-        <li>Your learning data always stays yours</li>
-      </ul>
+      </Card>
     </section>
-    </div>
+
+    <Card as="section" :hoverable="false" class="rounded-none">
+      <div class="p-6">
+        <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground mb-3">Notes</h2>
+        <ul class="space-y-1 text-sm text-muted-foreground list-disc list-inside">
+          <li>All plans include progress tracking</li>
+          <li>You can upgrade or downgrade anytime</li>
+          <li>Your learning data always stays yours</li>
+        </ul>
+      </div>
+    </Card>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { getPlanInfo, selectPlan as persistSelectPlan, type PlanName } from '../utils/plan'
+import { Button } from '../components/ui/button'
+import Card from '../components/ui/Card.vue'
 
 type Plan = {
   id: string

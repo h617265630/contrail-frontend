@@ -1,80 +1,133 @@
 <template>
-  <header class="fixed top-0 left-0 right-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
-    <div class="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between gap-4">
-      <RouterLink to="/home" class="flex items-center gap-2 font-semibold text-gray-900">
+  <header class="fixed top-0 left-0 right-0 z-30 border-b border-border bg-background">
+    <div class="mx-auto flex h-14 max-w-7xl items-center gap-10 px-4">
+      <RouterLink to="/home" class="flex shrink-0 items-center gap-2 font-semibold text-foreground">
         <img
           src="/logo.svg"
           alt="Contrail"
-          class="h-9 w-9"
+          class="h-9 w-9 rounded-none"
         />
-        <span class="text-lg font-semibold tracking-tight text-gray-900">
-          <span class="text-blue-600 font-bold">C</span><span>ontrail</span>
+        <span class="text-lg font-semibold tracking-tight text-foreground">
+          <span class="text-primary font-bold">C</span><span>ontrail</span>
         </span>
       </RouterLink>
-      <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-700">
-        <RouterLink class="hover:text-blue-600" to="/learningpool">LearningPool</RouterLink>
-        <RouterLink class="hover:text-blue-600" to="/notification">Notification</RouterLink>
-        <RouterLink class="hover:text-blue-600" to="/about">About</RouterLink>
-        <RouterLink class="hover:text-blue-600" to="/plan">Plan</RouterLink>
-        <RouterLink
-          to="/resources"
-          class="px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-          :class="currentTab === 'resourceLibrary' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'"
+      <nav class="hidden md:flex items-center gap-6 text-[11px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+        <Button
+          :as="RouterLinkComp"
+          to="/learningpool"
+          variant="ghost"
+          size="sm"
+          class="h-9 rounded-none px-0 py-0 hover:bg-transparent border-b-2 text-[11px]"
+          :class="isActive('/learningpool') ? 'text-foreground border-foreground' : 'border-transparent hover:text-foreground hover:border-foreground/30'"
         >
-          <Library class="w-4 h-4" />
+          LearningPool
+        </Button>
+        <Button
+          :as="RouterLinkComp"
+          to="/notification"
+          variant="ghost"
+          size="sm"
+          class="h-9 rounded-none px-0 py-0 hover:bg-transparent border-b-2 text-[11px]"
+          :class="isActive('/notification') ? 'text-foreground border-foreground' : 'border-transparent hover:text-foreground hover:border-foreground/30'"
+        >
+          Notification
+        </Button>
+        <Button
+          :as="RouterLinkComp"
+          to="/about"
+          variant="ghost"
+          size="sm"
+          class="h-9 rounded-none px-0 py-0 hover:bg-transparent border-b-2 text-[11px]"
+          :class="isActive('/about') ? 'text-foreground border-foreground' : 'border-transparent hover:text-foreground hover:border-foreground/30'"
+        >
+          About
+        </Button>
+        <Button
+          :as="RouterLinkComp"
+          to="/plan"
+          variant="ghost"
+          size="sm"
+          class="h-9 rounded-none px-0 py-0 hover:bg-transparent border-b-2 text-[11px]"
+          :class="isActive('/plan') ? 'text-foreground border-foreground' : 'border-transparent hover:text-foreground hover:border-foreground/30'"
+        >
+          Plan
+        </Button>
+        <Button
+          :as="RouterLinkComp"
+          to="/resources"
+          variant="ghost"
+          size="sm"
+          class="h-9 rounded-none px-0 py-0 hover:bg-transparent border-b-2 text-[11px]"
+          :class="isActive('/resources') ? 'text-foreground border-primary' : 'border-transparent hover:text-foreground hover:border-foreground/30'"
+        >
+          <Library class="h-4 w-4" />
           Resources
-        </RouterLink>
+        </Button>
       </nav>
-      <div class="hidden md:flex items-center gap-3">
+
+      <div class="ml-auto flex items-center gap-3">
         <div class="relative hidden lg:block">
-          <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            class="absolute left-0 top-1/2 -translate-y-1/2 h-9 w-9 rounded-none border-0 bg-transparent text-muted-foreground hover:text-foreground hover:bg-transparent"
+            @click="handleSearch"
+            :aria-label="t('Search')"
+          >
+            <Search class="h-4 w-4" />
+          </Button>
+          <Input
             v-model="searchQuery"
             type="search"
             :placeholder="t('Search...')"
             aria-label="Search"
-            class="w-56 pl-9 pr-3 py-2 rounded-md border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="h-9 w-56 rounded-none border-0 border-b border-input bg-transparent pl-9 pr-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            @keyup.enter="handleSearch"
           />
         </div>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          class="hidden md:inline-flex h-9 w-9 rounded-none border-0 bg-transparent text-foreground hover:bg-transparent hover:text-foreground/80"
+          :aria-label="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+          @click="toggleTheme"
+        >
+          <Sun v-if="theme === 'dark'" class="h-5 w-5" />
+          <Moon v-else class="h-5 w-5" />
+        </Button>
+
         <div
           v-if="isAuthed"
-          class="relative"
+          class="relative hidden md:block"
           @mouseenter="openDesktopMenu"
           @mouseleave="scheduleDesktopMenuClose"
         >
-          <button
+          <Button
             type="button"
-            class="inline-flex items-center rounded-full bg-gray-50/90 p-1.5 text-left text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200 transition-all duration-200 hover:bg-white"
-            :class="desktopMenuOpen ? 'scale-110 shadow-lg ring-2 ring-blue-100' : 'scale-100'"
+            variant="ghost"
+            size="sm"
+            class="h-9 rounded-none border-0 bg-transparent px-1 py-1 text-left font-semibold hover:bg-transparent"
             :aria-label="t('User menu')"
           >
-            <div
-              class="h-9 w-9 overflow-hidden rounded-full shadow transition-all duration-200"
-              :class="desktopMenuOpen ? 'scale-110' : 'scale-100'"
-            >
-              <img
-                v-if="avatarUrl"
-                :src="avatarUrl"
-                :alt="displayName"
-                class="h-full w-full object-cover"
-              />
-              <div
-                v-else
-                class="flex h-full w-full items-center justify-center bg-linear-to-r from-blue-500 to-indigo-500 text-white"
-              >
+            <div class="h-8 w-8 overflow-hidden rounded-full">
+              <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" class="h-full w-full object-cover" />
+              <div v-else class="flex h-full w-full items-center justify-center bg-linear-to-r from-blue-500 to-indigo-500 text-white text-xs">
                 {{ userInitials }}
               </div>
             </div>
-            <ChevronDown class="ml-2 h-4 w-4 text-gray-400 transition-transform duration-200" :class="desktopMenuOpen ? 'rotate-180' : ''" />
-          </button>
+            <ChevronDown class="h-4 w-4 text-muted-foreground transition-transform" :class="desktopMenuOpen ? 'rotate-180' : ''" />
+          </Button>
 
           <div
             v-if="desktopMenuOpen"
-            class="absolute right-0 mt-3 w-60 rounded-2xl border border-gray-100 bg-white/95 p-3 shadow-2xl ring-1 ring-black/5"
+            class="absolute right-0 mt-2 w-60 rounded-xl border border-border bg-background p-3 shadow-xl"
             @mouseenter="openDesktopMenu"
             @mouseleave="scheduleDesktopMenuClose"
           >
-            <div class="flex items-center gap-3 rounded-xl bg-linear-to-r from-blue-50 to-violet-50 p-3">
+            <div class="flex items-center gap-3 rounded-xl border border-border bg-background p-3">
               <div class="h-12 w-12 overflow-hidden rounded-full shadow">
                 <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" class="h-full w-full object-cover" />
                 <div
@@ -85,60 +138,60 @@
                 </div>
               </div>
               <div>
-                <p class="text-base font-semibold text-gray-900">{{ displayName }}</p>
-                <p class="text-xs text-gray-500">{{ userEmail }}</p>
+                <p class="text-base font-semibold text-foreground">{{ displayName }}</p>
+                <p class="text-xs text-muted-foreground">{{ userEmail }}</p>
               </div>
             </div>
-            <div class="mt-3 flex flex-col text-sm text-gray-700">
+            <div class="mt-3 flex flex-col text-sm text-foreground">
               <RouterLink
                 to="/account/user-info"
-                class="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50"
+                class="flex items-center justify-between rounded-xl px-3 py-2 transition-colors hover:bg-accent hover:text-accent-foreground"
               >
                 <span>Account</span>
-                <span class="text-xs text-gray-400">Go</span>
+                <span class="text-xs text-muted-foreground">Go</span>
               </RouterLink>
               <RouterLink
                 to="/tools"
-                class="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50"
+                class="flex items-center justify-between rounded-xl px-3 py-2 transition-colors hover:bg-accent hover:text-accent-foreground"
               >
                 <span>Tools</span>
-                <span class="text-xs text-gray-400">DB</span>
+                <span class="text-xs text-muted-foreground">DB</span>
               </RouterLink>
               <RouterLink
                 to="/my-paths"
-                class="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50"
+                class="flex items-center justify-between rounded-xl px-3 py-2 transition-colors hover:bg-accent hover:text-accent-foreground"
               >
                 <span>{{ t('My Paths') }}</span>
-                <span class="text-xs text-gray-400">Go</span>
+                <span class="text-xs text-muted-foreground">Go</span>
               </RouterLink>
            
 
               <RouterLink
                 to="/partical"
-                class="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50"
+                class="flex items-center justify-between rounded-xl px-3 py-2 transition-colors hover:bg-accent hover:text-accent-foreground"
               >
                 <span>Partical</span>
-                <span class="text-xs text-gray-400">Go</span>
+                <span class="text-xs text-muted-foreground">Go</span>
               </RouterLink>
 
               <RouterLink
                 to="/my-resources"
-                class="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50"
+                class="flex items-center justify-between rounded-xl px-3 py-2 transition-colors hover:bg-accent hover:text-accent-foreground"
               >
                 <span>{{ t('My Resources') }}</span>
-                <span class="text-xs text-gray-400">Hot</span>
+                <span class="text-xs text-muted-foreground">Hot</span>
               </RouterLink>
               <RouterLink
                 to="/creator"
-                class="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50"
+                class="flex items-center justify-between rounded-xl px-3 py-2 transition-colors hover:bg-accent hover:text-accent-foreground"
               >
                 <span>{{ t('Creator Center') }}</span>
-                <span class="text-xs text-gray-400">Beta</span>
+                <span class="text-xs text-muted-foreground">Beta</span>
               </RouterLink>
             </div>
             <button
               type="button"
-              class="mt-3 flex w-full items-center justify-between rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-100"
+              class="mt-3 flex w-full items-center justify-between rounded-xl border border-border bg-background px-3 py-2 text-sm font-semibold text-red-500 transition-colors hover:bg-red-500/10"
               @click="handleLogout"
             >
               {{ t('Log out') }}
@@ -146,125 +199,95 @@
             </button>
           </div>
         </div>
-        <RouterLink v-else class="text-blue-600 hover:text-blue-700 text-sm" to="/login">Login</RouterLink>
-        <RouterLink
-          to="/createpath"
-          class="px-4 py-2 rounded-full bg-pink-600 text-white text-sm hover:bg-pink-700 inline-flex items-center gap-2"
+        <Button
+          v-else
+          :as="RouterLinkComp"
+          to="/login"
+          variant="ghost"
+          size="sm"
+          class="hidden md:inline-flex h-9 rounded-none px-0 py-0 hover:bg-transparent text-xs font-medium tracking-[0.14em] uppercase text-muted-foreground hover:text-foreground"
         >
-          <Plus class="w-4 h-4" />
-          <span class="hidden lg:inline font-semibold">{{ t('CreatePath') }}</span>
-        </RouterLink>
+          Login
+        </Button>
+
+        <Button
+          :as="RouterLinkComp"
+          to="/createpath"
+          variant="outline"
+          size="sm"
+          class="hidden md:inline-flex h-9 rounded-none border-border bg-foreground px-3 text-xs font-semibold tracking-[0.14em] uppercase text-background hover:bg-foreground/90 hover:text-background"
+        >
+          <Plus class="h-4 w-4" />
+          <span class="hidden lg:inline">{{ t('CreatePath') }}</span>
+        </Button>
 
         <div ref="langMenuRef" class="relative">
-          <button
+          <Button
             type="button"
-            class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+            variant="ghost"
+            size="icon"
+            class="hidden md:inline-flex h-9 w-9 rounded-none border-0 bg-transparent text-foreground hover:bg-transparent hover:text-foreground/80"
             :aria-label="t('Language')"
             @click="langMenuOpen = !langMenuOpen"
           >
             <Globe class="h-5 w-5" />
-          </button>
+          </Button>
 
           <div
             v-if="langMenuOpen"
-            class="absolute right-0 mt-2 w-44 rounded-xl border border-gray-100 bg-white p-2 shadow-xl ring-1 ring-black/5"
+            class="absolute right-0 mt-2 w-44 rounded-xl border border-border bg-background p-2 shadow-xl"
           >
             <button
               v-for="opt in languages"
               :key="opt.code"
               type="button"
-              class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
               @click="selectLang(opt.code)"
             >
               <span>{{ opt.label }}</span>
-              <span v-if="lang === opt.code" class="text-xs text-blue-600">✓</span>
+              <span v-if="lang === opt.code" class="text-xs text-primary">✓</span>
             </button>
           </div>
         </div>
-      </div>
-    </div>
-    <div v-if="open" class="md:hidden border-t border-gray-200 bg-white">
-      <div class="px-4 py-3 flex flex-col gap-3 text-sm text-gray-700">
-        <RouterLink class="hover:text-blue-600" to="/home" @click="open = false">Home</RouterLink>
-        <RouterLink class="hover:text-blue-600" to="/learningpool" @click="open = false">LearningPool</RouterLink>
-        <RouterLink class="hover:text-blue-600" to="/notification" @click="open = false">Notification</RouterLink>
-        <RouterLink class="hover:text-blue-600" to="/my-paths" @click="open = false">My Paths</RouterLink>
-        <RouterLink class="hover:text-blue-600" to="/createpath" @click="open = false">CreatePath</RouterLink>
-        <RouterLink class="hover:text-blue-600" to="/about" @click="open = false">About</RouterLink>
-        <RouterLink
-          to="/resources"
-          class="px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-          :class="currentTab === 'resourceLibrary' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'"
-          @click="open = false"
+
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          class="inline-flex md:hidden h-9 w-9 rounded-none"
+          :aria-label="open ? 'Close menu' : 'Open menu'"
+          @click="open = !open"
         >
-          <Library class="w-4 h-4" />
-          Resources
-        </RouterLink>
-        <RouterLink class="hover:text-blue-600" to="/my-resources" @click="open = false">My Resources</RouterLink>
-        <RouterLink class="hover:text-blue-600" to="/plan" @click="open = false">Plan</RouterLink>
-        <div
-          v-if="isAuthed"
-          class="rounded-2xl border border-gray-100 bg-white/95 p-4 text-gray-900 shadow-sm"
-        >
-          <div class="flex items-center gap-3">
-            <div class="h-12 w-12 overflow-hidden rounded-full shadow">
-              <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" class="h-full w-full object-cover" />
-              <div
-                v-else
-                class="flex h-full w-full items-center justify-center bg-linear-to-r from-blue-500 to-indigo-500 text-white text-lg"
-              >
-                {{ userInitials }}
-              </div>
-            </div>
-            <div class="flex-1">
-              <p class="text-base font-semibold">{{ displayName }}</p>
-              <p class="text-xs text-gray-500">{{ userEmail }}</p>
-            </div>
-            <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600">{{ userLevel }}</span>
-          </div>
-          <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
-            <RouterLink
-              to="/account/user-info"
-              class="rounded-xl bg-gray-50 px-3 py-2 text-center font-medium text-gray-700 hover:bg-gray-100"
-              @click="open = false"
-            >
-              Account
-            </RouterLink>
-            <RouterLink
-              to="/my-paths"
-              class="rounded-xl bg-gray-50 px-3 py-2 text-center font-medium text-gray-700 hover:bg-gray-100"
-              @click="open = false"
-            >
-              My Paths
-            </RouterLink>
-            <RouterLink
-              to="/learningpool"
-              class="rounded-xl bg-gray-50 px-3 py-2 text-center font-medium text-gray-700 hover:bg-gray-100"
-              @click="open = false"
-            >
-              My Favorites
-            </RouterLink>
-            <RouterLink
-              to="/partical"
-              class="rounded-xl bg-gray-50 px-3 py-2 text-center font-medium text-gray-700 hover:bg-gray-100"
-              @click="open = false"
-            >
-              Partical
-            </RouterLink>
-          </div>
-          <button
-            type="button"
-            class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-100"
-            @click="handleLogout"
-          >
-            {{ t('Log out') }}
-            <LogOut class="h-4 w-4" />
-          </button>
-        </div>
-        <RouterLink v-else class="hover:text-blue-600" to="/login" @click="open = false">Login</RouterLink>
+          <X v-if="open" class="h-5 w-5" />
+          <Menu v-else class="h-5 w-5" />
+        </Button>
       </div>
     </div>
   </header>
+  <div v-if="open" class="md:hidden border-b border-border bg-background">
+    <div class="mx-auto max-w-7xl px-4 py-3">
+      <div class="flex flex-col gap-2 text-xs font-medium tracking-[0.14em] uppercase text-muted-foreground">
+        <RouterLink class="py-2 hover:text-foreground" to="/home" @click="open = false">Home</RouterLink>
+        <RouterLink class="py-2 hover:text-foreground" to="/learningpool" @click="open = false">LearningPool</RouterLink>
+        <RouterLink class="py-2 hover:text-foreground" to="/notification" @click="open = false">Notification</RouterLink>
+        <RouterLink class="py-2 hover:text-foreground" to="/about" @click="open = false">About</RouterLink>
+        <RouterLink class="py-2 hover:text-foreground" to="/plan" @click="open = false">Plan</RouterLink>
+        <RouterLink class="py-2 hover:text-foreground" to="/resources" @click="open = false">Resources</RouterLink>
+        <div class="my-1 h-px bg-border"></div>
+        <RouterLink class="py-2 hover:text-foreground" to="/createpath" @click="open = false">{{ t('CreatePath') }}</RouterLink>
+        <RouterLink v-if="!isAuthed" class="py-2 hover:text-foreground" to="/login" @click="open = false">Login</RouterLink>
+        <button
+          type="button"
+          class="mt-1 inline-flex items-center justify-between border border-border bg-background px-3 py-2 text-foreground"
+          @click="toggleTheme"
+        >
+          <span>{{ theme === 'dark' ? 'Light mode' : 'Dark mode' }}</span>
+          <Sun v-if="theme === 'dark'" class="h-4 w-4" />
+          <Moon v-else class="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  </div>
   <!-- spacer to prevent fixed header from covering page content -->
   <div class="h-16 md:h-16"></div>
 </template>
@@ -272,15 +295,23 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { Library, Plus, Search, User, ChevronDown, LogOut, Globe } from 'lucide-vue-next'
+import { Library, Plus, Search, User, ChevronDown, LogOut, Globe, Moon, Sun, Menu, X } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
 import { useAuthStore } from '../stores/auth'
 import { useI18n, type AppLang } from '../i18n'
 import { getOrCreateDefaultAvatarForUser } from '../utils/avatars'
 
+const RouterLinkComp = RouterLink
+
 const route = useRoute()
 const router = useRouter()
 const currentTab = computed(() => (route.path.startsWith('/resources') ? 'resourceLibrary' : ''))
+
+function isActive(prefix: string) {
+  return route.path === prefix || route.path.startsWith(prefix + '/')
+}
 
 const open = ref(false)
 const searchQuery = ref('')
@@ -302,6 +333,21 @@ const userLevel = computed(() => (user.value?.is_superuser ? 'Lv.SUPER' : 'Lv.1'
 const userEmail = computed(() => user.value?.email || 'No email')
 const desktopMenuOpen = ref(false)
 let desktopMenuCloseTimer: ReturnType<typeof setTimeout> | null = null
+
+type ThemeMode = 'light' | 'dark'
+const theme = ref<ThemeMode>('light')
+
+function applyTheme(next: ThemeMode) {
+  theme.value = next
+  const root = document.documentElement
+  if (next === 'dark') root.classList.add('dark')
+  else root.classList.remove('dark')
+  localStorage.setItem('theme', next)
+}
+
+function toggleTheme() {
+  applyTheme(theme.value === 'dark' ? 'light' : 'dark')
+}
 
 function selectLang(next: AppLang) {
   setLang(next)
@@ -341,8 +387,30 @@ function handleLogout() {
   router.push('/home')
 }
 
+function handleSearch() {
+  const query = searchQuery.value.trim()
+  if (!query) return
+  
+  // 跳转到 LearningPool 页面并传递搜索关键词
+  router.push({
+    path: '/learningpool',
+    query: { search: query }
+  })
+  
+  // 清空搜索框
+  searchQuery.value = ''
+}
+
 onMounted(() => {
   document.addEventListener('click', onDocumentClick)
+
+  const saved = (localStorage.getItem('theme') || '').toLowerCase()
+  if (saved === 'dark' || saved === 'light') {
+    applyTheme(saved as ThemeMode)
+  } else {
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    applyTheme(prefersDark ? 'dark' : 'light')
+  }
 })
 
 onBeforeUnmount(() => {

@@ -22,47 +22,146 @@
 
       <div class="grid gap-6 lg:grid-cols-[2fr_1fr]">
         <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-100">
-          <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
-            <div class="flex items-center gap-2 text-sm text-slate-700">
-              <BookOpen class="w-4 h-4 text-blue-600" />
-              <span>Reader</span>
+          <!-- Document Viewer -->
+          <div v-if="canPreview" class="w-full bg-slate-100">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
+              <div class="flex items-center gap-2 text-sm text-slate-700">
+                <FileText class="w-4 h-4 text-blue-600" />
+                <span>文档预览</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-black"
+                  @click="openSource"
+                >
+                  在新标签页打开
+                </button>
+                <button
+                  v-if="pathItemId != null"
+                  type="button"
+                  class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
+                  :disabled="progressUpdating"
+                  @click="markComplete"
+                >
+                  标记为已完成
+                </button>
+              </div>
             </div>
-            <div class="flex items-center gap-2">
-              <button
-                type="button"
-                class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-black disabled:opacity-50"
-                :disabled="!resource.source_url"
-                @click="openSource"
-              >
-                Start reading
-              </button>
-              <button
-                type="button"
-                class="p-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-white disabled:opacity-50"
-                :disabled="!resource.source_url"
-                @click="openSource"
-              >
-                <Download class="w-4 h-4" />
-              </button>
-              <button
-                v-if="pathItemId != null"
-                type="button"
-                class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
-                :disabled="progressUpdating"
-                @click="markComplete"
-              >
-                Mark as complete
-              </button>
+            <div class="w-full" style="height: 600px;">
+              <iframe 
+                v-if="viewerUrl" 
+                :src="viewerUrl" 
+                class="w-full h-full border-0"
+                title="Document viewer"
+              ></iframe>
+              <div v-else class="w-full h-full flex items-center justify-center text-slate-500">
+                <div class="text-center space-y-2">
+                  <FileText class="w-12 h-12 mx-auto text-slate-400" />
+                  <p>无法预览此文档</p>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="aspect-4/3 bg-slate-900">
-            <iframe v-if="resource.source_url" :src="resource.source_url" class="w-full h-full" title="Document preview"></iframe>
-            <div v-else class="w-full h-full flex items-center justify-center text-white/80 text-sm">Preview is unavailable</div>
-          </div>
-          <div class="p-6 space-y-4">
-            <div class="space-y-2">
-              <h2 class="text-xl font-semibold text-slate-900">Overview</h2>
-              <p class="text-slate-700 leading-relaxed whitespace-pre-wrap">{{ resource.summary || '—' }}</p>
+
+          <!-- Fallback: Thumbnail + Summary -->
+          <template v-else>
+            <div v-if="resource.thumbnail" class="w-full h-64 bg-slate-100 overflow-hidden">
+              <img :src="resource.thumbnail" :alt="resource.title" class="w-full h-full object-cover" />
+            </div>
+            <div v-else class="w-full h-64 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+              <FileText class="w-16 h-16 text-white/80" />
+            </div>
+          </template>
+
+          <!-- Content -->
+          <div class="p-6 space-y-6">
+            <div v-if="pathItemId != null" class="rounded-xl border border-slate-200 bg-white p-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-semibold text-slate-700">学习进度</span>
+                <span class="text-sm font-semibold text-blue-600">{{ trackedProgress }}%</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-2.5">
+                <div
+                  class="h-2.5 rounded-full transition-all duration-300"
+                  :class="trackedProgress >= 100 ? 'bg-green-500' : 'bg-blue-600'"
+                  :style="{ width: `${trackedProgress}%` }"
+                />
+              </div>
+              <div class="mt-2 flex items-center justify-between text-xs text-slate-500">
+                <span>{{ trackedProgress >= 100 ? '已完成' : trackedProgress > 0 ? '学习中' : '未开始' }}</span>
+                <span v-if="trackedProgress < 100">继续阅读以更新进度</span>
+              </div>
+            </div>
+
+            <!-- Summary -->
+            <div v-if="resource.summary" class="space-y-2">
+              <h2 class="text-xl font-semibold text-slate-900">摘要</h2>
+              <p class="text-slate-700 leading-relaxed whitespace-pre-wrap text-lg">{{ resource.summary }}</p>
+            </div>
+
+            <div v-if="!canPreview" class="rounded-xl border border-slate-200 bg-white overflow-hidden">
+              <div class="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
+                <div class="text-sm font-semibold text-slate-900">Reader Mode</div>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-black disabled:opacity-50"
+                    :disabled="!resource.source_url"
+                    @click="openSource(true)"
+                  >
+                    Open Original
+                  </button>
+                  <button
+                    v-if="pathItemId != null"
+                    type="button"
+                    class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
+                    :disabled="progressUpdating"
+                    @click="markComplete"
+                  >
+                    标记为已完成
+                  </button>
+                </div>
+              </div>
+              <div v-if="readerLoading" class="p-6 text-slate-700">Loading…</div>
+              <div v-else-if="readerHtml" ref="readerScrollRef" class="p-6 max-h-[70vh] overflow-y-auto prose prose-slate max-w-none">
+                <div v-html="readerHtml" />
+              </div>
+              <div v-else class="p-6">
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
+                  <div class="flex items-start gap-3">
+                    <BookOpen class="w-6 h-6 text-blue-600 shrink-0 mt-1" />
+                    <div class="flex-1">
+                      <h3 class="font-semibold text-slate-900 mb-2">站内阅读不可用</h3>
+                      <p class="text-slate-600 text-sm mb-4">
+                        {{ readerError || '当前链接暂时无法抽取正文。你仍可以打开原文，并在返回后记录进度。' }}
+                      </p>
+                      <div class="flex items-center gap-3">
+                        <button
+                          type="button"
+                          class="px-6 py-3 rounded-lg bg-slate-900 text-white font-semibold hover:bg-black disabled:opacity-50 transition-colors inline-flex items-center gap-2"
+                          :disabled="!resource.source_url"
+                          @click="openSource(true)"
+                        >
+                          <span>在 {{ resource.platform || '原站' }} 上查看</span>
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </button>
+                        <button
+                          v-if="pathItemId != null"
+                          type="button"
+                          class="px-4 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                          :disabled="progressUpdating"
+                          @click="markComplete"
+                        >
+                          标记为已完成
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -115,6 +214,7 @@ import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { BookOpen, Download, FileText, GraduationCap, Link as LinkIcon, Sparkles, UserRound } from 'lucide-vue-next'
 import { getMyResourceDetail, getResourceDetail, type DbResourceDetail } from '../api/resource'
 import { getMyProgressForItem, upsertMyProgress } from '../api/progress'
+import request from '../utils/request'
 
 const route = useRoute()
 const router = useRouter()
@@ -131,7 +231,7 @@ const resourceIdNumber = computed(() => {
   return Number.isFinite(n) ? n : null
 })
 
-const resource = ref<DbResourceDetail>({ id: 0, resource_type: 'document', title: '' })
+const resource = ref<DbResourceDetail>({} as DbResourceDetail)
 
 const pathItemId = computed(() => {
   const raw = String((route.query as any)?.path_item_id || '').trim()
@@ -145,11 +245,59 @@ const trackedProgress = ref(0)
 let progressTimer: number | null = null
 const progressUpdating = ref(false)
 const lastSentProgress = ref(0)
+const readerLoading = ref(false)
+const readerError = ref('')
+const readerHtml = ref('')
+const readerWordCount = ref(0)
+const readerScrollRef = ref<HTMLElement | null>(null)
+const readingActiveSeconds = ref(0)
+let lastTickAt = 0
+const externalTrackingStartAt = ref<number | null>(null)
+const externalTrackingArmed = ref(false)
 
 function stopProgressTimer() {
   if (progressTimer != null) {
     window.clearInterval(progressTimer)
     progressTimer = null
+  }
+}
+
+function stopExternalTracking() {
+  externalTrackingArmed.value = false
+  externalTrackingStartAt.value = null
+}
+
+function estimateReadingSeconds() {
+  const wc = Math.max(0, Number(readerWordCount.value) || 0)
+  if (wc > 0) {
+    return Math.max(60, Math.round((wc / 220) * 60))
+  }
+  return 8 * 60
+}
+
+function computeScrollPct() {
+  const el = readerScrollRef.value
+  if (!el) return 0
+  const max = el.scrollHeight - el.clientHeight
+  if (max <= 0) return 100
+  return Math.min(100, Math.max(0, Math.round((el.scrollTop / max) * 100)))
+}
+
+async function maybeSendProgress(next: number) {
+  const pid = pathItemId.value
+  if (pid == null) return
+  if (progressUpdating.value) return
+  const n = Math.min(95, Math.max(0, Math.round(next)))
+  if (n <= lastSentProgress.value) return
+  progressUpdating.value = true
+  try {
+    trackedProgress.value = n
+    lastSentProgress.value = n
+    await upsertMyProgress({ path_item_id: pid, progress_percentage: n })
+  } catch {
+    // ignore
+  } finally {
+    progressUpdating.value = false
   }
 }
 
@@ -166,24 +314,19 @@ async function startProgressTimer() {
 
   lastSentProgress.value = trackedProgress.value
 
+  readingActiveSeconds.value = 0
+  lastTickAt = Date.now()
   progressTimer = window.setInterval(async () => {
-    const pid = pathItemId.value
-    if (pid == null) return
     if (document.visibilityState !== 'visible') return
-    if (progressUpdating.value) return
-    progressUpdating.value = true
-    try {
-      const next = Math.min(Math.max(0, trackedProgress.value) + 2, 95)
-      if (next <= lastSentProgress.value) return
-      trackedProgress.value = next
-      lastSentProgress.value = next
-      await upsertMyProgress({ path_item_id: pid, progress_percentage: next })
-    } catch {
-      // ignore
-    } finally {
-      progressUpdating.value = false
-    }
-  }, 20_000)
+    if (!readerHtml.value) return
+    const now = Date.now()
+    const delta = Math.max(0, Math.round((now - lastTickAt) / 1000))
+    lastTickAt = now
+    readingActiveSeconds.value += delta
+    const scrollPct = computeScrollPct()
+    const timePct = Math.min(95, Math.round((readingActiveSeconds.value / estimateReadingSeconds()) * 100))
+    await maybeSendProgress(Math.max(scrollPct, timePct))
+  }, 5_000)
 }
 
 function formatDate(iso?: string | null) {
@@ -197,10 +340,96 @@ const createdText = computed(() => formatDate(resource.value.created_at || null)
 const publishedText = computed(() => formatDate(resource.value.article?.published_at || null))
 const updatedText = computed(() => publishedText.value || createdText.value)
 
-function openSource() {
+// 文档预览逻辑
+const canPreview = computed(() => {
+  const url = resource.value.source_url
+  if (!url) return false
+  
+  // 检查是否为可预览的文档类型
+  const lowerUrl = url.toLowerCase()
+  
+  // PDF 文件
+  if (lowerUrl.endsWith('.pdf')) return true
+  
+  // Office 文档
+  if (lowerUrl.endsWith('.doc') || lowerUrl.endsWith('.docx') ||
+      lowerUrl.endsWith('.xls') || lowerUrl.endsWith('.xlsx') ||
+      lowerUrl.endsWith('.ppt') || lowerUrl.endsWith('.pptx')) {
+    return true
+  }
+  
+  return false
+})
+
+const viewerUrl = computed(() => {
+  const url = resource.value.source_url
+  if (!url) return ''
+  
+  const lowerUrl = url.toLowerCase()
+  
+  // PDF 文件 - 使用 PDF.js
+  if (lowerUrl.endsWith('.pdf')) {
+    // 使用 Mozilla 的 PDF.js viewer
+    return `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(url)}`
+  }
+  
+  // Office 文档 - 使用 Microsoft Office Online Viewer
+  if (lowerUrl.endsWith('.doc') || lowerUrl.endsWith('.docx') ||
+      lowerUrl.endsWith('.xls') || lowerUrl.endsWith('.xlsx') ||
+      lowerUrl.endsWith('.ppt') || lowerUrl.endsWith('.pptx')) {
+    return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`
+  }
+  
+  return ''
+})
+
+function openSource(arg?: boolean | Event) {
+  const track = typeof arg === 'boolean' ? arg : false
   const url = String(resource.value.source_url || '').trim()
   if (!url) return
+  if (track) {
+    externalTrackingStartAt.value = Date.now()
+    externalTrackingArmed.value = true
+  }
   window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+function onVisibilityChange() {
+  if (document.visibilityState !== 'visible') return
+  if (!externalTrackingArmed.value) return
+  const startAt = externalTrackingStartAt.value
+  stopExternalTracking()
+  if (!startAt) return
+  const minutes = Math.round((Date.now() - startAt) / 60_000)
+  if (minutes <= 0) return
+  if (pathItemId.value == null) return
+  const ok = window.confirm(`是否记录你在外部阅读的 ${minutes} 分钟到学习进度？`)
+  if (!ok) return
+  const inc = Math.min(30, minutes * 5)
+  void maybeSendProgress(Math.min(95, trackedProgress.value + inc))
+}
+
+async function loadReader() {
+  readerError.value = ''
+  readerHtml.value = ''
+  readerWordCount.value = 0
+  if (canPreview.value) return
+  const url = String(resource.value.source_url || '').trim()
+  if (!url) return
+  readerLoading.value = true
+  try {
+    const data = await request.post<any, any>('/reader/extract', { url })
+    const html = String(data?.content_html || '').trim()
+    readerHtml.value = html
+    readerWordCount.value = Number(data?.word_count) || 0
+    if (html && pathItemId.value != null) {
+      await startProgressTimer()
+    }
+  } catch (e: any) {
+    readerError.value = String(e?.response?.data?.detail || e?.message || 'Reader extract failed')
+  } finally {
+    readerLoading.value = false
+  }
 }
 
 async function markComplete() {
@@ -228,6 +457,7 @@ async function load() {
     const isMy = String(route.path || '').startsWith('/my-resources')
     const data = isMy ? await getMyResourceDetail(dbId) : await getResourceDetail(dbId)
     resource.value = { ...data }
+    await loadReader()
   } catch (e: any) {
     error.value = String(e?.response?.data?.detail || e?.message || 'Failed to load resource')
   } finally {
@@ -238,6 +468,7 @@ async function load() {
 onMounted(() => {
   void load()
   void startProgressTimer()
+  document.addEventListener('visibilitychange', onVisibilityChange)
 })
 
 watch(pathItemId, () => {
@@ -246,5 +477,6 @@ watch(pathItemId, () => {
 
 onBeforeUnmount(() => {
   stopProgressTimer()
+  document.removeEventListener('visibilitychange', onVisibilityChange)
 })
 </script>

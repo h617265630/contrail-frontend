@@ -1,35 +1,45 @@
 <template>
-  <div class="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-6">
-    <div class="max-w-7xl mx-auto space-y-10">
-      <!-- Header -->
-      <div class="bg-white rounded-2xl shadow-xl p-8">
-        <h1 class="text-gray-900 mb-2">LearningPool</h1>
-        <p class="text-gray-600">浏览所有 learning paths，并按分类快速发现热门与 AI 相关内容</p>
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+    <section class="border-b border-border pb-8">
+      <div class="grid gap-6 md:grid-cols-12 md:items-end">
+        <div class="md:col-span-8">
+          <p class="text-xs font-medium tracking-[0.14em] uppercase text-muted-foreground">LearningPool</p>
+          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-foreground md:text-4xl">LearningPool</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">浏览所有 learning paths，并按分类快速发现热门与 AI 相关内容</p>
+        </div>
       </div>
+    </section>
 
       <!-- Section 1: Categories (8 labels) -->
       <section class="space-y-4">
         <div class="flex items-center justify-between">
-          <h2 class="text-xl font-semibold text-gray-900">分类</h2>
-          <span class="text-sm text-gray-500">8 categories</span>
+          <div>
+            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">分类</h2>
+            <p class="text-sm text-muted-foreground">8 categories</p>
+          </div>
         </div>
         <div class="flex flex-wrap gap-3">
-          <RouterLink
+          <Button
             v-for="cat in categories"
             :key="cat"
+            :as="RouterLinkComp"
             :to="{ name: 'learningpool-category', params: { category: cat } }"
-            class="px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm text-gray-700 text-sm font-semibold hover:bg-gray-50 hover:border-gray-300 transition-colors"
+            variant="outline"
+            size="sm"
+            class="rounded-none text-xs font-medium tracking-[0.14em] uppercase"
           >
             {{ cat }}
-          </RouterLink>
+          </Button>
         </div>
       </section>
 
       <!-- Section 2: Hot paths -->
       <section class="space-y-4">
         <div class="flex items-center justify-between">
-          <h2 class="text-xl font-semibold text-gray-900">热门 learning paths</h2>
-          <span class="text-sm text-gray-500">Top picks</span>
+          <div>
+            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">热门 learning paths</h2>
+            <p class="text-sm text-muted-foreground">Top picks</p>
+          </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <RouterLink
@@ -38,22 +48,22 @@
             :to="{ name: 'learningpath', params: { id: p.id } }"
             class="block"
           >
-            <article class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition">
-              <div class="h-36 bg-gray-100">
+            <Card as="article" :hoverable="true">
+              <div class="h-36 bg-muted">
                 <img :src="p.thumbnail" :alt="p.title" class="w-full h-full object-cover" />
               </div>
               <div class="p-4 space-y-2">
                 <div class="flex items-start justify-between gap-2">
-                  <h3 class="text-gray-900 font-semibold line-clamp-1" :title="p.title">{{ p.title }}</h3>
-                  <span class="px-2 py-1 rounded-full bg-orange-50 text-orange-700 text-xs font-semibold">HOT</span>
+                  <h3 class="text-foreground font-semibold line-clamp-1" :title="p.title">{{ p.title }}</h3>
+                  <span class="px-2 py-1 rounded-full border border-border bg-background text-xs font-semibold text-foreground">HOT</span>
                 </div>
-                <p class="text-gray-600 text-sm line-clamp-2" :title="p.description">{{ p.description }}</p>
+                <p class="text-muted-foreground text-sm line-clamp-2" :title="p.description">{{ p.description }}</p>
                 <div class="flex flex-wrap gap-2">
-                  <span class="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ p.category }}</span>
-                  <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs">{{ p.level }}</span>
+                  <span class="px-2 py-1 rounded-full border border-border bg-background text-xs font-semibold text-foreground">{{ p.category }}</span>
+                  <span class="px-2 py-1 rounded-full border border-border bg-background text-xs text-muted-foreground">{{ p.level }}</span>
                 </div>
               </div>
-            </article>
+            </Card>
           </RouterLink>
         </div>
       </section>
@@ -61,8 +71,10 @@
       <!-- Section 3: AI related -->
       <section class="space-y-4">
         <div class="flex items-center justify-between">
-          <h2 class="text-xl font-semibold text-gray-900">AI 相关</h2>
-          <span class="text-sm text-gray-500">AI</span>
+          <div>
+            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">AI 相关</h2>
+            <p class="text-sm text-muted-foreground">AI</p>
+          </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <RouterLink
@@ -71,19 +83,19 @@
             :to="{ name: 'learningpath', params: { id: p.id } }"
             class="block"
           >
-            <article class="bg-white rounded-xl shadow-lg p-5 hover:shadow-xl transition">
+            <Card as="article" :hoverable="true" class="p-5">
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
-                  <h3 class="text-gray-900 font-semibold line-clamp-1" :title="p.title">{{ p.title }}</h3>
-                  <p class="text-gray-600 text-sm mt-1 line-clamp-2" :title="p.description">{{ p.description }}</p>
+                  <h3 class="text-foreground font-semibold line-clamp-1" :title="p.title">{{ p.title }}</h3>
+                  <p class="text-muted-foreground text-sm mt-1 line-clamp-2" :title="p.description">{{ p.description }}</p>
                 </div>
-                <span class="px-2 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-semibold">AI</span>
+                <span class="px-2 py-1 rounded-full border border-border bg-background text-xs font-semibold text-foreground">AI</span>
               </div>
               <div class="mt-4 flex flex-wrap gap-2">
-                <span class="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ p.category }}</span>
-                <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs">{{ p.level }}</span>
+                <span class="px-2 py-1 rounded-full border border-border bg-background text-xs font-semibold text-foreground">{{ p.category }}</span>
+                <span class="px-2 py-1 rounded-full border border-border bg-background text-xs text-muted-foreground">{{ p.level }}</span>
               </div>
-            </article>
+            </Card>
           </RouterLink>
         </div>
       </section>
@@ -91,8 +103,10 @@
       <!-- Section 4: Other -->
       <section class="space-y-4">
         <div class="flex items-center justify-between">
-          <h2 class="text-xl font-semibold text-gray-900">其他</h2>
-          <span class="text-sm text-gray-500">Non-AI</span>
+          <div>
+            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">其他</h2>
+            <p class="text-sm text-muted-foreground">Non-AI</p>
+          </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <RouterLink
@@ -101,19 +115,19 @@
             :to="{ name: 'learningpath', params: { id: p.id } }"
             class="block"
           >
-            <article class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition">
+            <Card as="article" :hoverable="true">
               <div class="p-5 space-y-2">
                 <div class="flex items-center justify-between gap-3">
-                  <h3 class="text-gray-900 font-semibold line-clamp-1" :title="p.title">{{ p.title }}</h3>
-                  <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs">{{ p.category }}</span>
+                  <h3 class="text-foreground font-semibold line-clamp-1" :title="p.title">{{ p.title }}</h3>
+                  <span class="px-2 py-1 rounded-full border border-border bg-background text-xs text-muted-foreground">{{ p.category }}</span>
                 </div>
-                <p class="text-gray-600 text-sm line-clamp-3" :title="p.description">{{ p.description }}</p>
+                <p class="text-muted-foreground text-sm line-clamp-3" :title="p.description">{{ p.description }}</p>
                 <div class="flex flex-wrap gap-2">
-                  <span class="px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold">{{ p.level }}</span>
-                  <span class="px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs">{{ p.items }} items</span>
+                  <span class="px-2 py-1 rounded-full border border-border bg-background text-xs font-semibold text-foreground">{{ p.level }}</span>
+                  <span class="px-2 py-1 rounded-full border border-border bg-background text-xs text-muted-foreground">{{ p.items }} items</span>
                 </div>
               </div>
-            </article>
+            </Card>
           </RouterLink>
         </div>
       </section>
@@ -121,8 +135,10 @@
       <!-- Section 5: Waterfall (all paths) -->
       <section class="space-y-4">
         <div class="flex items-center justify-between">
-          <h2 class="text-xl font-semibold text-gray-900">全部（瀑布流）</h2>
-          <span class="text-sm text-gray-500">{{ allPaths.length }} total</span>
+          <div>
+            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">全部（瀑布流）</h2>
+            <p class="text-sm text-muted-foreground">{{ allPaths.length }} total</p>
+          </div>
         </div>
 
         <div class="columns-1 sm:columns-2 md:columns-3 lg:columns-5 gap-4">
@@ -132,27 +148,26 @@
             :to="{ name: 'learningpath', params: { id: p.id } }"
             class="block mb-4 break-inside-avoid"
           >
-            <article class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition">
-              <div class="h-32 bg-gray-100">
+            <Card as="article" :hoverable="true">
+              <div class="h-32 bg-muted">
                 <img :src="p.thumbnail" :alt="p.title" class="w-full h-full object-cover" />
               </div>
               <div class="p-5 space-y-2">
                 <div class="flex items-start justify-between gap-2">
-                  <h3 class="text-gray-900 font-semibold line-clamp-2" :title="p.title">{{ p.title }}</h3>
-                  <span v-if="p.isAI" class="px-2 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-semibold">AI</span>
+                  <h3 class="text-foreground font-semibold line-clamp-2" :title="p.title">{{ p.title }}</h3>
+                  <span v-if="p.isAI" class="px-2 py-1 rounded-full border border-border bg-background text-xs font-semibold text-foreground">AI</span>
                 </div>
-                <p class="text-gray-600 text-sm whitespace-pre-wrap">{{ p.description }}</p>
+                <p class="text-muted-foreground text-sm whitespace-pre-wrap">{{ p.description }}</p>
                 <div class="flex flex-wrap gap-2">
-                  <span class="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ p.category }}</span>
-                  <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs">{{ p.level }}</span>
-                  <span class="px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs">{{ p.items }} items</span>
+                  <span class="px-2 py-1 rounded-full border border-border bg-background text-xs font-semibold text-foreground">{{ p.category }}</span>
+                  <span class="px-2 py-1 rounded-full border border-border bg-background text-xs text-muted-foreground">{{ p.level }}</span>
+                  <span class="px-2 py-1 rounded-full border border-border bg-background text-xs text-muted-foreground">{{ p.items }} items</span>
                 </div>
               </div>
-            </article>
+            </Card>
           </RouterLink>
         </div>
       </section>
-    </div>
   </div>
 </template>
 
@@ -160,6 +175,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { listPublicLearningPaths, mapPublicLearningPathToDisplayBase } from '../api/learningPath'
 import { RouterLink } from 'vue-router'
+import { Button } from '../components/ui/button'
+import Card from '../components/ui/Card.vue'
+
+const RouterLinkComp = RouterLink
 
 const categories = ['AI','Frontend','Backend','DevOps','Database','Design','Product','Career']
 

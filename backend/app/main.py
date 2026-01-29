@@ -5,6 +5,7 @@ from pathlib import Path
 from app.routers import learning_path
 from app.routers import progress
 from app.routers import category
+from app.routers import reader
 from app.routers.rbac import role, user, permission, user_role, role_permission
 
 
@@ -72,6 +73,7 @@ app.include_router(user.router)
 app.include_router(learning_path.router)
 app.include_router(progress.router)
 app.include_router(category.router)
+app.include_router(reader.router)
 app.include_router(product.router)
 app.include_router(resource.router)
 app.include_router(role.router)

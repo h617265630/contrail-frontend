@@ -1,25 +1,65 @@
 <template>
-  <footer class="border-t border-gray-200 bg-white/80 backdrop-blur py-6">
-    <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-sm text-gray-600">
-      <div class="flex items-center gap-2 text-gray-800 font-semibold">
-        <img src="/logo.svg" alt="Contrail" class="h-8 w-8" />
+  <footer class="border-t border-border bg-background py-8">
+    <div class="mx-auto max-w-7xl px-4 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+      <div class="flex items-center gap-2 font-semibold text-foreground">
+        <img src="/logo.svg" alt="Contrail" class="h-8 w-8 rounded-none" />
         <span class="tracking-tight">
-          <span class="font-extrabold italic text-blue-600">C</span>
-          <span class="font-medium tracking-[0.12em] text-gray-900">ontrail</span>
+          <span class="font-bold text-primary">C</span>
+          <span class="font-semibold text-foreground">ontrail</span>
         </span>
       </div>
       <div class="flex flex-wrap gap-4">
-        <RouterLink class="hover:text-blue-600" to="/about">About</RouterLink>
-        <RouterLink class="hover:text-blue-600" to="/my-paths">My Paths</RouterLink>
-        <RouterLink class="hover:text-blue-600" to="/resources">Resources</RouterLink>
-        <RouterLink class="hover:text-blue-600" to="/login">Login</RouterLink>
-        <RouterLink class="hover:text-blue-600" to="/register">Sign Up</RouterLink>
+        <Button
+          :as="RouterLinkComp"
+          to="/about"
+          variant="ghost"
+          size="sm"
+          class="h-8 rounded-none px-0 py-0 hover:bg-transparent text-xs font-medium tracking-[0.14em] uppercase text-muted-foreground hover:text-foreground"
+        >
+          About
+        </Button>
+        <Button
+          :as="RouterLinkComp"
+          to="/my-paths"
+          variant="ghost"
+          size="sm"
+          class="h-8 rounded-none px-0 py-0 hover:bg-transparent text-xs font-medium tracking-[0.14em] uppercase text-muted-foreground hover:text-foreground"
+        >
+          My Paths
+        </Button>
+        <Button
+          :as="RouterLinkComp"
+          to="/resources"
+          variant="ghost"
+          size="sm"
+          class="h-8 rounded-none px-0 py-0 hover:bg-transparent text-xs font-medium tracking-[0.14em] uppercase text-muted-foreground hover:text-foreground"
+        >
+          Resources
+        </Button>
+        <Button
+          :as="RouterLinkComp"
+          to="/login"
+          variant="ghost"
+          size="sm"
+          class="h-8 rounded-none px-0 py-0 hover:bg-transparent text-xs font-medium tracking-[0.14em] uppercase text-muted-foreground hover:text-foreground"
+        >
+          Login
+        </Button>
+        <Button
+          :as="RouterLinkComp"
+          to="/register"
+          variant="ghost"
+          size="sm"
+          class="h-8 rounded-none px-0 py-0 hover:bg-transparent text-xs font-medium tracking-[0.14em] uppercase text-muted-foreground hover:text-foreground"
+        >
+          Sign Up
+        </Button>
       </div>
-      <div class="text-xs text-gray-500">
+      <div class="text-xs text-muted-foreground">
         © {{ new Date().getFullYear() }}
         <span class="tracking-tight">
-          <span class="font-extrabold italic text-blue-600">C</span>
-          <span class="font-medium tracking-[0.12em] text-gray-900">ontrail</span>
+          <span class="font-bold text-primary">C</span>
+          <span class="font-semibold text-foreground">ontrail</span>
         </span>.
         All rights reserved.
       </div>
@@ -29,4 +69,7 @@
 
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
+import { Button } from './ui/button'
+
+const RouterLinkComp = RouterLink
 </script>

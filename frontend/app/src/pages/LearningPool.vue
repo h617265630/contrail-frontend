@@ -4,7 +4,10 @@
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-xl font-semibold text-gray-900">Learning Paths</h2>
-          <p class="text-gray-600 text-sm">所有公开学习路径</p>
+          <p class="text-gray-600 text-sm">
+            <span v-if="searchQuery">搜索 "{{ searchQuery }}" 的结果：{{ learningPaths.length }} 个学习路径</span>
+            <span v-else>所有公开学习路径：{{ learningPaths.length }} 个</span>
+          </p>
         </div>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -36,19 +39,48 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import Card from '../components/ui/Card.vue'
 import { listPublicLearningPaths, type PublicLearningPath } from '../api/learningPath'
 
+const route = useRoute()
 const fallbackThumb = 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=900&h=506&fit=crop'
-const learningPaths = ref<PublicLearningPath[]>([])
+const allPaths = ref<PublicLearningPath[]>([])
 
-onMounted(async () => {
+// 从 URL 参数获取搜索关键词
+const searchQuery = computed(() => String(route.query.search || '').trim())
+
+// 根据搜索关键词过滤学习路径
+const learningPaths = computed(() => {
+  const query = searchQuery.value.toLowerCase()
+  if (!query) return allPaths.value
+  
+  return allPaths.value.filter(path => {
+    const title = (path.title || '').toLowerCase()
+    const description = (path.description || '').toLowerCase()
+    const category = (path.category_name || '').toLowerCase()
+    
+    return title.includes(query) || 
+           description.includes(query) || 
+           category.includes(query)
+  })
+})
+
+async function loadPaths() {
   try {
-    learningPaths.value = await listPublicLearningPaths()
+    allPaths.value = await listPublicLearningPaths()
   } catch {
-    learningPaths.value = []
+    allPaths.value = []
   }
+}
+
+onMounted(() => {
+  loadPaths()
+})
+
+// 监听搜索参数变化
+watch(() => route.query.search, () => {
+  // 搜索参数变化时，computed 会自动重新计算
 })
 </script>
