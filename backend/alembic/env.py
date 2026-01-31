@@ -28,6 +28,7 @@ import app.models.resources.clip  # noqa: F401
 import app.models.resources.doc  # noqa: F401
 import app.models.resources.product  # noqa: F401
 import app.models.resources.video  # noqa: F401
+import app.models.user_image  # noqa: F401
 # sys.path.append(os.path.dirname(os.path.abspath(__file__)) +"/..")
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
