@@ -13,6 +13,7 @@ class ResourceKind(str, Enum):
 
 class LearningPathBase(BaseModel):
     title: str
+    type: Optional[str] = None
     description: Optional[str] = None
     is_public: bool = False
     cover_image_url: Optional[str] = None
@@ -31,6 +32,7 @@ class LearningPathCreate(LearningPathBase):
 
 class LearningPathUpdate(BaseModel):
     title: Optional[str] = None
+    type: Optional[str] = None
     description: Optional[str] = None
     is_public: Optional[bool] = None
     is_active: Optional[bool] = None

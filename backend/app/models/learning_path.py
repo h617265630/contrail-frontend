@@ -9,6 +9,7 @@ class LearningPath(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(200), nullable=False)
+    type = Column(String(50), nullable=True)
     description = Column(Text, nullable=True)
     is_public = Column(Boolean, default=True)
     is_active = Column(Boolean, default=True)

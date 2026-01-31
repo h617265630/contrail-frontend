@@ -6,6 +6,7 @@ from app.models.category import Category
 from app.models.user_learning_path import UserLearningPath
 from app.models.path_item import PathItem
 from app.models.resource import Resource
+from app.models.progress import Progress
 
 class LearningPathCURD:
     @staticmethod
@@ -17,6 +18,7 @@ class LearningPathCURD:
         *,
         is_public: bool = False,
         cover_image_url: str | None = None,
+        type: str | None = None,
         category_id: int,
     ) -> LearningPath:
         if category_id is None:
@@ -28,6 +30,7 @@ class LearningPathCURD:
 
         learning_path = LearningPath(
             title=title,
+            type=type,
             description=description,
             is_public=bool(is_public),
             cover_image_url=cover_image_url,
@@ -81,8 +84,37 @@ class LearningPathCURD:
     
     @staticmethod
     def delete_learning_path(db: Session, learning_path: LearningPath) -> None:
-        db.delete(learning_path)
-        db.commit() 
+        try:
+            lp_id = int(getattr(learning_path, "id"))
+
+            # 1) Delete Progress records that reference path items in this learning path.
+            path_item_ids = [
+                int(x)
+                for (x,) in (
+                    db.query(PathItem.id)
+                    .filter(PathItem.learning_path_id == lp_id)
+                    .all()
+                )
+                if x is not None
+            ]
+            if path_item_ids:
+                db.query(Progress).filter(Progress.path_item_id.in_(path_item_ids)).delete(synchronize_session=False)
+
+            # 2) Delete join table associations.
+            db.query(UserLearningPath).filter(UserLearningPath.learning_path_id == lp_id).delete(synchronize_session=False)
+
+            # 3) Delete path items.
+            db.query(PathItem).filter(PathItem.learning_path_id == lp_id).delete(synchronize_session=False)
+
+            # 4) Finally delete the learning path.
+            db.delete(learning_path)
+            db.commit()
+        except IntegrityError as e:
+            db.rollback()
+            raise ValueError(f"Failed to delete learning path due to integrity constraints: {e}")
+        except Exception as e:
+            db.rollback()
+            raise ValueError(f"Failed to delete learning path: {e}")
 
     # ---------- PathItem 相关 CRUD ----------  还要修改
     @staticmethod

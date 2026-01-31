@@ -71,6 +71,7 @@ def create_learning_path(
 			db=db,
 			user_id=current_user.id,
 			title=payload.title,
+			type=getattr(payload, "type", None),
 			description=payload.description,
 			is_public=payload.is_public,
 			cover_image_url=getattr(payload, "cover_image_url", None),
@@ -122,6 +123,7 @@ def get_public_learning_path_detail(
 	return LearningPathDetailResponse(
 		id=lp.id,
 		title=lp.title,
+		type=getattr(lp, "type", None),
 		description=lp.description,
 		is_public=lp.is_public,
 		cover_image_url=getattr(lp, "cover_image_url", None),
@@ -229,6 +231,7 @@ def get_learning_path_detail(
 	return LearningPathDetailResponse(
 		id=lp.id,
 		title=lp.title,
+		type=getattr(lp, "type", None),
 		description=lp.description,
 		is_public=lp.is_public,
 		cover_image_url=getattr(lp, "cover_image_url", None),
@@ -246,7 +249,12 @@ def delete_learning_path(
 	current_user=Depends(get_current_user),
 ):
 	lp = _ensure_ownership(db, current_user.id, learning_path_id)
-	LearningPathCURD.delete_learning_path(db, lp)
+	try:
+		LearningPathCURD.delete_learning_path(db, lp)
+	except ValueError as e:
+		raise HTTPException(status_code=400, detail=str(e))
+	except Exception:
+		raise HTTPException(status_code=500, detail="Failed to delete learning path")
 	return None
 
 

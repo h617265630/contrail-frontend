@@ -7,7 +7,7 @@ import time
 import concurrent.futures
 from datetime import datetime
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import bleach
 import httpx
@@ -121,6 +121,46 @@ def _count_words(text: str) -> int:
     return len(raw.split(" "))
 
 
+def _absolutize_img_src(html: str, base_url: str) -> str:
+    if not html:
+        return html
+
+    # Rewrite <img src="..."> to absolute URLs for better rendering.
+    # Many readability outputs (esp. GitHub README) contain relative URLs.
+    # Note: this is best-effort and intentionally avoids adding heavy HTML parser deps.
+    def _rewrite(match: re.Match[str]) -> str:
+        prefix = match.group("prefix")
+        src = (match.group("src") or "").strip()
+        suffix = match.group("suffix")
+
+        if not src:
+            return match.group(0)
+
+        lowered = src.lower()
+        if lowered.startswith(("data:", "mailto:", "javascript:")):
+            return match.group(0)
+
+        # Handle scheme-relative URLs: //cdn.example.com/img.png
+        if lowered.startswith("//"):
+            scheme = urlparse(base_url).scheme or "https"
+            abs_src = f"{scheme}:{src}"
+        else:
+            abs_src = urljoin(base_url, src)
+
+        return f"{prefix}{abs_src}{suffix}"
+
+    # Match src attribute with single or double quotes.
+    img_src_re = re.compile(
+        r"(?P<prefix><img\b[^>]*?\bsrc\s*=\s*['\"])(?P<src>[^'\"]+)(?P<suffix>['\"][^>]*?>)",
+        flags=re.IGNORECASE,
+    )
+
+    try:
+        return img_src_re.sub(_rewrite, html)
+    except Exception:
+        return html
+
+
 @router.post("/extract", response_model=ReaderExtractResponse)
 def reader_extract(payload: ReaderExtractRequest):
     try:
@@ -189,6 +229,8 @@ def reader_extract(payload: ReaderExtractRequest):
         attributes=_ALLOWED_ATTRS,
         strip=True,
     )
+
+    cleaned = _absolutize_img_src(cleaned, url)
 
     text = bleach.clean(cleaned, tags=[], strip=True)
     wc = _count_words(text)
