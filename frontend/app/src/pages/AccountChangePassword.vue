@@ -1,80 +1,76 @@
 <template>
-  <div class="space-y-4">
-    <div class="rounded-2xl bg-white p-5 shadow-sm border border-slate-100">
-      <h1 class="text-xl font-semibold text-slate-900">Change Password</h1>
-      <p class="text-sm text-slate-600 mt-1">Update your account password</p>
+  <div class="space-y-6">
+    <div>
+      <h3 class="text-lg font-semibold text-foreground">Change Password</h3>
+      <p class="mt-2 text-sm text-muted-foreground">Update your account password</p>
     </div>
 
-    <div v-if="success" class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-700">
+    <div v-if="success" class="rounded-md border border-border bg-muted/30 p-4 text-sm text-foreground">
       Password updated successfully.
     </div>
 
-    <div v-if="error" class="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
+    <div v-if="error" class="rounded-md border border-border bg-muted/30 p-4 text-sm text-destructive">
       {{ error }}
     </div>
 
-    <form class="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 space-y-4" @submit.prevent="onSubmit">
-      <div class="space-y-1">
-        <label class="text-sm font-semibold text-slate-700">Current password</label>
-        <input
-          v-model="currentPassword"
-          type="password"
-          autocomplete="current-password"
-          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          @blur="touched.current = true"
-        />
-        <p v-if="showCurrentError" class="text-sm text-red-600">{{ currentError }}</p>
-      </div>
+    <Card as="section" :hoverable="false" class="rounded-md">
+      <form class="space-y-4 p-6" @submit.prevent="onSubmit">
+        <div class="space-y-1">
+          <label class="text-sm font-semibold text-foreground">Current password</label>
+          <Input
+            v-model="currentPassword"
+            type="password"
+            autocomplete="current-password"
+            class="rounded-md"
+            @blur="touched.current = true"
+          />
+          <p v-if="showCurrentError" class="text-sm text-destructive">{{ currentError }}</p>
+        </div>
 
-      <div class="space-y-1">
-        <label class="text-sm font-semibold text-slate-700">New password</label>
-        <input
-          v-model="newPassword"
-          type="password"
-          autocomplete="new-password"
-          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          @blur="touched.new = true"
-        />
-        <p v-if="showNewError" class="text-sm text-red-600">{{ newError }}</p>
-        <p class="text-xs text-slate-500">At least 8 characters, including letters and numbers.</p>
-      </div>
+        <div class="space-y-1">
+          <label class="text-sm font-semibold text-foreground">New password</label>
+          <Input
+            v-model="newPassword"
+            type="password"
+            autocomplete="new-password"
+            class="rounded-md"
+            @blur="touched.new = true"
+          />
+          <p v-if="showNewError" class="text-sm text-destructive">{{ newError }}</p>
+          <p class="text-xs text-muted-foreground">At least 8 characters, including letters and numbers.</p>
+        </div>
 
-      <div class="space-y-1">
-        <label class="text-sm font-semibold text-slate-700">Confirm new password</label>
-        <input
-          v-model="confirmPassword"
-          type="password"
-          autocomplete="new-password"
-          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          @blur="touched.confirm = true"
-        />
-        <p v-if="showConfirmError" class="text-sm text-red-600">{{ confirmError }}</p>
-      </div>
+        <div class="space-y-1">
+          <label class="text-sm font-semibold text-foreground">Confirm new password</label>
+          <Input
+            v-model="confirmPassword"
+            type="password"
+            autocomplete="new-password"
+            class="rounded-md"
+            @blur="touched.confirm = true"
+          />
+          <p v-if="showConfirmError" class="text-sm text-destructive">{{ confirmError }}</p>
+        </div>
 
-      <div class="pt-2 flex items-center gap-3">
-        <button
-          type="submit"
-          class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
-          :disabled="submitting || !isValid"
-        >
-          {{ submitting ? 'Saving…' : 'Save' }}
-        </button>
-        <button
-          type="button"
-          class="inline-flex items-center justify-center rounded-lg bg-slate-100 px-4 py-2 text-slate-800 font-semibold hover:bg-slate-200"
-          :disabled="submitting"
-          @click="reset"
-        >
-          Reset
-        </button>
-      </div>
-    </form>
+        <div class="pt-2 flex items-center gap-2">
+          <Button type="submit" class="rounded-md" :disabled="submitting || !isValid">
+            {{ submitting ? 'Saving…' : 'Save' }}
+          </Button>
+          <Button type="button" variant="outline" class="rounded-md" :disabled="submitting" @click="reset">
+            Reset
+          </Button>
+        </div>
+      </form>
+    </Card>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 import { changeMyPassword } from '../api/user'
+import Card from '../components/ui/Card.vue'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 
 const currentPassword = ref('')
 const newPassword = ref('')

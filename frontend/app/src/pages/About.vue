@@ -3,8 +3,7 @@
     <section class="border-b border-border pb-8">
       <div class="grid gap-6 md:grid-cols-12 md:items-end">
         <div class="md:col-span-8">
-          <p class="text-xs font-medium tracking-[0.14em] uppercase text-muted-foreground">About</p>
-          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-foreground md:text-4xl">What is Contrail?</h1>
+          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">What is Contrail?</h1>
           <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
             Contrail is a platform for building personal learning paths. It helps you turn scattered resources—found across
             YouTube, blogs, and course platforms—into a clear, actionable path you can actually finish.
@@ -16,21 +15,30 @@
 
     <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <Card as="article" :hoverable="false" class="rounded-none">
-        <div class="p-6 space-y-2">
+        <div class="p-6 space-y-2 flex flex-col h-full">
           <h3 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Resources</h3>
           <p class="text-sm leading-relaxed text-muted-foreground">Import videos, articles, documents, and links—then manage them in one library instead of browser bookmarks.</p>
+          <div class="pt-4 mt-auto flex justify-end">
+            <Button :as="RouterLinkComp" to="/about/resources" variant="outline" size="sm" class="rounded-none">Learn more</Button>
+          </div>
         </div>
       </Card>
       <Card as="article" :hoverable="false" class="rounded-none">
-        <div class="p-6 space-y-2">
+        <div class="p-6 space-y-2 flex flex-col h-full">
           <h3 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Learning Paths</h3>
           <p class="text-sm leading-relaxed text-muted-foreground">Drag resources into a path, reorder steps, and shape a learning rhythm that fits your goal and schedule.</p>
+          <div class="pt-4 mt-auto flex justify-end">
+            <Button :as="RouterLinkComp" to="/about/learning-paths" variant="outline" size="sm" class="rounded-none">Learn more</Button>
+          </div>
         </div>
       </Card>
       <Card as="article" :hoverable="false" class="rounded-none">
-        <div class="p-6 space-y-2">
+        <div class="p-6 space-y-2 flex flex-col h-full">
           <h3 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Progress</h3>
           <p class="text-sm leading-relaxed text-muted-foreground">Track progress per resource and see how much of a path you’ve completed—so learning stays continuous, not fragmented.</p>
+          <div class="pt-4 mt-auto flex justify-end">
+            <Button :as="RouterLinkComp" to="/about/progress" variant="outline" size="sm" class="rounded-none">Learn more</Button>
+          </div>
         </div>
       </Card>
     </section>
@@ -64,5 +72,9 @@
 </template>
 
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
 import Card from '../components/ui/Card.vue'
+import { Button } from '../components/ui/button'
+
+const RouterLinkComp = RouterLink
 </script>

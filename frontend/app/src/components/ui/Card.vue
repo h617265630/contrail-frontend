@@ -3,7 +3,7 @@
     :is="as"
     :class="[
       // base card styling (参考 learningpool 卡片)：白底、圆角、阴影、无黑色边框
-      'bg-card text-card-foreground rounded-xl border border-border shadow-sm overflow-hidden transition-shadow',
+      'bg-card text-card-foreground rounded-md border border-border shadow-sm overflow-hidden transition-shadow',
       hoverable ? 'hover:shadow-md' : '',
       padded ? 'p-5' : '',
       className,

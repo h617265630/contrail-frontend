@@ -1,32 +1,26 @@
 <template>
   <div class="min-h-[60vh] space-y-6">
-    <div class="rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
-      <h1 class="text-xl font-semibold text-slate-900">Flashed Ideas</h1>
-      <p class="mt-2 text-sm text-slate-600">记录你的素材：手动获取的 URL / 分享链接、笔记、文档链接、文字片段</p>
+    <div>
+      <h3 class="text-lg font-semibold text-foreground">Flashed Ideas</h3>
+      <p class="mt-2 text-sm text-muted-foreground">记录你的素材：手动获取的 URL / 分享链接、笔记、文档链接、文字片段</p>
     </div>
 
     <!-- Add item -->
-    <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+    <section class="rounded-md border border-border bg-background p-6">
       <div class="flex items-start justify-between gap-4">
         <div>
-          <h2 class="text-lg font-semibold text-slate-900">新增记录</h2>
-          <p class="text-sm text-slate-500 mt-1">支持：链接 / 文档链接 / 笔记 / 文字片段</p>
+          <h2 class="text-lg font-semibold text-foreground">新增记录</h2>
+          <p class="text-sm text-muted-foreground mt-1">支持：链接 / 文档链接 / 笔记 / 文字片段</p>
         </div>
-        <button
-          class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          :disabled="!canSave"
-          @click="saveItem"
-        >
-          保存
-        </button>
+        <Button type="button" class="rounded-md" :disabled="!canSave" @click="saveItem">保存</Button>
       </div>
 
       <div class="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-2">类型</label>
+          <label class="block text-sm font-semibold text-foreground mb-2">类型</label>
           <select
             v-model="draft.kind"
-            class="w-full px-4 py-2 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="link">分享链接 / URL</option>
             <option value="document">文档链接</option>
@@ -36,42 +30,32 @@
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-2">标题 *</label>
-          <input
-            v-model="draft.title"
-            type="text"
-            placeholder="给它起个名字，方便以后搜索"
-            class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <label class="block text-sm font-semibold text-foreground mb-2">标题 *</label>
+          <Input v-model="draft.title" type="text" placeholder="给它起个名字，方便以后搜索" class="rounded-md" />
         </div>
 
         <div v-if="draft.kind === 'link' || draft.kind === 'document'" class="lg:col-span-2">
-          <label class="block text-sm font-semibold text-slate-700 mb-2">链接 *</label>
-          <input
-            v-model="draft.url"
-            type="url"
-            placeholder="https://..."
-            class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <label class="block text-sm font-semibold text-foreground mb-2">链接 *</label>
+          <Input v-model="draft.url" type="url" placeholder="https://..." class="rounded-md" />
         </div>
 
         <div v-else class="lg:col-span-2">
-          <label class="block text-sm font-semibold text-slate-700 mb-2">内容 *</label>
+          <label class="block text-sm font-semibold text-foreground mb-2">内容 *</label>
           <textarea
             v-model="draft.content"
             rows="5"
             placeholder="把笔记或文字片段贴在这里"
-            class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           ></textarea>
         </div>
 
         <div class="lg:col-span-2">
-          <label class="block text-sm font-semibold text-slate-700 mb-2">备注（可选）</label>
+          <label class="block text-sm font-semibold text-foreground mb-2">备注（可选）</label>
           <textarea
             v-model="draft.note"
             rows="2"
             placeholder="为什么收藏 / 下一步怎么用"
-            class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           ></textarea>
         </div>
       </div>
@@ -80,26 +64,28 @@
     <!-- Documents -->
     <section class="space-y-4">
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-slate-900">文档</h2>
-        <span class="text-sm text-slate-500">{{ documents.length }} items</span>
+        <h2 class="text-lg font-semibold text-foreground">文档</h2>
+        <span class="text-sm text-muted-foreground">{{ documents.length }} items</span>
       </div>
-      <div v-if="documents.length === 0" class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 text-slate-600">暂无文档链接</div>
+      <div v-if="documents.length === 0" class="rounded-md border border-border bg-muted/30 p-6 text-sm text-muted-foreground">暂无文档链接</div>
       <div v-else class="space-y-3">
         <article
           v-for="d in documents"
           :key="d.id"
-          class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+          class="bg-background rounded-md border border-border p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
         >
           <div class="min-w-0">
-            <h3 class="text-slate-900 font-semibold line-clamp-1" :title="d.title">{{ d.title }}</h3>
-            <a :href="d.url" target="_blank" class="text-blue-600 hover:underline break-all text-sm">{{ d.url }}</a>
-            <p v-if="d.note" class="text-slate-600 text-sm mt-1 line-clamp-2" :title="d.note">{{ d.note }}</p>
-            <p class="text-xs text-slate-500 mt-1">{{ formatDate(d.createdAt) }}</p>
+            <h3 class="text-foreground font-semibold line-clamp-1" :title="d.title">{{ d.title }}</h3>
+            <a :href="d.url" target="_blank" class="text-foreground underline underline-offset-4 break-all text-sm">{{ d.url }}</a>
+            <p v-if="d.note" class="text-muted-foreground text-sm mt-1 line-clamp-2" :title="d.note">{{ d.note }}</p>
+            <p class="text-xs text-muted-foreground mt-1">{{ formatDate(d.createdAt) }}</p>
           </div>
           <div class="flex items-center gap-2">
-            <span class="px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold">Document</span>
-            <a :href="d.url" target="_blank" class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">打开</a>
-            <button class="px-3 py-2 rounded-lg bg-red-50 text-red-700 text-sm font-semibold hover:bg-red-100" @click="removeItem(d.id)">删除</button>
+            <span class="px-2 py-1 rounded-md border border-border bg-muted/30 text-xs font-semibold text-foreground">Document</span>
+            <Button type="button" size="sm" class="rounded-md" asChild>
+              <a :href="d.url" target="_blank">打开</a>
+            </Button>
+            <Button type="button" variant="destructive" size="sm" class="rounded-md" @click="removeItem(d.id)">删除</Button>
           </div>
         </article>
       </div>
@@ -108,24 +94,24 @@
     <!-- Text snippets -->
     <section class="space-y-4">
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-slate-900">文字片段</h2>
-        <span class="text-sm text-slate-500">{{ snippets.length }} items</span>
+        <h2 class="text-lg font-semibold text-foreground">文字片段</h2>
+        <span class="text-sm text-muted-foreground">{{ snippets.length }} items</span>
       </div>
-      <div v-if="snippets.length === 0" class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 text-slate-600">暂无文字片段</div>
+      <div v-if="snippets.length === 0" class="rounded-md border border-border bg-muted/30 p-6 text-sm text-muted-foreground">暂无文字片段</div>
       <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <article v-for="t in snippets" :key="t.id" class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+        <article v-for="t in snippets" :key="t.id" class="bg-background rounded-md border border-border p-5">
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
-              <h3 class="text-slate-900 font-semibold line-clamp-1" :title="t.title">{{ t.title }}</h3>
-              <p class="text-xs text-slate-500 mt-1">{{ formatDate(t.createdAt) }}</p>
+              <h3 class="text-foreground font-semibold line-clamp-1" :title="t.title">{{ t.title }}</h3>
+              <p class="text-xs text-muted-foreground mt-1">{{ formatDate(t.createdAt) }}</p>
             </div>
-            <span class="px-2 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">Text</span>
+            <span class="px-2 py-1 rounded-md border border-border bg-muted/30 text-xs font-semibold text-foreground">Text</span>
           </div>
-          <p class="mt-3 text-slate-700 text-sm leading-relaxed whitespace-pre-wrap line-clamp-6">{{ t.content }}</p>
-          <p v-if="t.note" class="mt-3 text-slate-600 text-sm line-clamp-2" :title="t.note">{{ t.note }}</p>
+          <p class="mt-3 text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap line-clamp-6">{{ t.content }}</p>
+          <p v-if="t.note" class="mt-3 text-muted-foreground text-sm line-clamp-2" :title="t.note">{{ t.note }}</p>
           <div class="mt-4 flex items-center justify-between gap-3">
-            <div class="text-xs text-slate-500">{{ t.kind === 'snippet' ? 'Snippet' : 'Text' }}</div>
-            <button class="px-3 py-2 rounded-lg bg-red-50 text-red-700 text-sm font-semibold hover:bg-red-100" @click="removeItem(t.id)">删除</button>
+            <div class="text-xs text-muted-foreground">{{ t.kind === 'snippet' ? 'Snippet' : 'Text' }}</div>
+            <Button type="button" variant="destructive" size="sm" class="rounded-md" @click="removeItem(t.id)">删除</Button>
           </div>
         </article>
       </div>
@@ -134,23 +120,23 @@
     <!-- Notes -->
     <section class="space-y-4">
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-slate-900">笔记</h2>
-        <span class="text-sm text-slate-500">{{ notes.length }} items</span>
+        <h2 class="text-lg font-semibold text-foreground">笔记</h2>
+        <span class="text-sm text-muted-foreground">{{ notes.length }} items</span>
       </div>
-      <div v-if="notes.length === 0" class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 text-slate-600">暂无笔记</div>
+      <div v-if="notes.length === 0" class="rounded-md border border-border bg-muted/30 p-6 text-sm text-muted-foreground">暂无笔记</div>
       <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <article v-for="n in notes" :key="n.id" class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+        <article v-for="n in notes" :key="n.id" class="bg-background rounded-md border border-border p-5">
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
-              <h3 class="text-slate-900 font-semibold line-clamp-1" :title="n.title">{{ n.title }}</h3>
-              <p class="text-xs text-slate-500 mt-1">{{ formatDate(n.createdAt) }}</p>
+              <h3 class="text-foreground font-semibold line-clamp-1" :title="n.title">{{ n.title }}</h3>
+              <p class="text-xs text-muted-foreground mt-1">{{ formatDate(n.createdAt) }}</p>
             </div>
-            <span class="px-2 py-1 rounded-full bg-yellow-50 text-yellow-800 text-xs font-semibold">Note</span>
+            <span class="px-2 py-1 rounded-md border border-border bg-muted/30 text-xs font-semibold text-foreground">Note</span>
           </div>
-          <p class="mt-3 text-slate-700 text-sm leading-relaxed whitespace-pre-wrap line-clamp-8">{{ n.content }}</p>
-          <p v-if="n.note" class="mt-3 text-slate-600 text-sm line-clamp-2" :title="n.note">{{ n.note }}</p>
+          <p class="mt-3 text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap line-clamp-8">{{ n.content }}</p>
+          <p v-if="n.note" class="mt-3 text-muted-foreground text-sm line-clamp-2" :title="n.note">{{ n.note }}</p>
           <div class="mt-4 flex items-center justify-end">
-            <button class="px-3 py-2 rounded-lg bg-red-50 text-red-700 text-sm font-semibold hover:bg-red-100" @click="removeItem(n.id)">删除</button>
+            <Button type="button" variant="destructive" size="sm" class="rounded-md" @click="removeItem(n.id)">删除</Button>
           </div>
         </article>
       </div>
@@ -159,22 +145,24 @@
     <!-- Shared links -->
     <section class="space-y-4">
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-slate-900">分享链接</h2>
-        <span class="text-sm text-slate-500">{{ links.length }} items</span>
+        <h2 class="text-lg font-semibold text-foreground">分享链接</h2>
+        <span class="text-sm text-muted-foreground">{{ links.length }} items</span>
       </div>
-      <div v-if="links.length === 0" class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 text-slate-600">暂无分享链接</div>
+      <div v-if="links.length === 0" class="rounded-md border border-border bg-muted/30 p-6 text-sm text-muted-foreground">暂无分享链接</div>
       <div v-else class="space-y-3">
-        <article v-for="l in links" :key="l.id" class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <article v-for="l in links" :key="l.id" class="bg-background rounded-md border border-border p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div class="min-w-0">
-            <h3 class="text-slate-900 font-semibold line-clamp-1" :title="l.title">{{ l.title }}</h3>
-            <a :href="l.url" target="_blank" class="text-blue-600 hover:underline break-all text-sm">{{ l.url }}</a>
-            <p v-if="l.note" class="text-slate-600 text-sm mt-1 line-clamp-2" :title="l.note">{{ l.note }}</p>
-            <p class="text-xs text-slate-500 mt-1">{{ formatDate(l.createdAt) }}</p>
+            <h3 class="text-foreground font-semibold line-clamp-1" :title="l.title">{{ l.title }}</h3>
+            <a :href="l.url" target="_blank" class="text-foreground underline underline-offset-4 break-all text-sm">{{ l.url }}</a>
+            <p v-if="l.note" class="text-muted-foreground text-sm mt-1 line-clamp-2" :title="l.note">{{ l.note }}</p>
+            <p class="text-xs text-muted-foreground mt-1">{{ formatDate(l.createdAt) }}</p>
           </div>
           <div class="flex items-center gap-2">
-            <span class="px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold">Link</span>
-            <a :href="l.url" target="_blank" class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">打开</a>
-            <button class="px-3 py-2 rounded-lg bg-red-50 text-red-700 text-sm font-semibold hover:bg-red-100" @click="removeItem(l.id)">删除</button>
+            <span class="px-2 py-1 rounded-md border border-border bg-muted/30 text-xs font-semibold text-foreground">Link</span>
+            <Button type="button" size="sm" class="rounded-md" asChild>
+              <a :href="l.url" target="_blank">打开</a>
+            </Button>
+            <Button type="button" variant="destructive" size="sm" class="rounded-md" @click="removeItem(l.id)">删除</Button>
           </div>
         </article>
       </div>
@@ -184,6 +172,8 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 
 type ItemKind = 'link' | 'document' | 'note' | 'snippet'
 

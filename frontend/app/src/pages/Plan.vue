@@ -3,8 +3,7 @@
     <section class="border-b border-border pb-8">
       <div class="grid gap-6 md:grid-cols-12 md:items-end">
         <div class="md:col-span-8">
-          <p class="text-xs font-medium tracking-[0.14em] uppercase text-muted-foreground">Plans</p>
-          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-foreground md:text-4xl">Choose the plan that fits you</h1>
+          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Choose the plan that fits you</h1>
           <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Use Contrail’s core features to start learning with structure.</p>
         </div>
         <div class="md:col-span-4 md:flex md:justify-end">

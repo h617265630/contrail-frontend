@@ -1,148 +1,170 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">我的资源</h1>
-      <button
-        @click="$router.push({ name: 'add-resource' })"
-        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-      >
-        Add Resource
-      </button>
-    </div>
-
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <div class="p-6 border-b border-gray-200">
-        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <div class="flex-1">
-            <div class="relative">
-              <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                v-model="searchKeyword"
-                placeholder="搜索资源标题..."
-                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+    <section class="border-b border-border pb-8">
+      <div class="grid gap-6 md:grid-cols-12 md:items-end">
+        <div class="md:col-span-8">
+          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">My Resources</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Manage the learning resources you saved.</p>
+        </div>
+        <div class="md:col-span-4 md:flex md:justify-end md:items-end">
           <div class="flex gap-2">
+            <Button
+              type="button"
+              size="sm"
+              class="rounded-none hover:bg-[#8ecbff] hover:text-white"
+              @click="router.push({ name: 'add-resource' })"
+            >
+              Add Resource
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 grid gap-4 md:grid-cols-12 md:items-center">
+        <div class="md:col-span-8">
+          <div class="relative">
+            <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input v-model="searchKeyword" placeholder="Search resources..." class="pl-9 rounded-none" />
+          </div>
+        </div>
+        <div class="md:col-span-4 md:flex md:justify-end">
+          <div class="flex items-center gap-2">
             <select
               v-model="filterType"
-              class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="h-10 w-full md:w-auto border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-none"
             >
-              <option value="">全部类型</option>
-              <option value="video">视频</option>
-              <option value="article">文章</option>
-              <option value="document">文档</option>
+              <option value="">All types</option>
+              <option value="video">Video</option>
+              <option value="article">Article</option>
+              <option value="document">Document</option>
             </select>
           </div>
         </div>
       </div>
+    </section>
 
-      <div class="p-6">
-        <div v-if="loading" class="text-center py-12">
-          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p class="mt-3 text-gray-600">加载中...</p>
-        </div>
-        <div v-else-if="resources.length === 0" class="text-center py-12">
-          <p class="text-gray-600">暂无资源</p>
-        </div>
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-          <div
-            v-for="resource in filteredResources"
-            :key="resource.id"
-            class="bg-white rounded-xl shadow-lg overflow-hidden transition-all cursor-pointer h-90 flex flex-col hover:shadow-xl"
-            @click="viewResource(resource)"
-          >
-            <div class="relative h-32">
-              <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="w-full h-full object-cover" />
-              <div class="absolute top-3 right-3">
-                <span class="px-2 py-1 rounded-full flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-semibold">
-                  {{ resource.type }}
-                </span>
-              </div>
-              <div class="absolute bottom-3 left-3">
-                <span class="px-2 py-1 rounded-full bg-black bg-opacity-60 text-white text-xs flex items-center gap-1">
-                  {{ resource.platform || '—' }}
-                </span>
-              </div>
-            </div>
-            <div class="p-4 flex flex-col flex-1 min-h-0">
-              <h3 class="text-gray-900 font-semibold text-sm truncate mb-2">{{ resource.title }}</h3>
-              <p class="text-gray-600 text-sm mb-3 line-clamp-3">{{ resource.summary }}</p>
-              <div class="space-y-1 text-xs text-gray-600 mb-3">
-                <div class="flex items-center justify-between gap-3">
-                  <span class="text-gray-500">分类</span>
-                  <span class="font-semibold text-gray-700 truncate">{{ resource.category || '—' }}</span>
-                </div>
-                <div class="flex items-center justify-between gap-3">
-                  <span class="text-gray-500">添加时间</span>
-                  <span class="font-semibold text-gray-700">{{ resource.addedDate || '—' }}</span>
-                </div>
-              </div>
-              <div class="mt-auto">
-                <div class="flex items-center gap-1 justify-start mb-2">
-                  <button
-                    type="button"
-                    class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    @click.stop="togglePublic(resource)"
-                    :disabled="publicUpdatingId === resource.id"
-                    aria-label="Toggle public/private"
-                  >
-                    <span>{{ resource.is_system_public ? '公开' : '私有' }}</span>
-                    <span class="ml-1 relative h-4 w-7 rounded-full transition-colors" :class="resource.is_system_public ? 'bg-green-500' : 'bg-gray-300'">
-                      <span class="absolute left-0.5 top-0.5 h-3 w-3 rounded-full bg-white transition-transform" :class="resource.is_system_public ? 'translate-x-3' : ''" />
-                    </span>
-                  </button>
-                </div>
-                <div class="flex items-center gap-1 justify-start">
-                  <button @click.stop="viewResource(resource)" class="flex-1 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xs font-semibold">View</button>
-                  <button type="button" class="flex-1 px-2 py-1 rounded bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold text-xs" @click.stop="editResource(resource)">Edit</button>
-                  <button type="button" class="flex-1 px-2 py-1 rounded bg-pink-600 text-white hover:bg-pink-700 font-semibold text-xs disabled:opacity-50 disabled:cursor-not-allowed" :disabled="deletingId === resource.id" @click.stop="deleteResource(resource)">{{ deletingId === resource.id ? 'Deleting…' : 'Delete' }}</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <section>
+      <div v-if="loading" class="py-12 text-center">
+        <div class="inline-block h-8 w-8 animate-spin border-b-2 border-foreground" />
+        <p class="mt-3 text-sm text-muted-foreground">Loading...</p>
       </div>
-    </div>
 
-    <!-- 删除确认模态框 -->
-    <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
-        <div class="border-b border-gray-200 p-6 flex items-center justify-between">
-          <h2 class="text-gray-900 text-lg font-semibold">确认删除</h2>
-          <button type="button" @click="closeDeleteConfirm" class="text-gray-400 hover:text-gray-600" :disabled="deletingId !== null">
-            <X class="w-6 h-6" />
-          </button>
-        </div>
+      <div v-else-if="resources.length === 0" class="py-12 text-center">
+        <p class="text-sm text-muted-foreground">No resources yet</p>
+      </div>
 
-        <div class="p-6 space-y-3">
-          <div class="text-gray-700">是否确认删除该资源？</div>
-          <div v-if="deleteTarget" class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-            <div class="text-gray-900 font-semibold line-clamp-1">{{ deleteTarget.title }}</div>
-            <div class="text-xs text-gray-600 line-clamp-1 mt-1">ID: {{ deleteTarget.id }}</div>
+      <div v-else class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+        <Card
+          v-for="resource in filteredResources"
+          :key="resource.id"
+          class="rounded-none cursor-pointer"
+          :hoverable="true"
+          @click="viewResource(resource)"
+        >
+          <div class="relative h-32 bg-muted">
+            <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="h-full w-full object-cover" />
+            <div class="absolute top-3 right-3">
+              <span class="px-2 py-1 border border-border bg-background text-foreground text-xs font-semibold">
+                {{ resource.type }}
+              </span>
+            </div>
+            <div class="absolute bottom-3 left-3">
+              <span class="px-2 py-1 border border-border bg-background/90 text-foreground text-xs">
+                {{ formatPlatform(resource.platform) }}
+              </span>
+            </div>
           </div>
-          <p v-if="deleteError" class="text-sm text-red-600">{{ deleteError }}</p>
-        </div>
 
-        <div class="bg-gray-50 border-t border-gray-200 p-6 flex gap-3 justify-end">
-          <button
+          <div class="p-4 flex min-h-0 flex-1 flex-col">
+            <h3 class="truncate text-sm font-semibold text-foreground">{{ resource.title }}</h3>
+            <p class="mt-2 line-clamp-3 text-sm text-muted-foreground">{{ resource.summary }}</p>
+
+            <div class="mt-3 space-y-1 text-xs text-muted-foreground">
+              <div class="flex items-center justify-between gap-3">
+                <span>Category</span>
+                <span class="truncate text-foreground">{{ resource.category || '—' }}</span>
+              </div>
+              <div class="flex items-center justify-between gap-3">
+                <span>Added</span>
+                <span class="text-foreground">{{ resource.addedDate || '—' }}</span>
+              </div>
+            </div>
+
+            <div class="mt-auto pt-4">
+              <div class="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  class="rounded-none"
+                  @click.stop="togglePublic(resource)"
+                  :disabled="publicUpdatingId === resource.id"
+                >
+                  {{ resource.is_system_public ? 'Public' : 'Private' }}
+                </Button>
+              </div>
+
+              <div class="mt-2 grid grid-cols-3 gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  class="rounded-none bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white"
+                  @click.stop="viewResource(resource)"
+                >
+                  View
+                </Button>
+                <Button type="button" variant="outline" size="sm" class="rounded-none" @click.stop="editResource(resource)">Edit</Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  class="rounded-none"
+                  :disabled="deletingId === resource.id"
+                  @click.stop="deleteResource(resource)"
+                >
+                  {{ deletingId === resource.id ? 'Deleting…' : 'Delete' }}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </section>
+
+    <div v-if="showDeleteConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
+      <Card class="w-full max-w-md rounded-none" :hoverable="false">
+        <div class="flex items-center justify-between border-b border-border p-6">
+          <h2 class="text-lg font-semibold text-foreground">Confirm delete</h2>
+          <Button
             type="button"
-            class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="ghost"
+            size="icon"
+            class="rounded-none"
             @click="closeDeleteConfirm"
             :disabled="deletingId !== null"
           >
-            取消
-          </button>
-          <button
-            type="button"
-            class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            @click="confirmDelete"
-            :disabled="deletingId !== null"
-          >
-            {{ deletingId !== null ? '删除中...' : '确认删除' }}
-          </button>
+            <X class="h-5 w-5" />
+          </Button>
         </div>
-      </div>
+
+        <div class="space-y-3 p-6">
+          <div class="text-sm text-foreground">Are you sure you want to delete this resource?</div>
+          <div v-if="deleteTarget" class="border border-border bg-muted/30 p-3">
+            <div class="line-clamp-1 font-semibold text-foreground">{{ deleteTarget.title }}</div>
+            <div class="mt-1 line-clamp-1 text-xs text-muted-foreground">ID: {{ deleteTarget.id }}</div>
+          </div>
+          <p v-if="deleteError" class="text-sm text-destructive">{{ deleteError }}</p>
+        </div>
+
+        <div class="flex justify-end gap-2 border-t border-border bg-muted/30 p-6">
+          <Button type="button" variant="outline" class="rounded-none" @click="closeDeleteConfirm" :disabled="deletingId !== null">
+            Cancel
+          </Button>
+          <Button type="button" variant="destructive" class="rounded-none" @click="confirmDelete" :disabled="deletingId !== null">
+            {{ deletingId !== null ? 'Deleting...' : 'Confirm' }}
+          </Button>
+        </div>
+      </Card>
     </div>
   </div>
 </template>
@@ -152,6 +174,10 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, X } from 'lucide-vue-next'
 import { deleteMyResource, listMyResources, type DbResource } from '../api/resource'
+import Card from '../components/ui/Card.vue'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { formatPlatform } from '../utils/platform'
 
 const router = useRouter()
 
@@ -195,7 +221,7 @@ function mapDbToUi(r: DbResource): UiResource {
     id: r.id,
     title: r.title,
     summary: String((r as any).summary || '').trim(),
-    category: String((r as any).category_name || '').trim() || '其他',
+    category: String((r as any).category_name || '').trim() || 'Other',
     platform,
     thumbnail: String((r as any).thumbnail || '').trim() || fallbackThumb,
     type,
@@ -205,7 +231,7 @@ function mapDbToUi(r: DbResource): UiResource {
 }
 
 async function togglePublic(resource: UiResource) {
-  alert('当前版本不支持 Public/Private 切换（新 schema 已移除 is_public）。')
+  alert('Public/Private toggle is not supported yet.')
 }
 
 async function load() {
@@ -231,6 +257,9 @@ const filteredResources = computed(() => {
   const type = filterType.value
 
   return resources.value.filter(r => {
+    const platform = String(r.platform || '').trim().toLowerCase()
+    if (platform === 'xiaohongshu' || platform === 'xhs' || platform.includes('xiaohongshu')) return false
+    if (platform === 'reddit') return false
     const matchType = !type || type === '' || r.type === type
     if (!matchType) return false
     if (!q) return true

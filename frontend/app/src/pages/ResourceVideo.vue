@@ -1,23 +1,37 @@
 <template>
-  <div class="min-h-screen bg-slate-50">
-    <div class="max-w-6xl mx-auto p-6 space-y-4">
-      <div v-if="loading" class="rounded-2xl bg-white p-6 shadow-sm text-slate-700">Loading…</div>
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+    <section class="border-b border-border pb-8">
+      <div class="grid gap-6 md:grid-cols-12 md:items-end">
+        <div class="md:col-span-8">
+          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Video</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Watch and track your progress.</p>
+        </div>
+      </div>
+    </section>
 
-      <div v-else-if="error" class="rounded-2xl bg-white p-6 shadow-sm text-red-600">{{ error }}</div>
+    <div v-if="loading">
+      <Card :hoverable="false" padded>
+        <div class="text-sm text-muted-foreground">Loading…</div>
+      </Card>
+    </div>
 
-      <template v-else>
-        <div class="space-y-3">
-          <div class="rounded-2xl bg-black overflow-hidden shadow-sm">
+    <div v-else-if="error">
+      <Card :hoverable="false" padded>
+        <div class="text-sm text-destructive">{{ error }}</div>
+      </Card>
+    </div>
+
+    <template v-else>
+      <div class="space-y-6">
+        <Card :hoverable="false" className="bg-black overflow-hidden" >
             <div class="relative w-full aspect-video">
-              <iframe
-                v-if="isYouTubeUrl(resource.source_url)"
-                :src="toYouTubeEmbed(resource.source_url)"
+              <div
+                v-if="isYouTubeUrl(resource.source_url) && !playerFailed"
+                ref="playerEl"
                 class="absolute inset-0 h-full w-full"
-                title="YouTube Video Player"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen
               />
-              <div v-else-if="embedUrl"
+              <iframe
+                v-else-if="embedUrl"
                 :src="embedUrl"
                 class="absolute inset-0 h-full w-full"
                 title="Video preview"
@@ -27,96 +41,99 @@
               <div v-else class="absolute inset-0 flex items-center justify-center text-white/80">
                 Video preview is unavailable
               </div>
+            </div>
+        </Card>
 
+        <div
+          v-if="playerFailed"
+          class="rounded-md border border-border bg-muted/30 p-4 text-sm text-muted-foreground"
+        >
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              Unable to load the embedded player. This is usually caused by network restrictions or browser extensions.
+            </div>
+            <Button type="button" variant="outline" size="sm" class="rounded-md" @click="openSource">
+              Open Source URL
+            </Button>
+          </div>
+        </div>
 
+        <div class="space-y-3">
+          <h2 class="text-xl sm:text-2xl font-semibold text-foreground">{{ resource.title }}</h2>
+
+          <div v-if="pathItemId != null" class="rounded-md border border-border bg-muted/30 p-4">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-muted-foreground">Progress</span>
+              <span class="font-semibold text-foreground">{{ trackedProgress }}%</span>
+            </div>
+            <div class="mt-2 h-2 w-full bg-muted">
               <div
-                v-if="playerFailed"
-                class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/50 px-6 text-center"
-              >
-                <div class="text-white/90 text-sm">
-                  Unable to load the embedded player. This is usually caused by network restrictions or browser extensions.
-                </div>
-                <button
-                  type="button"
-                  class="inline-flex items-center gap-2 rounded-lg bg-white/90 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-white"
-                  @click="openSource"
-                >
-                  Open Source URL
-                </button>
-              </div>
+                class="h-2 bg-foreground transition-all duration-300"
+                :style="{ width: `${trackedProgress}%` }"
+              />
             </div>
           </div>
 
-          <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">{{ resource.title }}</h1>
-
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div class="flex flex-wrap items-center gap-3 text-sm text-slate-600">
-              <span class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1">
+            <div class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span class="inline-flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-1">
                 <UserRound class="h-4 w-4" />
                 {{ resource.video?.channel || 'Unknown author' }}
               </span>
-              <span v-if="publishedText" class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1">
+              <span v-if="publishedText" class="inline-flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-1">
                 <Calendar class="h-4 w-4" />
                 {{ publishedText }}
               </span>
-              <span v-if="addedText" class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1">
+              <span v-if="addedText" class="inline-flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-1">
                 <Clock class="h-4 w-4" />
                 Added {{ addedText }}
               </span>
             </div>
 
             <div class="flex items-center gap-2">
-              <button
-                type="button"
-                class="px-3 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold shadow-sm hover:bg-slate-50"
-                @click="goSaveToPath"
-              >
+              <Button type="button" variant="outline" size="sm" class="rounded-md" @click="goSaveToPath">
                 Save to path
-              </button>
-              <button
+              </Button>
+              <Button
                 v-if="pathItemId != null"
                 type="button"
-                class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm hover:bg-blue-700 disabled:opacity-50"
+                size="sm"
+                class="rounded-md"
                 :disabled="progressUpdating"
                 @click="markComplete"
               >
                 Mark as complete
-              </button>
-              <button
-                type="button"
-                class="p-2 rounded-lg bg-white text-slate-900 shadow-sm hover:bg-slate-50"
-                :aria-label="'Open source URL'"
-                @click="openSource"
-              >
+              </Button>
+              <Button type="button" variant="outline" size="icon" class="rounded-md" :aria-label="'Open source URL'" @click="openSource">
                 <Download class="w-4 h-4" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>
 
         <div class="grid gap-6 lg:grid-cols-3">
           <div class="lg:col-span-2 space-y-6">
-            <div class="rounded-2xl bg-white p-5 shadow-sm space-y-2">
-              <h2 class="text-lg font-semibold text-slate-900">Description</h2>
-              <p class="text-slate-700 whitespace-pre-wrap leading-relaxed">{{ resource.summary || '—' }}</p>
-            </div>
+            <Card :hoverable="false" padded>
+              <h3 class="text-lg font-semibold text-foreground">Description</h3>
+              <p class="mt-2 text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{{ resource.summary || '—' }}</p>
+            </Card>
           </div>
 
           <div class="space-y-4">
-            <div class="rounded-2xl bg-white p-5 shadow-sm space-y-3">
-              <h3 class="font-semibold text-slate-900">Source</h3>
-              <div class="space-y-2 text-sm text-slate-700">
+            <Card :hoverable="false" padded>
+              <h3 class="font-semibold text-foreground">Source</h3>
+              <div class="mt-2 space-y-2 text-sm text-muted-foreground">
                 <div class="flex items-center gap-2">
-                  <LinkIcon class="w-4 h-4 text-slate-500" />
-                  <a v-if="resource.source_url" :href="resource.source_url" target="_blank" class="text-blue-600 hover:underline break-all">{{ resource.source_url }}</a>
+                  <LinkIcon class="w-4 h-4 text-muted-foreground" />
+                  <a v-if="resource.source_url" :href="resource.source_url" target="_blank" class="text-foreground underline underline-offset-4 break-all">{{ resource.source_url }}</a>
                   <span v-else>—</span>
                 </div>
               </div>
-            </div>
+            </Card>
           </div>
         </div>
-      </template>
-    </div>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -132,11 +149,13 @@ function toYouTubeEmbed(url: string | undefined | null): string {
   const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
   return match ? `https://www.youtube.com/embed/${match[1]}` : url;
 }
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Calendar, Clock, Download, Link as LinkIcon, Play, UserRound } from 'lucide-vue-next'
 import { getMyResourceDetail, getResourceDetail, type DbResourceDetail } from '../api/resource'
 import { getMyProgressForItem, upsertMyProgress } from '../api/progress'
+import Card from '../components/ui/Card.vue'
+import { Button } from '../components/ui/button'
 
 const route = useRoute()
 const router = useRouter()
@@ -144,7 +163,7 @@ const router = useRouter()
 const loading = ref(false)
 const error = ref('')
 
-const resource = ref<DbResourceDetail>({ id: 0, resource_type: 'video', title: '', category_id: 0 })
+const resource = ref<DbResourceDetail>({} as DbResourceDetail)
 
 const startSeconds = ref(0)
 
@@ -179,19 +198,66 @@ function stopProgressTimer() {
   }
 }
 
-async function startProgressTimer() {
-  stopProgressTimer()
+async function seedProgressFromServer() {
   if (pathItemId.value == null) return
-
-  // Seed from server
   try {
     const row = await getMyProgressForItem(pathItemId.value)
     trackedProgress.value = Number(row?.progress_percentage) || 0
   } catch {
     trackedProgress.value = 0
   }
-
   lastSentProgress.value = trackedProgress.value
+
+  // If we are in iframe fallback mode, try to compute a start time so playback resumes near progress.
+  if (!ytPlayer && isYouTubeUrl(resource.value.source_url)) {
+    maybeSetStartFromProgressForIframe()
+  }
+}
+
+function maybeSetStartFromProgressForIframe() {
+  if (pathItemId.value == null) return
+  if (!isYouTubeUrl(resource.value.source_url)) return
+
+  const pct = Math.min(99, Math.max(0, Math.round(Number(trackedProgress.value) || 0)))
+  if (!pct) return
+
+  const duration = Number(resource.value.video?.duration)
+  if (!Number.isFinite(duration) || duration <= 0) return
+
+  // For iframe mode, we can't seek after load reliably, so we set startSeconds before embedUrl is used.
+  startSeconds.value = Math.max(0, Math.floor((duration * pct) / 100))
+}
+
+function maybeSeekFromProgress() {
+  if (pathItemId.value == null) return
+  if (!ytPlayer) return
+
+  const pct = Math.min(99, Math.max(0, Math.round(Number(trackedProgress.value) || 0)))
+  if (!pct) return
+
+  let duration = 0
+  try {
+    const d = Number(ytPlayer.getDuration?.())
+    duration = Number.isFinite(d) ? d : 0
+  } catch {
+    duration = 0
+  }
+  if (!duration) {
+    const fallback = Number(resource.value.video?.duration)
+    duration = Number.isFinite(fallback) ? fallback : 0
+  }
+  if (!duration) return
+
+  const target = Math.max(0, Math.floor((duration * pct) / 100))
+  seekTo(target)
+}
+
+async function startProgressTimer() {
+  stopProgressTimer()
+  if (pathItemId.value == null) return
+
+  // Seed once per entry (and allow auto-seek when player is ready)
+  await seedProgressFromServer()
 
   progressTimer = window.setInterval(async () => {
     const pid = pathItemId.value
@@ -287,14 +353,22 @@ const videoId = computed(() => {
 })
 
 const embedUrl = computed(() => {
-  const vid = String(videoId.value || '').trim()
-  if (vid) {
-    const start = Math.max(0, Number(startSeconds.value || 0))
-    const qs = start ? `?start=${start}&rel=0` : '?rel=0'
-    return `https://www.youtube.com/embed/${encodeURIComponent(vid)}${qs}`
+  const rawUrl = String(resource.value.source_url || '').trim()
+  const start = Math.max(0, Number(startSeconds.value || 0))
+
+  // Prefer a proper YouTube embed URL (even if videoId parsing fails).
+  if (isYouTubeUrl(rawUrl)) {
+    const vid = String(videoId.value || '').trim()
+    if (vid) {
+      const qs = start ? `?start=${start}&rel=0` : '?rel=0'
+      return `https://www.youtube.com/embed/${encodeURIComponent(vid)}${qs}`
+    }
+    const base = toYouTubeEmbed(rawUrl)
+    if (!base) return ''
+    return start ? `${base}${base.includes('?') ? '&' : '?'}start=${start}` : base
   }
-  const raw = String(resource.value.source_url || '').trim()
-  return raw || ''
+
+  return rawUrl || ''
 })
 
 function ensureYouTubeApi(): Promise<void> {
@@ -329,8 +403,15 @@ function ensureYouTubeApi(): Promise<void> {
 }
 
 async function initPlayer() {
-  if (!playerEl.value) return
-  if (!videoId.value) return
+  if (!playerEl.value) {
+    playerFailed.value = true
+    return
+  }
+  if (!videoId.value) {
+    // No usable videoId: fallback to iframe (embedUrl still works).
+    playerFailed.value = true
+    return
+  }
   playerFailed.value = false
   try {
     await ensureYouTubeApi()
@@ -356,12 +437,19 @@ async function initPlayer() {
         rel: 0,
       },
       events: {
-        onReady: () => {
+        onReady: async () => {
+          await seedProgressFromServer()
+          maybeSeekFromProgress()
           void startProgressTimer()
         },
       },
     })
   } catch {
+    playerFailed.value = true
+  }
+
+  // If player still isn't created, fallback.
+  if (!ytPlayer) {
     playerFailed.value = true
   }
 }
@@ -382,6 +470,12 @@ async function load() {
       ...data,
     }
     startSeconds.value = 0
+    // Reset so the YT mount element can render; initPlayer will set it back to true on failure.
+    if (isYouTubeUrl(resource.value.source_url)) {
+      playerFailed.value = false
+    }
+    // Ensure the player mount element exists before initializing the YT player.
+    await nextTick()
     await initPlayer()
   } catch (e: any) {
     error.value = String(e?.response?.data?.detail || e?.message || 'Failed to load resource')
@@ -435,11 +529,11 @@ watch(
 
 onMounted(() => {
   load()
-  void startProgressTimer()
 })
 
 watch(pathItemId, () => {
-  void startProgressTimer()
+  void seedProgressFromServer()
+  maybeSeekFromProgress()
 })
 
 onBeforeUnmount(() => {

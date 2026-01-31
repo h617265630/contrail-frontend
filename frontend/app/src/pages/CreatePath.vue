@@ -1,56 +1,59 @@
 <template>
-  <div class="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-6">
-    <div class="max-w-7xl mx-auto space-y-6">
-      <!-- Header -->
-      <div class="bg-white rounded-2xl shadow-xl p-8">
-        <div class="flex items-start justify-between gap-4">
-          <div class="min-w-0">
-            <h1 class="text-gray-900 mb-2">CreatePath</h1>
-            <p class="text-gray-600">搜索并选择资源，通过拖拽或点击添加到你的学习路径。</p>
-          </div>
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+    <section class="border-b border-border pb-8">
+      <div class="grid gap-6 md:grid-cols-12 md:items-end">
+        <div class="md:col-span-8">
+          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">CreatePath</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Search and select resources, then drag or click to add them into your learning path.</p>
         </div>
       </div>
+    </section>
 
       <!-- Main content -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Resources panel -->
-        <section class="bg-white rounded-2xl shadow-xl p-6 space-y-4">
+        <Card as="section" :hoverable="false" class="rounded-none">
+          <div class="p-6 space-y-4">
           <div class="flex items-center justify-between gap-3">
-            <h2 class="text-lg font-semibold text-gray-900">Resources</h2>
-            <span class="text-sm text-gray-500">{{ filteredResources.length }} results</span>
+            <div>
+              <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Resources</h2>
+              <p class="text-sm text-muted-foreground">{{ filteredResources.length }} results</p>
+            </div>
           </div>
 
           <div class="relative">
-            <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
+            <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
               v-model="searchQuery"
               type="search"
               placeholder="Search resources..."
-              class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="h-10 w-full rounded-none pl-9"
             />
           </div>
 
           <!-- Create resource from URL/share link -->
-          <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-3">
+          <div class="border border-border bg-background p-4 space-y-3">
             <div>
-              <p class="text-gray-900 font-semibold">通过链接生成资源</p>
-              <p class="text-gray-600 text-xs mt-1">粘贴 URL / 分享链接后点击生成，将加入下方资源列表。</p>
+              <p class="text-foreground font-semibold">Create a resource from a link</p>
+              <p class="text-muted-foreground text-xs mt-1">Paste a URL / share link and click Generate. It will be added to the list below.</p>
             </div>
             <div class="flex items-center gap-2">
-              <input
+              <Input
                 v-model="newResourceUrl"
                 type="url"
                 placeholder="https://..."
-                class="flex-1 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="h-10 flex-1 rounded-none"
               />
-              <button
+              <Button
                 type="button"
-                class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="outline"
+                size="sm"
+                class="rounded-none"
                 :disabled="!newResourceUrl.trim() || newResourceLoading"
                 @click="createResourceFromUrl"
               >
-                {{ newResourceLoading ? '生成中...' : '生成' }}
-              </button>
+                {{ newResourceLoading ? 'Generating…' : 'Generate' }}
+              </Button>
             </div>
             <p v-if="newResourceError" class="text-xs text-red-600">{{ newResourceError }}</p>
           </div>
@@ -59,86 +62,123 @@
             <article
               v-for="r in filteredResources"
               :key="r.id"
-              class="border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition bg-white"
+              class="border border-gray-200 rounded-none overflow-hidden hover:shadow-md transition bg-white"
               draggable="true"
               @dragstart="handleDragStart($event, r)"
             >
               <div class="flex gap-3 p-3">
-                <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-lg bg-gray-100 shrink-0" />
+                <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-none bg-gray-100 shrink-0" />
                 <div class="min-w-0 flex-1">
                   <div class="flex items-start justify-between gap-2">
                     <h3 class="text-gray-900 font-semibold text-sm line-clamp-1" :title="r.title">{{ r.title }}</h3>
-                    <span class="px-2 py-1 rounded-full text-xs font-semibold" :class="typeBadge(r.type)">{{ r.type }}</span>
+                    <span class="px-2 py-1 rounded-none text-xs font-semibold" :class="typeBadge(r.type)">{{ r.type }}</span>
                   </div>
                   <p class="text-gray-600 text-xs mt-1 line-clamp-2">{{ r.summary }}</p>
                   <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
-                    <span v-if="r.platform" class="px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ r.platform }}</span>
+                    <span v-if="r.platform" class="px-2 py-1 rounded-none bg-gray-100 text-gray-700">{{ formatPlatform(r.platform) }}</span>
                   </div>
                 </div>
               </div>
               <div class="border-t border-gray-100 p-3 flex items-center justify-between">
-                <span class="text-xs text-gray-400">拖拽到右侧学习路径区域</span>
+                <span class="text-xs text-gray-400">Drag into the builder on the right</span>
                 <button
                   type="button"
-                  class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
+                  class="px-3 py-1.5 rounded-none bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
                   @click="addResource(r)"
                 >
                   <Plus class="w-3.5 h-3.5" />
-                  添加
+                  Add
                 </button>
               </div>
             </article>
           </div>
-        </section>
+          </div>
+        </Card>
 
         <!-- Builder panel -->
-        <section
-          class="bg-white rounded-2xl shadow-xl p-6 space-y-4"
-          @dragover.prevent
-          @drop="onDrop"
-        >
+        <Card as="section" :hoverable="false" class="rounded-none" @dragover.prevent @drop="onDrop">
+          <div class="p-6 space-y-4">
           <div class="flex items-center justify-between gap-3">
             <div class="min-w-0">
-              <h2 class="text-lg font-semibold text-gray-900">LearningPath Builder</h2>
-              <p class="text-sm text-gray-600">
-                <span class="text-gray-500">{{ selected.length }} items</span>
+              <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">LearningPath Builder</h2>
+              <p class="text-sm text-muted-foreground">
+                <span class="text-muted-foreground">{{ selected.length }} items</span>
               </p>
             </div>
-            <button
+            <Button
               type="button"
-              class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+              variant="outline"
+              size="sm"
+              class="rounded-none"
               @click="clearSelected"
               :disabled="selected.length === 0"
             >
-              清空
-            </button>
+              Clear
+            </Button>
           </div>
 
           <!-- Meta inputs -->
-          <div class="rounded-xl border border-gray-200 p-4 bg-gray-50 space-y-3">
+          <div class="rounded-none border border-gray-200 p-4 bg-gray-50 space-y-3">
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">名称 *</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Templates</label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  class="rounded-none border border-gray-200 bg-white p-3 text-left transition hover:bg-gray-50"
+                  :class="selectedTemplate === 'github_trends' ? 'border-blue-600' : ''"
+                  @click="applyTemplate('github_trends')"
+                >
+                  <div class="text-sm font-semibold text-gray-900">GitHub Trends</div>
+                  <div class="mt-1 text-xs text-gray-600">A structured path to track trending repos and tech updates</div>
+                </button>
+                <button
+                  type="button"
+                  class="rounded-none border border-gray-200 bg-white p-3 text-left transition hover:bg-gray-50"
+                  :class="selectedTemplate === 'social_news' ? 'border-blue-600' : ''"
+                  @click="applyTemplate('social_news')"
+                >
+                  <div class="text-sm font-semibold text-gray-900">Social News</div>
+                  <div class="mt-1 text-xs text-gray-600">A resource pool for collecting and organizing news by topic</div>
+                </button>
+              </div>
+              <p class="mt-2 text-xs text-gray-500">Click a template to auto-fill the fields below (name, description, type, etc.).</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Name *</label>
               <input
                 v-model="pathMeta.title"
                 type="text"
-                placeholder="例如：AI Engineer Starter"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                placeholder="e.g. AI Engineer Starter"
+                class="w-full px-4 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               />
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">介绍</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
               <textarea
                 v-model="pathMeta.description"
                 rows="3"
-                placeholder="简要介绍这个学习路径的目标与内容"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-white"
+                placeholder="Briefly describe the goal and content of this learning path"
+                class="w-full px-4 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-white"
               />
             </div>
 
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">封面</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Type</label>
+              <select
+                v-model="pathMeta.type"
+                class="w-full px-4 py-2 border border-gray-300 rounded-none bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="linear path">linear path</option>
+                <option value="partical pool">partical pool</option>
+                <option value="structured path">structured path</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Cover</label>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                <div class="rounded-none border border-gray-200 bg-white overflow-hidden">
                   <div class="aspect-video bg-gray-100">
                     <img
                       v-if="pathMeta.coverImageUrl"
@@ -147,19 +187,19 @@
                       class="w-full h-full object-cover"
                     />
                     <div v-else class="w-full h-full flex items-center justify-center text-sm text-gray-500">
-                      未选择封面
+                      No cover selected
                     </div>
                   </div>
                   <div class="p-3">
-                    <p class="text-xs text-gray-500">左侧为当前选择的封面预览</p>
+                    <p class="text-xs text-gray-500">Left: current cover preview</p>
                   </div>
                 </div>
 
-                <div class="rounded-xl border border-gray-200 bg-white p-3">
+                <div class="rounded-none border border-gray-200 bg-white p-3">
                   <div v-if="uploadedCoverUrl" class="space-y-3">
                     <button
                       type="button"
-                      class="w-full rounded-lg overflow-hidden border-2"
+                      class="w-full rounded-none overflow-hidden border-2"
                       :class="pathMeta.coverImageUrl === uploadedCoverUrl ? 'border-blue-600' : 'border-gray-200 hover:border-gray-300'"
                       @click="selectCover(uploadedCoverUrl)"
                     >
@@ -174,7 +214,7 @@
                       v-for="(u, idx) in defaultCoverUrls"
                       :key="idx"
                       type="button"
-                      class="rounded-lg overflow-hidden border-2"
+                      class="rounded-none overflow-hidden border-2"
                       :class="pathMeta.coverImageUrl === u ? 'border-blue-600' : 'border-gray-200 hover:border-gray-300'"
                       @click="selectCover(u)"
                     >
@@ -194,48 +234,48 @@
                     />
                     <button
                       type="button"
-                      class="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-semibold"
+                      class="inline-flex items-center justify-center px-3 py-2 rounded-none bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-semibold"
                       @click="openCoverFilePicker"
                     >
-                      上传图片
+                      Upload image
                     </button>
-                    <p class="text-xs text-gray-500">上传后右侧仅显示上传图</p>
+                    <p class="text-xs text-gray-500">After uploading, only the uploaded image will be shown on the right</p>
                   </div>
                 </div>
               </div>
             </div>
 
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">分类</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Category</label>
               <select
                 v-model.number="pathMeta.categoryId"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                class="w-full px-4 py-2 border border-gray-300 rounded-none bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                 :disabled="categoriesLoading || categories.length === 0"
               >
-                <option :value="null">未选择</option>
+                <option :value="null">Not selected</option>
                 <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
               </select>
               <p v-if="categoriesError" class="text-xs text-red-600 mt-2">{{ categoriesError }}</p>
-              <p v-else class="text-xs text-gray-500 mt-2">从数据库读取分类（可不选）。</p>
+              <p v-else class="text-xs text-gray-500 mt-2">Categories are loaded from the database (optional).</p>
             </div>
 
             <div class="flex items-center justify-between gap-3">
               <div class="min-w-0">
-                <div class="text-sm font-semibold text-gray-700">是否公开</div>
-                <div class="text-xs text-gray-500">公开：会出现在 LearningPool；私有：仅自己可见</div>
+                <div class="text-sm font-semibold text-gray-700">Visibility</div>
+                <div class="text-xs text-gray-500">Public: appears in LearningPool. Private: only visible to you.</div>
               </div>
               <button
                 type="button"
-                class="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-200"
+                class="inline-flex items-center gap-2 rounded-none bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-200"
                 @click="pathMeta.isPublic = !pathMeta.isPublic"
               >
                 <span>{{ pathMeta.isPublic ? 'Public' : 'Private' }}</span>
                 <span
-                  class="relative h-5 w-9 rounded-full transition-colors"
+                  class="relative h-5 w-9 rounded-none transition-colors"
                   :class="pathMeta.isPublic ? 'bg-blue-600' : 'bg-gray-300'"
                 >
                   <span
-                    class="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform"
+                    class="absolute left-0.5 top-0.5 h-4 w-4 rounded-none bg-white transition-transform"
                     :class="pathMeta.isPublic ? 'translate-x-0' : 'translate-x-4'"
                   />
                 </span>
@@ -244,18 +284,18 @@
           </div>
 
           <div
-            class="rounded-xl border-2 border-dashed p-4"
+            class="rounded-none border-2 border-dashed p-4"
             :class="selected.length ? 'border-gray-200 bg-gray-50' : 'border-blue-200 bg-blue-50'"
           >
             <div v-if="selected.length === 0" class="text-sm text-gray-600">
-              将左侧资源拖拽到这里，或点击“添加”。
+              Drag resources here, or click “Add”.
             </div>
 
             <div v-else class="space-y-2">
               <div v-for="(r, idx) in selected" :key="r.id" class="space-y-2">
                 <article
                   :class="[
-                    'rounded-xl border p-3 flex gap-3 transition',
+                    'rounded-none border p-3 flex gap-3 transition',
                     selectedDragState.draggingId === r.id
                       ? 'bg-pink-50/60 backdrop-blur-md border-pink-200/60'
                       : 'bg-white border-gray-200',
@@ -266,10 +306,10 @@
                   @dragover.prevent="onSelectedDragOver(idx)"
                   @drop.prevent="onSelectedDrop($event, idx)"
                 >
-                  <div class="w-8 h-8 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center text-xs font-semibold shrink-0">
+                  <div class="w-8 h-8 rounded-none bg-gray-100 text-gray-700 flex items-center justify-center text-xs font-semibold shrink-0">
                     {{ idx + 1 }}
                   </div>
-                  <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-lg bg-gray-100 shrink-0" />
+                  <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-none bg-gray-100 shrink-0" />
                   <div class="min-w-0 flex-1">
                     <div class="flex items-start justify-between gap-2">
                       <h3 class="text-gray-900 font-semibold text-sm line-clamp-1">{{ r.title }}</h3>
@@ -279,8 +319,8 @@
                     </div>
                     <p class="text-gray-600 text-xs mt-1 line-clamp-2">{{ r.summary }}</p>
                     <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
-                      <span v-if="r.platform" class="px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ r.platform }}</span>
-                      <span class="px-2 py-1 rounded-full text-xs font-semibold" :class="typeBadge(r.type)">{{ r.type }}</span>
+                      <span v-if="r.platform" class="px-2 py-1 rounded-none bg-gray-100 text-gray-700">{{ r.platform }}</span>
+                      <span class="px-2 py-1 rounded-none text-xs font-semibold" :class="typeBadge(r.type)">{{ r.type }}</span>
                     </div>
                   </div>
                 </article>
@@ -298,32 +338,39 @@
           </div>
 
           <div class="pt-2">
-            <button
+            <Button
               type="button"
-              class="w-full px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="outline"
+              size="lg"
+              class="w-full rounded-none border-border bg-[#8ecbff] text-white transition-all hover:-translate-y-px hover:bg-[#8ecbff]/90 hover:text-white hover:shadow-sm active:translate-y-0"
               :disabled="!pathMeta.title.trim() || selected.length === 0"
               @click="createLearningPath"
             >
-              创建 LearningPath
-            </button>
+              Create Learning Path
+            </Button>
           </div>
-        </section>
+          </div>
+        </Card>
       </div>
     </div>
-  </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ChevronDown, Plus, Search, X } from 'lucide-vue-next'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import Card from '../components/ui/Card.vue'
 import { createMyResourceFromUrl, listMyResources, type DbResource } from '../api/resource'
 import { addResourceToMyLearningPath, createLearningPathWithCategory } from '../api/learningPath'
 import { listCategories, type Category } from '../api/category'
+import { formatPlatform } from '../utils/platform'
 
 type PathMeta = {
   title: string
   description: string
+  type: string
   isPublic: boolean
   categoryId: number | null
   coverImageUrl: string
@@ -364,7 +411,27 @@ const selectedDragState = reactive({
   overIndex: -1 as number,
 })
 
-const pathMeta = reactive<PathMeta>({ title: '', description: '', isPublic: true, categoryId: null, coverImageUrl: '' })
+const pathMeta = reactive<PathMeta>({ title: '', description: '', type: 'linear path', isPublic: true, categoryId: null, coverImageUrl: '' })
+
+type TemplateId = 'github_trends' | 'social_news'
+const selectedTemplate = ref<TemplateId | ''>('')
+
+function applyTemplate(id: TemplateId) {
+  selectedTemplate.value = id
+
+  if (id === 'github_trends') {
+    pathMeta.title = 'GitHub Trends Weekly'
+    pathMeta.description = 'Track GitHub Trending weekly: shortlist repos, read READMEs, capture key ideas, and turn them into an actionable learning path.'
+    pathMeta.type = 'structured path'
+    pathMeta.isPublic = true
+    return
+  }
+
+  pathMeta.title = 'Social News Digest'
+  pathMeta.description = 'Collect tech news, articles, and podcasts you care about: organize by topic, review regularly, and refine over time.'
+  pathMeta.type = 'partical pool'
+  pathMeta.isPublic = true
+}
 
 const coverFileInput = ref<HTMLInputElement | null>(null)
 const uploadedCoverUrl = ref<string>('')
@@ -438,7 +505,7 @@ async function loadCategories() {
     }
   } catch (e: any) {
     categories.value = []
-    categoriesError.value = e?.message || '分类加载失败'
+    categoriesError.value = e?.message || 'Failed to load categories'
   } finally {
     categoriesLoading.value = false
   }
@@ -505,31 +572,31 @@ async function createResourceFromUrl() {
   try {
     parsed = new URL(raw)
   } catch {
-    newResourceError.value = '链接格式不正确，请输入完整的 http(s) URL'
+    newResourceError.value = 'Invalid link format. Please enter a full http(s) URL.'
     return
   }
 
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-    newResourceError.value = '仅支持 http(s) 链接'
+    newResourceError.value = 'Only http(s) links are supported.'
     return
   }
 
   const exists = allResources.value.some(r => (r.source_url || '') === parsed.toString())
   if (exists) {
-    newResourceError.value = '该链接已存在于资源列表'
+    newResourceError.value = 'This link already exists in your resource list.'
     return
   }
 
   newResourceLoading.value = true
   try {
     if (pathMeta.categoryId == null) {
-      throw new Error('请选择分类')
+      throw new Error('Please select a category.')
     }
     await createMyResourceFromUrl(parsed.toString(), { category_id: pathMeta.categoryId })
     newResourceUrl.value = ''
     await loadResources()
   } catch (e: any) {
-    newResourceError.value = String(e?.response?.data?.detail || e?.message || '生成失败')
+    newResourceError.value = String(e?.response?.data?.detail || e?.message || 'Failed to generate resource')
   } finally {
     newResourceLoading.value = false
   }
@@ -626,7 +693,7 @@ async function createLearningPath() {
   if (!pathMeta.title.trim()) return
   if (selected.value.length === 0) return
   if (pathMeta.categoryId == null) {
-    alert('请选择分类')
+    alert('Please select a category.')
     return
   }
 
@@ -637,6 +704,7 @@ async function createLearningPath() {
   try {
     const createdDb = await createLearningPathWithCategory({
       title: pathMeta.title,
+      type: pathMeta.type,
       description: pathMeta.description,
       is_public: pathMeta.isPublic,
       cover_image_url: coverUrl,
@@ -644,7 +712,7 @@ async function createLearningPath() {
     })
 
     const lpId = Number((createdDb as any)?.id)
-    if (!Number.isFinite(lpId) || lpId <= 0) throw new Error('创建失败：无效的 learning path id')
+    if (!Number.isFinite(lpId) || lpId <= 0) throw new Error('Create failed: invalid learning path id')
 
     for (let i = 0; i < selected.value.length; i++) {
       const r = selected.value[i]
@@ -657,12 +725,13 @@ async function createLearningPath() {
 
     router.push({ name: 'learningpath', params: { id: String(lpId) }, query: { from: 'my-paths' } })
   } catch (e: any) {
-    alert(String(e?.response?.data?.detail || e?.message || '创建失败'))
+    alert(String(e?.response?.data?.detail || e?.message || 'Create failed'))
     return
   }
 
   pathMeta.title = ''
   pathMeta.description = ''
+  pathMeta.type = 'linear path'
   pathMeta.isPublic = true
   pathMeta.categoryId = null
   pathMeta.coverImageUrl = defaultCoverUrls[0] || ''

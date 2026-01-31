@@ -1,154 +1,138 @@
 <template>
-  <div class="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-6">
-    <div class="max-w-7xl mx-auto space-y-6">
-      <div class="bg-white rounded-2xl shadow-xl p-8">
+  <div class="min-h-screen bg-background">
+    <div class="mx-auto max-w-7xl space-y-6 px-4 py-8">
+      <Card :hoverable="false" padded>
         <div class="flex items-start justify-between gap-4">
           <div class="min-w-0">
-            <h1 class="text-gray-900 mb-2">Edit LearningPath</h1>
-            <p class="text-gray-600">修改名称/介绍，并编辑学习路径中的资源。</p>
+            <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Edit LearningPath</h1>
+            <p class="mt-2 text-sm text-muted-foreground">修改名称/介绍，并编辑学习路径中的资源。</p>
           </div>
-          <RouterLink
-            to="/my-paths"
-            class="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
-          >
+          <Button :as="RouterLinkComp" to="/my-paths" variant="outline" size="sm" class="rounded-md">
             返回 My Paths
-          </RouterLink>
+          </Button>
         </div>
-      </div>
+      </Card>
 
-      <div v-if="!loaded" class="bg-white rounded-2xl shadow-xl p-6">
-        <p class="text-gray-600">加载中...</p>
-      </div>
+      <Card v-if="!loaded" :hoverable="false" padded>
+        <p class="text-sm text-muted-foreground">加载中...</p>
+      </Card>
 
-      <div v-else-if="!exists" class="bg-white rounded-2xl shadow-xl p-6">
-        <p class="text-gray-900 font-semibold">未找到该 LearningPath</p>
-        <RouterLink to="/my-paths" class="inline-flex mt-4 text-blue-600 hover:text-blue-700 text-sm font-semibold">
+      <Card v-else-if="!exists" :hoverable="false" padded>
+        <p class="text-foreground font-semibold">未找到该 LearningPath</p>
+        <Button :as="RouterLinkComp" to="/my-paths" variant="link" size="sm" class="mt-2 px-0">
           返回 My Paths
-        </RouterLink>
-      </div>
-
+        </Button>
+      </Card>
       <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Resources panel -->
-        <section class="bg-white rounded-2xl shadow-xl p-6 space-y-4">
+        <Card as="section" :hoverable="false" padded className="space-y-4">
           <div class="flex items-center justify-between gap-3">
-            <h2 class="text-lg font-semibold text-gray-900">Resources</h2>
-            <span class="text-sm text-gray-500">{{ filteredResources.length }} results</span>
+            <h2 class="text-lg font-semibold text-foreground">Resources</h2>
+            <span class="text-sm text-muted-foreground">{{ filteredResources.length }} results</span>
           </div>
 
           <div class="relative">
-            <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              v-model="searchQuery"
-              type="search"
-              placeholder="Search resources..."
-              class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input v-model="searchQuery" type="search" placeholder="Search resources..." class="h-9 rounded-md pl-9" />
           </div>
 
           <div class="max-h-130 overflow-y-auto pr-1 space-y-3">
             <article
               v-for="r in filteredResources"
               :key="r.id"
-              class="border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition bg-white"
+              class="border border-border rounded-md overflow-hidden transition bg-card text-card-foreground hover:bg-muted/20"
               draggable="true"
               @dragstart="handleDragStart($event, r)"
             >
               <div class="flex gap-3 p-3">
-                <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-lg bg-gray-100 shrink-0" />
+                <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-md bg-muted shrink-0" />
                 <div class="min-w-0 flex-1">
                   <div class="flex items-start justify-between gap-2">
-                    <h3 class="text-gray-900 font-semibold text-sm line-clamp-1" :title="r.title">{{ r.title }}</h3>
+                    <h3 class="text-foreground font-semibold text-sm line-clamp-1" :title="r.title">{{ r.title }}</h3>
                     <span class="px-2 py-1 rounded-full text-xs font-semibold" :class="typeBadge(r.type)">{{ r.type }}</span>
                   </div>
-                  <p class="text-gray-600 text-xs mt-1 line-clamp-2">{{ r.summary }}</p>
-                  <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
-                    <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ r.category }}</span>
+                  <p class="text-muted-foreground text-xs mt-1 line-clamp-2">{{ r.summary }}</p>
+                  <div class="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    <span class="px-2 py-1 rounded-full bg-muted text-foreground">{{ r.category }}</span>
                   </div>
                 </div>
               </div>
-              <div class="border-t border-gray-100 p-3 flex items-center justify-between">
-                <span class="text-xs text-gray-400">拖拽到右侧学习路径区域</span>
-                <button
-                  type="button"
-                  class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
-                  @click="addResource(r)"
-                >
+              <div class="border-t border-border p-3 flex items-center justify-between">
+                <span class="text-xs text-muted-foreground">拖拽到右侧学习路径区域</span>
+                <Button type="button" variant="outline" size="sm" class="rounded-md" @click="addResource(r)">
                   <Plus class="w-3.5 h-3.5" />
                   添加
-                </button>
+                </Button>
               </div>
             </article>
           </div>
-        </section>
+        </Card>
 
         <!-- Builder panel -->
-        <section class="bg-white rounded-2xl shadow-xl p-6 space-y-4" @dragover.prevent @drop="onDrop">
+        <Card as="section" :hoverable="false" padded className="space-y-4" @dragover.prevent @drop="onDrop">
           <div class="flex items-center justify-between gap-3">
             <div class="min-w-0">
-              <h2 class="text-lg font-semibold text-gray-900">LearningPath Builder</h2>
-              <p class="text-sm text-gray-600">
-                <span class="text-gray-500">{{ selected.length }} items</span>
+              <h2 class="text-lg font-semibold text-foreground">LearningPath Builder</h2>
+              <p class="text-sm text-muted-foreground">
+                <span>{{ selected.length }} items</span>
               </p>
             </div>
-            <button
+            <Button
               type="button"
-              class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+              variant="outline"
+              size="sm"
+              class="rounded-md"
               @click="clearSelected"
               :disabled="selected.length === 0"
             >
               清空
-            </button>
+            </Button>
           </div>
 
-          <div class="rounded-xl border border-gray-200 p-4 bg-gray-50 space-y-3">
+          <div class="rounded-md border border-border p-4 bg-muted/20 space-y-3">
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">名称 *</label>
-              <input
-                v-model="meta.title"
-                type="text"
-                placeholder="例如：AI Engineer Starter"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              />
+              <label class="block text-sm font-semibold text-foreground mb-2">名称 *</label>
+              <Input v-model="meta.title" type="text" placeholder="例如：AI Engineer Starter" class="h-9 rounded-md bg-background" />
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">介绍</label>
+              <label class="block text-sm font-semibold text-foreground mb-2">介绍</label>
               <textarea
                 v-model="meta.description"
                 rows="3"
                 placeholder="简要介绍这个学习路径的目标与内容"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-white"
+                class="w-full px-3 py-2 border border-input rounded-md bg-background text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background resize-none"
               />
             </div>
 
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">封面</label>
+              <label class="block text-sm font-semibold text-foreground mb-2">封面</label>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
-                  <div class="aspect-video bg-gray-100">
+                <div class="rounded-md border border-border bg-background overflow-hidden">
+                  <div class="aspect-video bg-muted">
                     <img
                       v-if="meta.coverImageUrl"
                       :src="meta.coverImageUrl"
                       alt="Selected cover"
                       class="w-full h-full object-cover"
                     />
-                    <div v-else class="w-full h-full flex items-center justify-center text-sm text-gray-500">
+                    <div v-else class="w-full h-full flex items-center justify-center text-sm text-muted-foreground">
                       未选择封面
                     </div>
                   </div>
                   <div class="p-3">
-                    <p class="text-xs text-gray-500">左侧为当前选择的封面预览</p>
+                    <p class="text-xs text-muted-foreground">左侧为当前选择的封面预览</p>
                   </div>
                 </div>
 
-                <div class="rounded-xl border border-gray-200 bg-white p-3">
+                <div class="rounded-md border border-border bg-background p-3">
                   <div v-if="uploadedCoverUrl" class="space-y-3">
                     <button
                       type="button"
-                      class="w-full rounded-lg overflow-hidden border-2"
-                      :class="meta.coverImageUrl === uploadedCoverUrl ? 'border-blue-600' : 'border-gray-200 hover:border-gray-300'"
+                      class="w-full rounded-md overflow-hidden border-2"
+                      :class="meta.coverImageUrl === uploadedCoverUrl ? 'border-primary' : 'border-border hover:border-muted-foreground/30'"
                       @click="selectCover(uploadedCoverUrl)"
                     >
-                      <div class="aspect-video bg-gray-100">
+                      <div class="aspect-video bg-muted">
                         <img :src="uploadedCoverUrl" alt="Uploaded cover" class="w-full h-full object-cover" />
                       </div>
                     </button>
@@ -159,11 +143,11 @@
                       v-for="(u, idx) in defaultCoverUrls"
                       :key="idx"
                       type="button"
-                      class="rounded-lg overflow-hidden border-2"
-                      :class="meta.coverImageUrl === u ? 'border-blue-600' : 'border-gray-200 hover:border-gray-300'"
+                      class="rounded-md overflow-hidden border-2"
+                      :class="meta.coverImageUrl === u ? 'border-primary' : 'border-border hover:border-muted-foreground/30'"
                       @click="selectCover(u)"
                     >
-                      <div class="aspect-video bg-gray-100">
+                      <div class="aspect-video bg-muted">
                         <img :src="u" :alt="`Cover ${idx + 1}`" class="w-full h-full object-cover" />
                       </div>
                     </button>
@@ -177,71 +161,63 @@
                       class="hidden"
                       @change="onCoverFileChange"
                     />
-                    <button
-                      type="button"
-                      class="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-semibold"
-                      @click="openCoverFilePicker"
-                    >
+                    <Button type="button" variant="outline" size="sm" class="rounded-md" @click="openCoverFilePicker">
                       上传图片
-                    </button>
-                    <p class="text-xs text-gray-500">上传后右侧仅显示上传图</p>
+                    </Button>
+                    <p class="text-xs text-muted-foreground">上传后右侧仅显示上传图</p>
                   </div>
                 </div>
               </div>
             </div>
 
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">分类</label>
+              <label class="block text-sm font-semibold text-foreground mb-2">分类</label>
               <select
                 v-model.number="meta.categoryId"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                class="w-full h-9 px-3 border border-input rounded-md bg-background text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-50"
                 :disabled="categoriesLoading || categories.length === 0"
               >
                 <option :value="null">未选择</option>
                 <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
               </select>
-              <p v-if="categoriesError" class="text-xs text-red-600 mt-2">{{ categoriesError }}</p>
-              <p v-else class="text-xs text-gray-500 mt-2">从数据库读取分类（可不选）。</p>
+              <p v-if="categoriesError" class="text-xs text-destructive mt-2">{{ categoriesError }}</p>
+              <p v-else class="text-xs text-muted-foreground mt-2">从数据库读取分类（可不选）。</p>
             </div>
 
             <div class="flex items-center justify-between gap-3">
               <div class="min-w-0">
-                <div class="text-sm font-semibold text-gray-700">是否公开</div>
-                <div class="text-xs text-gray-500">公开：会出现在 LearningPool；私有：仅自己可见</div>
+                <div class="text-sm font-semibold text-foreground">是否公开</div>
+                <div class="text-xs text-muted-foreground">公开：会出现在 LearningPool；私有：仅自己可见</div>
               </div>
-              <button
-                type="button"
-                class="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-200"
-                @click="meta.isPublic = !meta.isPublic"
-              >
+              <Button type="button" variant="outline" size="sm" class="rounded-md" @click="meta.isPublic = !meta.isPublic">
                 <span>{{ meta.isPublic ? 'Public' : 'Private' }}</span>
                 <span
                   class="relative h-5 w-9 rounded-full transition-colors"
-                  :class="meta.isPublic ? 'bg-blue-600' : 'bg-gray-300'"
+                  :class="meta.isPublic ? 'bg-primary' : 'bg-muted-foreground/30'"
                 >
                   <span
                     class="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform"
                     :class="meta.isPublic ? 'translate-x-0' : 'translate-x-4'"
                   />
                 </span>
-              </button>
+              </Button>
             </div>
           </div>
 
           <div
-            class="rounded-xl border-2 border-dashed p-4"
-            :class="selected.length ? 'border-gray-200 bg-gray-50' : 'border-blue-200 bg-blue-50'"
+            class="rounded-md border-2 border-dashed p-4"
+            :class="selected.length ? 'border-border bg-muted/20' : 'border-primary/30 bg-primary/5'"
           >
-            <div v-if="selected.length === 0" class="text-sm text-gray-600">将左侧资源拖拽到这里，或点击“添加”。</div>
+            <div v-if="selected.length === 0" class="text-sm text-muted-foreground">将左侧资源拖拽到这里，或点击“添加”。</div>
 
             <div v-else class="space-y-2">
               <div v-for="(r, idx) in selected" :key="r.id" class="space-y-2">
                 <article
                   :class="[
-                    'rounded-xl border p-3 flex gap-3 transition',
+                    'rounded-md border p-3 flex gap-3 transition',
                     selectedDragState.draggingId === r.id
                       ? 'bg-pink-50/60 backdrop-blur-md border-pink-200/60'
-                      : 'bg-white border-gray-200',
+                      : 'bg-card border-border',
                   ]"
                   draggable="true"
                   @dragstart="onSelectedDragStart($event, r.id, idx)"
@@ -250,21 +226,21 @@
                   @drop.prevent="onSelectedDrop($event, idx)"
                 >
                   <div
-                    class="w-8 h-8 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center text-xs font-semibold shrink-0"
+                    class="w-8 h-8 rounded-md bg-muted text-foreground flex items-center justify-center text-xs font-semibold shrink-0"
                   >
                     {{ idx + 1 }}
                   </div>
-                  <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-lg bg-gray-100 shrink-0" />
+                  <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-md bg-muted shrink-0" />
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center justify-between gap-2">
-                      <h3 class="text-gray-900 font-semibold text-sm line-clamp-1">{{ r.title }}</h3>
-                      <button type="button" class="text-gray-400 hover:text-gray-700" @click="removeResource(r.id)" aria-label="Remove">
+                      <h3 class="text-foreground font-semibold text-sm line-clamp-1">{{ r.title }}</h3>
+                      <button type="button" class="text-muted-foreground hover:text-foreground" @click="removeResource(r.id)" aria-label="Remove">
                         <X class="w-4 h-4" />
                       </button>
                     </div>
-                    <p class="text-gray-600 text-xs mt-1 line-clamp-2">{{ r.summary }}</p>
-                    <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
-                      <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ r.category }}</span>
+                    <p class="text-muted-foreground text-xs mt-1 line-clamp-2">{{ r.summary }}</p>
+                    <div class="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                      <span class="px-2 py-1 rounded-full bg-muted text-foreground">{{ r.category }}</span>
                       <span class="px-2 py-1 rounded-full text-xs font-semibold" :class="typeBadge(r.type)">{{ r.type }}</span>
                     </div>
                   </div>
@@ -272,7 +248,7 @@
 
                 <div
                   v-if="idx !== selected.length - 1"
-                  class="flex justify-center text-gray-300"
+                  class="flex justify-center text-muted-foreground/50"
                   @dragover.prevent
                   @drop.prevent="onSelectedDrop($event, idx + 1)"
                 >
@@ -283,16 +259,11 @@
           </div>
 
           <div class="pt-2">
-            <button
-              type="button"
-              class="w-full px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              :disabled="!meta.title.trim()"
-              @click="save"
-            >
+            <Button type="button" class="w-full rounded-md" :disabled="!meta.title.trim()" @click="save">
               保存修改
-            </button>
+            </Button>
           </div>
-        </section>
+        </Card>
       </div>
     </div>
   </div>
@@ -302,6 +273,9 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { ChevronDown, Plus, Search, X } from 'lucide-vue-next'
+import Card from '../components/ui/Card.vue'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 import {
   addResourceToMyLearningPath,
   getMyLearningPathDetail,
@@ -310,6 +284,8 @@ import {
 } from '../api/learningPath'
 import { listMyResources, type DbResource } from '../api/resource'
 import { listCategories, type Category } from '../api/category'
+
+const RouterLinkComp = RouterLink
 
 type PathMeta = {
   title: string

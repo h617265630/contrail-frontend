@@ -3,8 +3,7 @@
     <section class="border-b border-border pb-8">
       <div class="grid gap-6 md:grid-cols-12 md:items-end">
         <div class="md:col-span-8">
-          <p class="text-xs font-medium tracking-[0.14em] uppercase text-muted-foreground">Resources</p>
-          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-foreground md:text-4xl">Resource Library</h1>
+          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Resource Library</h1>
           <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Manage your resources</p>
         </div>
       </div>
@@ -96,242 +95,191 @@
 
       <div v-else>
         <div v-if="viewMode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-          <div
+          <Card
             v-for="resource in filteredResources"
             :key="resource.id"
-            class="bg-white rounded-xl shadow-lg overflow-hidden transition-all cursor-pointer h-90 flex flex-col hover:shadow-xl"
+            :hoverable="true"
+            className="rounded-none cursor-pointer"
             @click="viewResource(resource)"
           >
-            <div class="relative h-32">
-              <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="w-full h-full object-cover" />
-
+            <div class="relative h-32 bg-muted">
+              <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="h-full w-full object-cover" />
               <div class="absolute top-3 right-3">
-                <div
-                  class="px-2 py-1 rounded-full flex items-center gap-1"
-                  :class="getTypeColor(displayResourceType(resource))"
-                >
-                  <component :is="typeIcon(displayResourceType(resource))" class="w-4 h-4" />
-                  <span class="text-xs capitalize">{{ displayResourceType(resource) }}</span>
-                </div>
+                <span class="px-2 py-1 border border-border bg-background text-foreground text-xs font-semibold">
+                  {{ displayResourceType(resource) }}
+                </span>
               </div>
-
               <div class="absolute bottom-3 left-3">
-                <div class="px-2 py-1 rounded-full bg-black bg-opacity-60 text-white text-xs flex items-center gap-1">
-                  <LinkIcon class="w-3 h-3" />
-                  {{ resource.platform || '—' }}
-                </div>
+                <span class="px-2 py-1 border border-border bg-background/90 text-foreground text-xs">
+                  {{ formatPlatform((resource as any).platform) }}
+                </span>
               </div>
             </div>
 
-            <div class="p-4 flex flex-col flex-1 min-h-0">
-              <h3 class="text-gray-900 font-semibold text-sm truncate mb-2">{{ resource.title }}</h3>
-              <p class="text-gray-600 text-sm mb-3 line-clamp-3">{{ resource.summary || '' }}</p>
+            <div class="p-4 flex min-h-0 flex-1 flex-col">
+              <h3 class="truncate text-sm font-semibold text-foreground">{{ resource.title }}</h3>
+              <p class="mt-2 line-clamp-3 text-sm text-muted-foreground">{{ resource.summary || '' }}</p>
 
-              <div class="space-y-1 text-xs text-gray-600 mb-3">
+              <div class="mt-3 space-y-1 text-xs text-muted-foreground">
                 <div class="flex items-center justify-between gap-3">
-                  <span class="text-gray-500">Author</span>
-                  <span class="font-semibold text-gray-700 truncate">{{ getCardMeta(resource.id)?.author || '—' }}</span>
+                  <span>分类</span>
+                  <span class="truncate text-foreground">{{ resourceCategoryLabel(resource) }}</span>
                 </div>
                 <div class="flex items-center justify-between gap-3">
-                  <span class="text-gray-500">Publish</span>
-                  <span class="font-semibold text-gray-700">{{ formatExtractDate(getCardMeta(resource.id)?.publish_date || null) || '—' }}</span>
-                </div>
-                <div class="flex items-center justify-between gap-3">
-                  <span class="text-gray-500">Video ID</span>
-                  <span class="font-mono text-[11px] text-gray-700 truncate">{{ getCardMeta(resource.id)?.video_id || '—' }}</span>
-                </div>
-                <div class="flex items-center justify-between gap-3">
-                  <span class="text-gray-500">Chapters</span>
-                  <span class="font-semibold text-gray-700">{{ (getCardMeta(resource.id)?.chapters || []).length || 0 }}</span>
+                  <span>发布时间</span>
+                  <span class="text-foreground">{{ formatExtractDate(getCardMeta(resource.id)?.publish_date || null) || '—' }}</span>
                 </div>
               </div>
 
-              <div class="flex items-center gap-4 text-xs text-gray-500 mb-3">
-                <div class="flex items-center gap-1">
-                  <Tag class="w-3 h-3" />
-                  {{ resourceCategoryLabel(resource) }}
-                </div>
-              </div>
-
-              <div class="mt-auto">
-                <div class="flex items-center gap-2">
-                  <button
-                    @click.stop="viewResource(resource)"
-                    class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-                  >
+              <div class="mt-auto pt-4">
+                <div class="grid grid-cols-2 gap-2">
+                  <Button type="button" size="sm" class="rounded-none" @click.stop="viewResource(resource)">
                     View
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
+                    class="rounded-none"
                     @click.stop="addToMyResources(resource)"
                     :disabled="addingToMy[resource.id] || addedToMy[resource.id]"
-                    class="flex-1 px-3 py-2 rounded-lg bg-pink-600 text-white hover:bg-pink-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {{ addedToMy[resource.id] ? 'Added' : (addingToMy[resource.id] ? 'Adding…' : 'Add') }}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
 
         <div v-else class="space-y-4">
-          <div
+          <Card
             v-for="resource in filteredResources"
             :key="resource.id"
-            class="bg-white rounded-xl shadow-lg p-4 transition-all cursor-pointer hover:shadow-xl"
+            :hoverable="true"
+            className="rounded-none cursor-pointer"
             @click="viewResource(resource)"
           >
-            <div class="flex gap-4">
-              <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="w-32 h-28 object-cover rounded-lg shrink-0" />
-
-              <div class="flex-1 min-w-0">
-                <div class="flex items-start justify-between gap-4 mb-2">
-                  <div class="flex-1">
-                    <h3 class="text-gray-900 mb-1">{{ resource.title }}</h3>
-                    <p class="text-gray-600 text-sm line-clamp-2">{{ resource.summary || '' }}</p>
+            <div class="p-4">
+              <div class="flex gap-4">
+                <div class="relative w-32 shrink-0">
+                  <img
+                    :src="resource.thumbnail || fallbackThumb"
+                    :alt="resource.title"
+                    class="h-28 w-32 rounded-none object-cover"
+                  />
+                  <div class="absolute top-2 left-2">
+                    <span class="px-2 py-1 border border-border bg-background text-foreground text-xs font-semibold">
+                      {{ displayResourceType(resource) }}
+                    </span>
                   </div>
-                    <div
-                      class="px-2 py-1 rounded-full flex items-center gap-1 shrink-0"
-                      :class="getTypeColor(displayResourceType(resource))"
-                    >
-                      <component :is="typeIcon(displayResourceType(resource))" class="w-4 h-4" />
-                      <span class="text-xs capitalize">{{ displayResourceType(resource) }}</span>
+                </div>
+
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="min-w-0">
+                      <h3 class="truncate text-sm font-semibold text-foreground">{{ resource.title }}</h3>
+                      <p class="mt-2 line-clamp-2 text-sm text-muted-foreground">{{ resource.summary || '' }}</p>
                     </div>
+
+                    <div class="shrink-0">
+                      <span class="px-2 py-1 border border-border bg-background/90 text-foreground text-xs">
+                        {{ formatPlatform((resource as any).platform) }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="mt-3 grid grid-cols-1 gap-2 text-xs text-muted-foreground sm:grid-cols-2">
+                    <div class="flex items-center justify-between gap-3">
+                      <span>分类</span>
+                      <span class="truncate text-foreground">{{ resourceCategoryLabel(resource) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                      <span>发布时间</span>
+                      <span class="text-foreground">{{ formatExtractDate(getCardMeta(resource.id)?.publish_date || null) || '—' }}</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div class="flex items-center gap-4 text-xs text-gray-500">
-                  <div class="flex items-center gap-1">
-                    <Tag class="w-3 h-3" />
-                    {{ resourceCategoryLabel(resource) }}
-                  </div>
-                  <div class="flex items-center gap-1">
-                    <LinkIcon class="w-3 h-3" />
-                    {{ resource.platform || '—' }}
-                  </div>
+                <div class="flex shrink-0 flex-col gap-2">
+                  <Button type="button" size="sm" class="rounded-none" @click.stop="viewResource(resource)">View</Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    class="rounded-none"
+                    @click.stop="addToMyResources(resource)"
+                    :disabled="addingToMy[resource.id] || addedToMy[resource.id]"
+                  >
+                    {{ addedToMy[resource.id] ? 'Added' : (addingToMy[resource.id] ? 'Adding…' : 'Add') }}
+                  </Button>
                 </div>
               </div>
-
-              <div class="flex gap-2 shrink-0">
-                <button @click.stop="viewResource(resource)" class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
-                  View
-                </button>
-                <button
-                  type="button"
-                  @click.stop="addToMyResources(resource)"
-                  :disabled="addingToMy[resource.id] || addedToMy[resource.id]"
-                  class="px-3 py-2 rounded-lg bg-pink-600 text-white hover:bg-pink-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {{ addedToMy[resource.id] ? 'Added' : (addingToMy[resource.id] ? 'Adding…' : 'Add') }}
-                </button>
-              </div>
             </div>
-
-            <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-gray-600">
-              <div class="flex items-center justify-between gap-3">
-                <span class="text-gray-500">Author</span>
-                <span class="font-semibold text-gray-700 truncate">{{ getCardMeta(resource.id)?.author || '—' }}</span>
-              </div>
-              <div class="flex items-center justify-between gap-3">
-                <span class="text-gray-500">Publish</span>
-                <span class="font-semibold text-gray-700">{{ formatExtractDate(getCardMeta(resource.id)?.publish_date || null) || '—' }}</span>
-              </div>
-              <div class="flex items-center justify-between gap-3">
-                <span class="text-gray-500">Video ID</span>
-                <span class="font-mono text-[11px] text-gray-700 truncate">{{ getCardMeta(resource.id)?.video_id || '—' }}</span>
-              </div>
-              <div class="flex items-center justify-between gap-3">
-                <span class="text-gray-500">Chapters</span>
-                <span class="font-semibold text-gray-700">{{ (getCardMeta(resource.id)?.chapters || []).length || 0 }}</span>
-              </div>
-            </div>
-          </div>
+          </Card>
         </div>
       </div>
     </div>
 
 
   <div v-if="showAddResultModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
-      <div class="border-b border-gray-200 p-6 flex items-center justify-between">
-        <h2 class="text-gray-900 text-lg font-semibold">{{ addResultTitle }}</h2>
-        <button type="button" @click="closeAddResultModal" class="text-gray-400 hover:text-gray-600">
-          <X class="w-6 h-6" />
-        </button>
+    <Card as="section" :hoverable="false" class="w-full max-w-md rounded-none">
+      <div class="flex items-center justify-between border-b border-border p-6">
+        <h2 class="text-lg font-semibold text-foreground">{{ addResultTitle }}</h2>
+        <Button type="button" variant="ghost" size="icon" class="rounded-none" @click="closeAddResultModal">
+          <X class="h-5 w-5" />
+        </Button>
       </div>
 
-      <div class="p-6 space-y-3">
-        <div class="text-gray-700">{{ addResultMessage }}</div>
+      <div class="space-y-3 p-6">
+        <div class="text-sm text-foreground">{{ addResultMessage }}</div>
       </div>
 
-      <div class="bg-gray-50 border-t border-gray-200 p-6 flex gap-3 justify-end">
-        <button
-          type="button"
-          class="px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
-          @click="closeAddResultModal"
-        >
-          确定
-        </button>
+      <div class="flex justify-end gap-2 border-t border-border bg-muted/30 p-6">
+        <Button type="button" class="rounded-none" @click="closeAddResultModal">确定</Button>
       </div>
-    </div>
+    </Card>
   </div>
 
   <div v-if="showCreateModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
-      <div class="border-b border-gray-200 p-6 flex items-center justify-between">
-        <h2 class="text-gray-900 text-lg font-semibold">Add Resource</h2>
-        <button type="button" @click="closeCreateModal" class="text-gray-400 hover:text-gray-600" :disabled="creating">
-          <X class="w-6 h-6" />
-        </button>
+    <Card as="section" :hoverable="false" class="w-full max-w-md rounded-none">
+      <div class="flex items-center justify-between border-b border-border p-6">
+        <h2 class="text-lg font-semibold text-foreground">Add Resource</h2>
+        <Button type="button" variant="ghost" size="icon" class="rounded-none" @click="closeCreateModal" :disabled="creating">
+          <X class="h-5 w-5" />
+        </Button>
       </div>
 
-      <div class="p-6 space-y-4">
+      <div class="space-y-4 p-6">
         <div>
-          <label class="block text-gray-700 mb-2">Resource URL *</label>
-          <input
-            v-model="createUrl"
-            type="url"
-            placeholder="Paste YouTube URL"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <label class="mb-2 block text-sm font-semibold text-foreground">Resource URL *</label>
+          <Input v-model="createUrl" type="url" placeholder="Paste YouTube URL" class="rounded-none" />
         </div>
 
         <div>
-          <label class="block text-gray-700 mb-2">Category</label>
+          <label class="mb-2 block text-sm font-semibold text-foreground">Category</label>
           <div class="relative">
             <select
               v-model="createCategoryId"
-              class="w-full appearance-none px-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white cursor-pointer"
+              class="h-10 w-full appearance-none rounded-none border border-input bg-background px-3 pr-10 text-sm text-foreground outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer"
             >
               <option value="">选择分类</option>
               <option v-for="c in dbCategories" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
             </select>
-            <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           </div>
         </div>
 
-        <p v-if="createError" class="text-sm text-red-600">{{ createError }}</p>
+        <p v-if="createError" class="text-sm text-destructive">{{ createError }}</p>
       </div>
 
-      <div class="bg-gray-50 border-t border-gray-200 p-6 flex gap-3 justify-end">
-        <button
-          type="button"
-          class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          @click="closeCreateModal"
-          :disabled="creating"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          class="px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          @click="submitCreate"
-          :disabled="!createUrl || creating"
-        >
+      <div class="flex justify-end gap-2 border-t border-border bg-muted/30 p-6">
+        <Button type="button" variant="outline" class="rounded-none" @click="closeCreateModal" :disabled="creating">Cancel</Button>
+        <Button type="button" class="rounded-none" @click="submitCreate" :disabled="!createUrl || creating">
           {{ creating ? 'Saving…' : 'Add' }}
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   </div>
 </template>
 
@@ -342,6 +290,7 @@ import { useRouter } from 'vue-router'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import Card from '../components/ui/Card.vue'
+import { formatPlatform } from '../utils/platform'
 import {
   addPublicResourceToMyResourcesWithStatus,
   createMyResourceFromUrl,
@@ -488,6 +437,9 @@ async function prefetchCardMetas(list: DbResource[]) {
 
 const filteredResources = computed(() => {
   return resources.value.filter(r => {
+    const platform = String((r as any)?.platform || '').trim().toLowerCase()
+    if (platform === 'xiaohongshu' || platform === 'xhs' || platform.includes('小红书')) return false
+    if (platform === 'reddit') return false
     const cat = resourceCategoryLabel(r)
     const matchesCategory = selectedCategory.value === 'All' || cat === selectedCategory.value
     const q = searchQuery.value.trim().toLowerCase()

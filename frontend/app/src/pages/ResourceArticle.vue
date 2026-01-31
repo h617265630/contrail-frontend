@@ -1,23 +1,40 @@
 <template>
-  <div class="min-h-screen bg-slate-50">
-    <div class="max-w-6xl mx-auto p-6 space-y-6">
-      <div v-if="loading" class="rounded-2xl bg-white p-6 shadow-sm text-slate-700">Loading…</div>
-      <div v-else-if="error" class="rounded-2xl bg-white p-6 shadow-sm text-red-600">{{ error }}</div>
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+    <section class="border-b border-border pb-8">
+      <div class="grid gap-6 md:grid-cols-12 md:items-end">
+        <div class="md:col-span-8">
+          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Article</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Read and track your progress.</p>
+        </div>
+      </div>
+    </section>
 
-      <template v-else>
-        <div class="flex flex-col gap-2">
-          <p class="text-sm uppercase tracking-wide text-emerald-600 font-semibold">Article Resource</p>
-          <h1 class="text-3xl font-semibold text-slate-900">{{ resource.title }}</h1>
-          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-600">
-            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-700">
+    <div v-if="loading">
+      <Card :hoverable="false" padded>
+        <div class="text-sm text-muted-foreground">Loading…</div>
+      </Card>
+    </div>
+    <div v-else-if="error">
+      <Card :hoverable="false" padded>
+        <div class="text-sm text-destructive">{{ error }}</div>
+      </Card>
+    </div>
+
+    <template v-else>
+      <div class="space-y-6">
+        <div class="space-y-2">
+          <p class="text-xs font-medium tracking-[0.14em] uppercase text-muted-foreground">Article Resource</p>
+          <h2 class="text-2xl font-semibold text-foreground md:text-3xl">{{ resource.title }}</h2>
+          <div class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-md border border-border bg-muted/30">
               <BookOpen class="w-4 h-4" />
               {{ resource.resource_type }}
             </span>
-            <span v-if="resource.platform" class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-700">
+            <span v-if="resource.platform" class="inline-flex items-center gap-2 px-3 py-1 rounded-md border border-border bg-muted/30">
               <Sparkles class="w-4 h-4" />
-              {{ resource.platform }}
+              {{ formatPlatform(resource.platform) }}
             </span>
-            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-700">
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-md border border-border bg-muted/30">
               <Sparkles class="w-4 h-4" />
               {{ updatedText ? `Updated ${updatedText}` : '—' }}
             </span>
@@ -25,7 +42,7 @@
         </div>
 
         <div class="grid gap-6 lg:grid-cols-[2fr_1fr]">
-          <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-100">
+          <Card :hoverable="false" className="overflow-hidden">
             <!-- Thumbnail -->
             <div v-if="resource.thumbnail" class="w-full h-64 bg-slate-100 overflow-hidden">
               <img :src="resource.thumbnail" :alt="resource.title" class="w-full h-full object-cover" />
@@ -36,19 +53,18 @@
 
             <!-- Content -->
             <div class="p-6 space-y-6">
-              <div v-if="pathItemId != null" class="rounded-xl border border-slate-200 bg-white p-4">
+              <div v-if="pathItemId != null" class="rounded-md border border-border bg-background p-4">
                 <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-semibold text-slate-700">学习进度</span>
-                  <span class="text-sm font-semibold text-emerald-600">{{ trackedProgress }}%</span>
+                  <span class="text-sm font-semibold text-foreground">学习进度</span>
+                  <span class="text-sm font-semibold text-foreground">{{ trackedProgress }}%</span>
                 </div>
-                <div class="w-full bg-slate-200 rounded-full h-2.5">
+                <div class="w-full bg-muted h-2">
                   <div
-                    class="h-2.5 rounded-full transition-all duration-300"
-                    :class="trackedProgress >= 100 ? 'bg-green-500' : 'bg-emerald-600'"
+                    class="h-2 rounded-md transition-all duration-300 bg-foreground"
                     :style="{ width: `${trackedProgress}%` }"
                   />
                 </div>
-                <div class="mt-2 flex items-center justify-between text-xs text-slate-500">
+                <div class="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                   <span>{{ trackedProgress >= 100 ? '已完成' : trackedProgress > 0 ? '学习中' : '未开始' }}</span>
                   <span v-if="trackedProgress < 100">继续阅读以更新进度</span>
                 </div>
@@ -56,67 +72,58 @@
 
               <!-- Summary -->
               <div v-if="resource.summary" class="space-y-2">
-                <h2 class="text-xl font-semibold text-slate-900">摘要</h2>
-                <p class="text-slate-700 leading-relaxed whitespace-pre-wrap text-lg">{{ resource.summary }}</p>
+                <h3 class="text-lg font-semibold text-foreground">摘要</h3>
+                <p class="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{{ resource.summary }}</p>
               </div>
 
-              <div class="rounded-xl border border-slate-200 bg-white overflow-hidden">
-                <div class="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
-                  <div class="text-sm font-semibold text-slate-900">Reader Mode</div>
+              <div class="rounded-md border border-border bg-background overflow-hidden">
+                <div class="flex items-center justify-between px-4 py-3 bg-muted/30 border-b border-border">
+                  <div class="text-sm font-semibold text-foreground">Reader Mode</div>
                   <div class="flex items-center gap-2">
-                    <button
-                      type="button"
-                      class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-black disabled:opacity-50"
-                      :disabled="!resource.source_url"
-                      @click="openSource(true)"
-                    >
+                    <Button type="button" size="sm" class="rounded-md" :disabled="!resource.source_url" @click="openSource(true)">
                       Open Original
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       v-if="pathItemId != null"
                       type="button"
-                      class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50"
+                      size="sm"
+                      class="rounded-md"
                       :disabled="progressUpdating"
                       @click="markComplete"
                     >
                       标记为已完成
-                    </button>
+                    </Button>
                   </div>
                 </div>
-                <div v-if="readerLoading" class="p-6 text-slate-700">Loading…</div>
+                <div v-if="readerLoading" class="p-6 text-muted-foreground">Loading…</div>
                 <div v-else-if="readerHtml" ref="readerScrollRef" class="p-6 max-h-[70vh] overflow-y-auto prose prose-slate max-w-none">
                   <div v-html="readerHtml" />
                 </div>
                 <div v-else class="p-6">
-                  <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
+                  <div class="bg-muted/30 border border-border rounded-md p-6 space-y-4">
                     <div class="flex items-start gap-3">
                       <BookOpen class="w-6 h-6 text-emerald-600 shrink-0 mt-1" />
                       <div class="flex-1">
-                        <h3 class="font-semibold text-slate-900 mb-2">站内阅读不可用</h3>
-                        <p class="text-slate-600 text-sm mb-4">
+                        <h3 class="font-semibold text-foreground mb-2">站内阅读不可用</h3>
+                        <p class="text-muted-foreground text-sm mb-4">
                           {{ readerError || '当前链接暂时无法抽取正文。你仍可以打开原文，并在返回后记录进度。' }}
                         </p>
                         <div class="flex items-center gap-3">
-                          <button
-                            type="button"
-                            class="px-6 py-3 rounded-lg bg-slate-900 text-white font-semibold hover:bg-black disabled:opacity-50 transition-colors inline-flex items-center gap-2"
-                            :disabled="!resource.source_url"
-                            @click="openSource(true)"
-                          >
-                            <span>在 {{ resource.platform || '原站' }} 上阅读</span>
+                          <Button type="button" class="rounded-md" :disabled="!resource.source_url" @click="openSource(true)">
+                            <span>Read on {{ formatPlatform(resource.platform) || 'Original site' }}</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                             </svg>
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             v-if="pathItemId != null"
                             type="button"
-                            class="px-4 py-3 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                            class="rounded-md"
                             :disabled="progressUpdating"
                             @click="markComplete"
                           >
                             标记为已完成
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -125,52 +132,61 @@
               </div>
 
             </div>
-          </div>
+          </Card>
 
           <div class="space-y-4">
-            <div class="p-4 rounded-2xl bg-white border border-slate-200 space-y-3">
-              <h3 class="font-semibold text-slate-900">Meta</h3>
-              <div class="space-y-2 text-sm text-slate-700">
+            <Card :hoverable="false" padded>
+              <h3 class="font-semibold text-foreground">Meta</h3>
+              <div class="mt-2 space-y-2 text-sm text-muted-foreground">
                 <div class="flex items-center gap-2">
-                  <LinkIcon class="w-4 h-4 text-slate-500" />
-                  <a v-if="resource.source_url" :href="resource.source_url" target="_blank" class="text-emerald-600 hover:underline break-all">{{ resource.source_url }}</a>
+                  <LinkIcon class="w-4 h-4 text-muted-foreground" />
+                  <a v-if="resource.source_url" :href="resource.source_url" target="_blank" class="text-foreground underline underline-offset-4 break-all">{{ resource.source_url }}</a>
                   <span v-else>—</span>
                 </div>
                 <div class="flex items-center gap-2">
-                  <UserRound class="w-4 h-4 text-slate-500" />
+                  <UserRound class="w-4 h-4 text-muted-foreground" />
                   <span>Publisher {{ resource.article?.publisher || '—' }}</span>
                 </div>
                 <div class="flex items-center gap-2">
-                  <GraduationCap class="w-4 h-4 text-slate-500" />
-                  <span>Platform {{ resource.platform || '—' }}</span>
+                  <GraduationCap class="w-4 h-4 text-muted-foreground" />
+                  <span>Platform {{ formatPlatform(resource.platform) }}</span>
                 </div>
               </div>
-              <div class="grid grid-cols-2 gap-2 text-sm text-slate-800">
-                <div class="p-3 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-between">
+              <div class="mt-3 grid grid-cols-2 gap-2 text-sm text-foreground">
+                <div class="p-3 rounded-md bg-muted/30 border border-border flex items-center justify-between">
                   <span>Created</span>
                   <span class="font-semibold">{{ createdText || '—' }}</span>
                 </div>
-                <div class="p-3 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-between">
+                <div class="p-3 rounded-md bg-muted/30 border border-border flex items-center justify-between">
                   <span>Published</span>
                   <span class="font-semibold">{{ publishedText || '—' }}</span>
                 </div>
               </div>
-              <div class="flex gap-2">
+              <div class="mt-3 flex gap-2">
                 <RouterLink
                   :to="{ name: 'resource-add-to-path', params: { type: 'article', id: resourceId } }"
-                  class="flex-1 px-3 py-2 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 text-center"
+                  class="flex-1"
                 >
-                  Add to path
+                  <Button type="button" class="w-full rounded-md">Add to path</Button>
                 </RouterLink>
-                <button type="button" class="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-white" @click="openSource" :disabled="!resource.source_url">
-                  Open
-                </button>
+                <Button
+                  v-if="pathItemId != null"
+                  type="button"
+                  variant="outline"
+                  class="rounded-md"
+                  :disabled="progressUpdating"
+                  @click="markComplete"
+                >
+                  Mark as complete
+                </Button>
+                <Button type="button" variant="outline" class="rounded-md" @click="openSource" :disabled="!resource.source_url">Open</Button>
               </div>
-            </div>
+            </Card>
           </div>
         </div>
+
+      </div>
       </template>
-    </div>
   </div>
 </template>
 
@@ -181,6 +197,9 @@ import { BookOpen, Download, GraduationCap, Link as LinkIcon, Sparkles, UserRoun
 import { getMyResourceDetail, getResourceDetail, type DbResourceDetail } from '../api/resource'
 import { getMyProgressForItem, upsertMyProgress } from '../api/progress'
 import request from '../utils/request'
+import Card from '../components/ui/Card.vue'
+import { Button } from '../components/ui/button'
+import { formatPlatform } from '../utils/platform'
 
 const route = useRoute()
 

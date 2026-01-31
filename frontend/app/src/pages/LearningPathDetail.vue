@@ -1,67 +1,90 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-
-    
-    <div class="p-6">
-      <div class="max-w-5xl mx-auto space-y-8">
-      <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div class="h-44 bg-gray-100">
-          <img v-if="path" :src="path.thumbnail" :alt="path.title" class="w-full h-full object-cover" />
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+    <section class="border-b border-border pb-8">
+      <div class="grid gap-6 md:grid-cols-12 md:items-end">
+        <div class="md:col-span-8">
+          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">{{ path?.title || 'Learning Path' }}</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
+            {{ path?.description || 'This learning path is not found in the current dataset.' }}
+          </p>
         </div>
-        <div class="p-8">
-          <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-            <div class="min-w-0">
-              <h1 class="text-gray-900 mb-2">{{ path?.title || 'Learning Path' }}</h1>
-              <p class="text-gray-600 whitespace-pre-wrap">{{ path?.description || 'This learning path is not found in the current dataset.' }}</p>
-              <div class="mt-4 flex flex-wrap gap-2 text-sm">
-                <span v-if="path" class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold">{{ path.category }}</span>
-                <span v-if="path" class="px-3 py-1 rounded-full bg-gray-100 text-gray-700">{{ path.level }}</span>
-                <span v-if="path" class="px-3 py-1 rounded-full bg-green-50 text-green-700">{{ path.items }} items</span>
-              </div>
-            </div>
-            <div class="flex gap-2">
-              <RouterLink
-                :to="fromMyPaths ? '/my-paths' : '/learningpool'"
-                class="px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-gray-600 hover:bg-gray-100"
-              >
-                {{ fromMyPaths ? '返回 My Paths' : '返回 LearningPool' }}
-              </RouterLink>
-              <button
-                type="button"
-                class="px-4 py-2 rounded-lg flex items-center gap-2 transition-colors bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="fromMyPaths ? false : usingThisPath"
-                @click="fromMyPaths ? startLearning() : openUseThisPath()"
-              >
-                {{ fromMyPaths ? 'Start' : (usingThisPath ? 'Saving…' : 'Use this path') }}
-              </button>
-            </div>
+        <div class="md:col-span-4 md:flex md:justify-end md:items-end">
+          <div class="flex gap-2">
+            <Button
+              :as="RouterLinkComp"
+              :to="fromMyPaths ? '/my-paths' : '/learningpool'"
+              variant="outline"
+              size="sm"
+              class="rounded-none"
+            >
+              {{ fromMyPaths ? '返回 My Paths' : '返回 LearningPool' }}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              class="rounded-none"
+              :class="
+                fromMyPaths
+                  ? 'bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white'
+                  : 'bg-foreground text-background hover:bg-foreground/90 hover:text-background'
+              "
+              :disabled="fromMyPaths ? false : usingThisPath"
+              @click="fromMyPaths ? startLearning() : openUseThisPath()"
+            >
+              {{ fromMyPaths ? 'Start' : (usingThisPath ? 'Saving…' : 'Use this path') }}
+            </Button>
           </div>
         </div>
       </div>
 
-      <section class="space-y-4">
-        <div class="flex items-center justify-between">
-          <h2 class="text-xl font-semibold text-gray-900">路径内容</h2>
-          <span class="text-sm text-gray-500">{{ modules.length }} modules</span>
-        </div>
+      <div v-if="path" class="mt-6 flex flex-wrap gap-2 text-xs">
+        <span class="px-2 py-1 border border-border bg-background text-foreground font-semibold">{{ path.category }}</span>
+        <span class="px-2 py-1 border border-border bg-background text-muted-foreground">{{ path.level }}</span>
+        <span class="px-2 py-1 border border-border bg-background text-muted-foreground">{{ path.items }} items</span>
+      </div>
+    </section>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <article
-            v-for="m in modules"
-            :key="m.id"
-            class="bg-white rounded-xl shadow-lg p-5 cursor-pointer hover:shadow-xl transition"
-            @click="openResource(m.resourceId, m.type)"
-          >
+    <Card as="section" :hoverable="false" class="rounded-none overflow-hidden" v-if="path">
+      <div class="relative h-44 bg-muted">
+        <img :src="path.thumbnail" :alt="path.title" class="w-full h-full object-cover" />
+        <span
+          v-if="path.type"
+          class="absolute right-3 top-3 px-2 py-1 rounded-full border border-border bg-background text-[10px] font-semibold tracking-[0.14em] uppercase text-foreground"
+        >
+          {{ path.type }}
+        </span>
+      </div>
+    </Card>
+
+    <section class="space-y-4">
+      <div class="flex items-end justify-between gap-4">
+        <div>
+          <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">路径内容</h2>
+          <p class="text-sm text-muted-foreground">{{ modules.length }} modules</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card
+          v-for="m in modules"
+          :key="m.id"
+          as="article"
+          :hoverable="true"
+          class="rounded-none cursor-pointer"
+          @click="openResource(m.resourceId, m.type)"
+        >
+          <div class="p-5">
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
-                <h3 class="text-gray-900 font-semibold line-clamp-1" :title="m.title">{{ m.title }}</h3>
-                <p class="text-gray-600 text-sm mt-1 line-clamp-2" :title="m.summary">{{ m.summary }}</p>
+                <h3 class="text-foreground font-semibold line-clamp-1" :title="m.title">{{ m.title }}</h3>
+                <p class="text-muted-foreground text-sm mt-1 line-clamp-2" :title="m.summary">{{ m.summary }}</p>
               </div>
-              <span class="px-2 py-1 rounded-full text-xs font-semibold" :class="typeBadge(m.type)">
+              <span class="px-2 py-1 text-xs font-semibold" :class="typeBadge(m.type)">
                 {{ m.type }}
               </span>
             </div>
-            <div class="mt-4 flex items-center justify-between text-xs text-gray-500">
+            <div class="mt-4 flex items-center justify-between text-xs text-muted-foreground">
               <span class="inline-flex items-center gap-1">
                 <Clock class="w-4 h-4" />
                 {{ m.duration }}
@@ -71,94 +94,108 @@
                 {{ m.level }}
               </span>
             </div>
-          </article>
-        </div>
-      </section>
+          </div>
+        </Card>
+      </div>
+    </section>
 
-      <section class="space-y-4">
-        <div class="flex items-center justify-between">
-          <h2 class="text-xl font-semibold text-gray-900">评论</h2>
-          <span class="text-sm text-gray-500">{{ comments.length }} 条</span>
+    <section class="space-y-4">
+      <div class="flex items-end justify-between gap-4">
+        <div>
+          <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">评论</h2>
+          <p class="text-sm text-muted-foreground">{{ comments.length }} 条</p>
         </div>
+      </div>
 
-        <div class="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
+      <Card as="div" :hoverable="false" class="rounded-none">
+        <div class="p-5 space-y-3">
           <textarea
             v-model="commentDraft"
-            class="w-full min-h-24 p-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-900"
+            class="w-full min-h-24 p-3 rounded-none border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
             placeholder="写下你对这个 learningpath 的评论…"
           />
           <div class="flex justify-end">
-            <button
+            <Button
               type="button"
-              class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
+              variant="outline"
+              size="sm"
+              class="rounded-none bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white"
               @click="submitComment"
             >
               发布
-            </button>
+            </Button>
           </div>
         </div>
+      </Card>
 
-        <div v-if="comments.length === 0" class="text-sm text-gray-600">还没有评论。</div>
-        <div v-else class="space-y-3">
-          <div v-for="c in comments" :key="c.id" class="bg-white rounded-xl border border-gray-200 p-4">
-            <div class="text-xs text-gray-500">{{ formatTime(c.createdAt) }}</div>
-            <div class="mt-2 text-sm text-gray-900 whitespace-pre-wrap">{{ c.text }}</div>
+      <div v-if="comments.length === 0" class="text-sm text-muted-foreground">还没有评论。</div>
+      <div v-else class="space-y-3">
+        <Card v-for="c in comments" :key="c.id" as="div" :hoverable="false" class="rounded-none">
+          <div class="p-4">
+            <div class="text-xs text-muted-foreground">{{ formatTime(c.createdAt) }}</div>
+            <div class="mt-2 text-sm text-foreground whitespace-pre-wrap">{{ c.text }}</div>
           </div>
-        </div>
-      </section>
+        </Card>
+      </div>
+    </section>
 
-      <div v-if="!path" class="bg-white rounded-xl border border-gray-200 p-5 text-sm text-gray-700">
+    <Card v-if="!path" as="div" :hoverable="false" class="rounded-none">
+      <div class="p-5 text-sm text-muted-foreground">
         未找到该 learning path（id: {{ id }}）。你可以先从 LearningPool 里选择一个已有的卡片进入。
       </div>
-      </div>
-    </div>
+    </Card>
   </div>
 
   <div v-if="showUseModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full">
-      <div class="p-6 border-b border-gray-200 flex items-center justify-between">
-        <h2 class="text-gray-900 text-lg font-semibold">{{ useModalTitle }}</h2>
-        <button type="button" class="text-gray-400 hover:text-gray-600" @click="closeUseModal" :disabled="usingThisPath">
-          <span class="sr-only">Close</span>
+    <Card as="div" :hoverable="false" class="rounded-none max-w-md w-full">
+      <div class="p-6 border-b border-border flex items-center justify-between">
+        <h2 class="text-foreground text-sm font-medium tracking-[0.14em] uppercase">{{ useModalTitle }}</h2>
+        <Button type="button" variant="ghost" size="icon" class="rounded-none" @click="closeUseModal" :disabled="usingThisPath" aria-label="Close">
           ×
-        </button>
+        </Button>
       </div>
 
       <div class="p-6 space-y-3">
-        <p class="text-gray-700">{{ useModalMessage }}</p>
-        <p v-if="useModalHint" class="text-sm text-gray-500">{{ useModalHint }}</p>
+        <p class="text-foreground">{{ useModalMessage }}</p>
+        <p v-if="useModalHint" class="text-sm text-muted-foreground">{{ useModalHint }}</p>
       </div>
 
       <div class="p-6 pt-0 flex items-center justify-end gap-3">
-        <button
+        <Button
           v-if="useModalState === 'confirm'"
           type="button"
-          class="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold"
+          variant="outline"
+          size="sm"
+          class="rounded-none"
           @click="closeUseModal"
           :disabled="usingThisPath"
         >
           取消
-        </button>
-        <button
+        </Button>
+        <Button
           v-if="useModalState === 'confirm'"
           type="button"
-          class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          variant="outline"
+          size="sm"
+          class="rounded-none bg-foreground text-background hover:bg-foreground/90 hover:text-background"
           @click="confirmUseThisPath"
           :disabled="usingThisPath"
         >
           {{ usingThisPath ? 'Saving…' : '保存到 My Paths' }}
-        </button>
+        </Button>
 
-        <button
+        <Button
           v-else
           type="button"
-          class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold"
+          variant="outline"
+          size="sm"
+          class="rounded-none"
           @click="closeUseModal"
         >
           确定
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   </div>
 </template>
 
@@ -166,8 +203,12 @@
 import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute, RouterLink, useRouter } from 'vue-router'
 import { BookOpen, Clock, Home as HomeIcon, Layers, Library } from 'lucide-vue-next'
+import { Button } from '../components/ui/button'
+import Card from '../components/ui/Card.vue'
 import { getPublicLearningPathDetail, getMyLearningPathDetail, attachPublicLearningPathToMe } from '../api/learningPath'
 import { getMyResourceDetail, getResourceDetail, type DbResourceDetail } from '../api/resource'
+
+const RouterLinkComp = RouterLink
 
 type Module = {
   id: string
@@ -276,6 +317,7 @@ onMounted(async () => {
         path.value = {
           id: detail.id,
           title: detail.title,
+          type: String((detail as any)?.type || '').trim(),
           description: detail.description,
           thumbnail: String(detail.cover_image_url || '') || '',
           category: detail.category_name || 'Learning Path',

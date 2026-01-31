@@ -3,12 +3,12 @@
     <div class="mx-auto flex h-14 max-w-7xl items-center gap-10 px-4">
       <RouterLink to="/home" class="flex shrink-0 items-center gap-2 font-semibold text-foreground">
         <img
-          src="/logo.svg"
+          src="/favicon.svg"
           alt="Contrail"
-          class="h-9 w-9 rounded-none"
+          class="h-9 w-9 rounded-sm"
         />
-        <span class="text-lg font-semibold tracking-tight text-foreground">
-          <span class="text-primary font-bold">C</span><span>ontrail</span>
+        <span class="brand-wordmark text-lg text-foreground">
+          <span class="font-semibold">Contrail</span>
         </span>
       </RouterLink>
       <nav class="hidden md:flex items-center gap-6 text-[11px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
@@ -215,7 +215,7 @@
           to="/createpath"
           variant="outline"
           size="sm"
-          class="hidden md:inline-flex h-9 rounded-none border-border bg-foreground px-3 text-xs font-semibold tracking-[0.14em] uppercase text-background hover:bg-foreground/90 hover:text-background"
+          class="hidden md:inline-flex h-9 rounded-none border-border bg-black px-3 text-xs font-semibold tracking-[0.14em] uppercase text-white transition-all hover:-translate-y-px hover:bg-[#8ecbff] hover:text-white hover:shadow-sm active:translate-y-0"
         >
           <Plus class="h-4 w-4" />
           <span class="hidden lg:inline">{{ t('CreatePath') }}</span>

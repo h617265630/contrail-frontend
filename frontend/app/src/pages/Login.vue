@@ -1,57 +1,68 @@
 <template>
-  <div class="min-h-[calc(100vh-120px)] flex items-center justify-center pt-6">
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-      <div class="text-center mb-8">
-        <h1 class="text-gray-900 mb-2">Welcome Back</h1>
-        <p class="text-gray-600">Sign in to your account to continue</p>
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+    <section class="border-b border-border pb-8">
+      <div class="grid gap-6 md:grid-cols-12 md:items-end">
+        <div class="md:col-span-8">
+          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Login</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Sign in to your account to continue</p>
+        </div>
       </div>
+    </section>
 
-      <form @submit.prevent="handleSubmit" class="space-y-6">
+    <section class="flex justify-center">
+      <Card className="w-full max-w-md" :hoverable="false" padded>
+        <form @submit.prevent="handleSubmit" class="space-y-6">
         <div>
-          <label for="email" class="block text-gray-700 mb-2">Username or Email</label>
+          <label for="email" class="block text-sm font-medium text-foreground mb-2">Username or Email</label>
           <div class="relative">
-            <Mail class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
+            <Mail class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
               id="email"
               type="text"
               v-model="email"
               @blur="onBlur('email')"
-              @input="onInput('email')"
               :class="[
-                'w-full pl-11 pr-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-                errors.email ? 'border-red-500 pt-2 pb-6' : 'border-gray-300 py-3',
+                'pl-9',
+                errors.email ? 'border-destructive' : '',
               ]"
               placeholder="Enter your username or email"
+              @update:modelValue="onInput('email')"
             />
 
-            <span v-if="errors.email" class="absolute left-11 bottom-1 text-xs text-red-500 pointer-events-none">
+            <span v-if="errors.email" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none">
               {{ errors.email }}
             </span>
           </div>
         </div>
 
         <div>
-          <label for="password" class="block text-gray-700 mb-2">Password</label>
+          <label for="password" class="block text-sm font-medium text-foreground mb-2">Password</label>
           <div class="relative">
-            <Lock class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
+            <Lock class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
               id="password"
               :type="showPassword ? 'text' : 'password'"
               v-model="password"
               @blur="onBlur('password')"
-              @input="onInput('password')"
               :class="[
-                'w-full pl-11 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-                errors.password ? 'border-red-500 pt-2 pb-6' : 'border-gray-300 py-3',
+                'pl-9 pr-10',
+                errors.password ? 'border-destructive' : '',
               ]"
               placeholder="Enter your password"
+              @update:modelValue="onInput('password')"
             />
-            <button type="button" @click="showPassword = !showPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-              <EyeOff v-if="showPassword" class="w-5 h-5" />
-              <Eye v-else class="w-5 h-5" />
-            </button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              class="absolute right-1 top-1/2 -translate-y-1/2"
+              @click="showPassword = !showPassword"
+            >
+              <EyeOff v-if="showPassword" class="w-4 h-4" />
+              <Eye v-else class="w-4 h-4" />
+            </Button>
 
-            <span v-if="errors.password" class="absolute left-11 bottom-1 text-xs text-red-500 pointer-events-none">
+            <span v-if="errors.password" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none">
               {{ errors.password }}
             </span>
           </div>
@@ -59,30 +70,27 @@
 
         <div class="flex items-center justify-between">
           <label class="flex items-center">
-            <input type="checkbox" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-            <span class="ml-2 text-gray-700">Remember me</span>
+            <input type="checkbox" class="w-4 h-4 border-input rounded-md" />
+            <span class="ml-2 text-sm text-muted-foreground">Remember me</span>
           </label>
-          <a href="#" class="text-blue-600 hover:text-blue-700">Forgot password?</a>
+          <a href="#" class="text-sm text-foreground underline underline-offset-4">Forgot password?</a>
         </div>
 
-        <button
-          type="submit"
-          :disabled="loading || !isFormValid"
-          class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-        >
+        <Button type="submit" :disabled="loading || !isFormValid" class="w-full rounded-md">
           {{ loading ? 'Signing in...' : 'Sign In' }}
-        </button>
+        </Button>
 
-        <p v-if="formError" class="text-red-600 text-sm text-center">{{ formError }}</p>
+        <p v-if="formError" class="text-destructive text-sm text-center">{{ formError }}</p>
       </form>
 
       <div class="mt-6 text-center">
-        <p class="text-gray-600">
+        <p class="text-sm text-muted-foreground">
           Don't have an account?
-          <RouterLink to="/register" class="text-blue-600 hover:text-blue-700"> Sign up</RouterLink>
+          <RouterLink to="/register" class="text-foreground underline underline-offset-4"> Sign up</RouterLink>
         </p>
       </div>
-    </div>
+      </Card>
+    </section>
   </div>
 </template>
 
@@ -92,6 +100,9 @@ import { Eye, EyeOff, Lock, Mail } from 'lucide-vue-next'
 import {login} from '../api/auth'  // Example import for login API
 import {useRouter, RouterLink} from 'vue-router'
 import {useAuthStore} from '../stores/auth'
+import Card from '../components/ui/Card.vue'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 
 defineOptions({ name: 'LoginPage' })
 const router = useRouter()

@@ -1,51 +1,54 @@
 <template>
-  <div class="space-y-4">
-    <div class="rounded-2xl bg-white p-5 shadow-sm border border-slate-100">
-      <h1 class="text-xl font-semibold text-slate-900">Plan</h1>
-      <p class="text-sm text-slate-600 mt-1">Your current plan and permissions</p>
+  <div class="space-y-6">
+    <div>
+      <h3 class="text-lg font-semibold text-foreground">Plan</h3>
+      <p class="mt-2 text-sm text-muted-foreground">Your current plan and permissions</p>
     </div>
 
-    <div class="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 space-y-5">
-      <div class="flex items-center justify-between">
+    <Card as="section" :hoverable="false" class="rounded-md">
+      <div class="space-y-5 p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-muted-foreground uppercase tracking-[0.14em]">Current plan</p>
+            <p class="mt-2 text-xl font-semibold text-foreground">{{ planInfo.name }}</p>
+          </div>
+          <span class="rounded-md border border-border bg-muted/30 px-3 py-1 text-sm font-semibold text-foreground">{{ planInfo.name }}</span>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div class="rounded-md border border-border bg-muted/30 p-4">
+            <p class="text-xs font-semibold text-muted-foreground">Purchased</p>
+            <p class="mt-1 text-sm font-semibold text-foreground">{{ purchasedText }}</p>
+          </div>
+          <div class="rounded-md border border-border bg-muted/30 p-4">
+            <p class="text-xs font-semibold text-muted-foreground">Started</p>
+            <p class="mt-1 text-sm font-semibold text-foreground">{{ startedText || '—' }}</p>
+          </div>
+          <div class="rounded-md border border-border bg-muted/30 p-4">
+            <p class="text-xs font-semibold text-muted-foreground">Active for</p>
+            <p class="mt-1 text-sm font-semibold text-foreground">{{ activeForText }}</p>
+          </div>
+          <div class="rounded-md border border-border bg-muted/30 p-4">
+            <p class="text-xs font-semibold text-muted-foreground">Expires</p>
+            <p class="mt-1 text-sm font-semibold text-foreground">{{ expiresText || '—' }}</p>
+          </div>
+        </div>
+
         <div>
-          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Current plan</p>
-          <p class="mt-1 text-xl font-semibold text-slate-900">{{ planInfo.name }}</p>
-        </div>
-        <span class="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-800">{{ planInfo.name }}</span>
-      </div>
-
-      <div class="grid gap-3 sm:grid-cols-2">
-        <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
-          <p class="text-xs font-semibold text-slate-500">Purchased</p>
-          <p class="mt-1 text-sm font-semibold text-slate-900">{{ purchasedText }}</p>
-        </div>
-        <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
-          <p class="text-xs font-semibold text-slate-500">Started</p>
-          <p class="mt-1 text-sm font-semibold text-slate-900">{{ startedText || '—' }}</p>
-        </div>
-        <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
-          <p class="text-xs font-semibold text-slate-500">Active for</p>
-          <p class="mt-1 text-sm font-semibold text-slate-900">{{ activeForText }}</p>
-        </div>
-        <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
-          <p class="text-xs font-semibold text-slate-500">Expires</p>
-          <p class="mt-1 text-sm font-semibold text-slate-900">{{ expiresText || '—' }}</p>
+          <p class="text-xs font-semibold text-muted-foreground uppercase tracking-[0.14em]">Permissions</p>
+          <ul class="mt-2 space-y-1 text-sm text-muted-foreground list-disc list-inside">
+            <li v-for="p in planInfo.permissions" :key="p">{{ p }}</li>
+          </ul>
         </div>
       </div>
-
-      <div>
-        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Permissions</p>
-        <ul class="mt-2 space-y-1 text-sm text-slate-700 list-disc list-inside">
-          <li v-for="p in planInfo.permissions" :key="p">{{ p }}</li>
-        </ul>
-      </div>
-    </div>
+    </Card>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { addDaysIso, daysBetween, formatIsoDate, getPlanInfo } from '../utils/plan'
+import Card from '../components/ui/Card.vue'
 
 const planInfo = computed(() => getPlanInfo())
 

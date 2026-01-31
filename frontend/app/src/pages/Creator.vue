@@ -1,133 +1,148 @@
 <template>
-  <div class="min-h-screen bg-slate-50">
-    <div class="max-w-7xl mx-auto p-6">
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+    <section class="border-b border-border pb-8">
+      <div class="grid gap-6 md:grid-cols-12 md:items-end">
+        <div class="md:col-span-8">
+          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Creator Center</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">创作工具集合。</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
       <div class="grid gap-6 lg:grid-cols-12">
         <aside class="lg:col-span-3">
-          <div class="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-            <p class="text-sm font-semibold text-slate-900">Creator Center</p>
-            <p class="text-xs text-slate-500 mt-1">创作工具集合</p>
+          <Card className="rounded-none" :hoverable="false" padded>
+            <p class="text-sm font-semibold text-foreground">Creator Center</p>
+            <p class="text-xs text-muted-foreground mt-1">创作工具集合</p>
 
             <div class="mt-4 space-y-2">
-              <button
+              <Button
                 type="button"
-                class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold"
-                :class="activeTab === 'image' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
+                variant="ghost"
+                class="w-full justify-start rounded-none"
+                :class="activeTab === 'image' ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
                 @click="selectTab('image')"
               >
                 上传图片
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold"
-                :class="activeTab === 'hand' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
+                variant="ghost"
+                class="w-full justify-start rounded-none"
+                :class="activeTab === 'hand' ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
                 @click="selectTab('hand')"
               >
                 手写笔记
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold"
-                :class="activeTab === 'url' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
+                variant="ghost"
+                class="w-full justify-start rounded-none"
+                :class="activeTab === 'url' ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
                 @click="selectTab('url')"
               >
                 记录 URL
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold"
-                :class="activeTab === 'idea' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
+                variant="ghost"
+                class="w-full justify-start rounded-none"
+                :class="activeTab === 'idea' ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
                 @click="selectTab('idea')"
               >
                 记录 Idea
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold"
-                :class="activeTab === 'markdown' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
+                variant="ghost"
+                class="w-full justify-start rounded-none"
+                :class="activeTab === 'markdown' ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
                 @click="selectTab('markdown')"
               >
                 Markdown 编辑器
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold"
-                :class="activeTab === 'records' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
+                variant="ghost"
+                class="w-full justify-start rounded-none"
+                :class="activeTab === 'records' ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
                 @click="selectTab('records')"
               >
                 我的记录
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
         </aside>
 
-        <main class="lg:col-span-9">
-          <div class="rounded-2xl bg-white p-5 shadow-sm border border-slate-100">
+        <main class="lg:col-span-9 space-y-4">
+          <Card className="rounded-none" :hoverable="false" padded>
             <div class="flex items-center justify-between gap-3">
               <div>
-                <h1 class="text-xl font-semibold text-slate-900">{{ tabTitle }}</h1>
-                <p class="text-sm text-slate-600 mt-1">{{ tabSubtitle }}</p>
+                <h2 class="text-xl font-semibold text-foreground">{{ tabTitle }}</h2>
+                <p class="text-sm text-muted-foreground mt-1">{{ tabSubtitle }}</p>
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div class="mt-4 rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
+          <Card className="rounded-none" :hoverable="false" padded>
             <div v-if="activeTab === 'image'" class="space-y-3">
             <input
               type="file"
               accept="image/*"
-              class="block w-full text-sm text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
+              class="block w-full text-sm text-foreground file:mr-4 file:rounded-none file:border file:border-border file:bg-background file:px-4 file:py-2 file:text-sm file:font-semibold file:text-foreground hover:file:bg-muted/30"
               @change="onPickImage"
             />
             <div class="flex items-center gap-3">
-              <input
-                v-model="imageTitle"
-                type="text"
-                placeholder="标题（可选）"
-                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                type="button"
-                class="shrink-0 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-                :disabled="!pendingImageDataUrl"
-                @click="saveImage"
-              >
-                保存
-              </button>
+              <Input v-model="imageTitle" type="text" placeholder="标题（可选）" class="rounded-none" />
+              <Button type="button" class="shrink-0 rounded-none" :disabled="!pendingImageDataUrl" @click="saveImage">保存</Button>
             </div>
-            <p v-if="imageError" class="text-sm text-red-600">{{ imageError }}</p>
-            <div v-if="pendingImageDataUrl" class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <img :src="pendingImageDataUrl" alt="preview" class="max-h-56 w-full rounded-lg object-contain" />
+            <p v-if="imageError" class="text-sm text-destructive">{{ imageError }}</p>
+            <div v-if="pendingImageDataUrl" class="border border-border bg-muted/30 p-3">
+              <img :src="pendingImageDataUrl" alt="preview" class="max-h-56 w-full object-contain" />
+            </div>
+
+            <div class="pt-2 border-t border-border">
+              <div class="flex items-end justify-between gap-3">
+                <div>
+                  <p class="text-sm font-semibold text-foreground">我的图片</p>
+                  <p class="text-xs text-muted-foreground mt-1">共 {{ imageItems.length }} 张</p>
+                </div>
+              </div>
+
+              <div v-if="imageItems.length === 0" class="mt-3 text-sm text-muted-foreground">暂无图片</div>
+
+              <div v-else class="mt-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                <div
+                  v-for="img in imageItems"
+                  :key="img.id"
+                  class="border border-border bg-background overflow-hidden rounded-none"
+                >
+                  <div class="aspect-video bg-muted/30">
+                    <img :src="img.dataUrl" :alt="img.title || 'image'" class="h-full w-full object-cover" />
+                  </div>
+                  <div class="p-3">
+                    <p class="text-sm font-semibold text-foreground truncate" :title="img.title || '无标题'">
+                      {{ img.title || '无标题' }}
+                    </p>
+                    <p class="mt-1 text-xs text-muted-foreground">{{ formatTime(img.createdAt) }}</p>
+                  </div>
+                </div>
+              </div>
             </div>
             </div>
 
             <div v-else-if="activeTab === 'hand'" class="space-y-3">
             <div class="flex items-center gap-3">
-              <input
-                v-model="handTitle"
-                type="text"
-                placeholder="标题（可选）"
-                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                type="button"
-                class="shrink-0 rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200"
-                @click="clearCanvas"
-              >
-                清空
-              </button>
-              <button
-                type="button"
-                class="shrink-0 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-                @click="saveHandNote"
-              >
-                保存
-              </button>
+              <Input v-model="handTitle" type="text" placeholder="标题（可选）" class="rounded-none" />
+              <Button type="button" variant="outline" class="shrink-0 rounded-none" @click="clearCanvas">清空</Button>
+              <Button type="button" class="shrink-0 rounded-none" @click="saveHandNote">保存</Button>
             </div>
 
-            <div class="rounded-xl border border-slate-200 bg-white p-2">
+            <div class="border border-border bg-background p-2">
               <canvas
                 ref="canvasRef"
-                class="h-56 w-full rounded-lg bg-slate-50"
+                class="h-56 w-full bg-muted/30"
                 @pointerdown="onPointerDown"
                 @pointermove="onPointerMove"
                 @pointerup="onPointerUp"
@@ -135,77 +150,50 @@
                 @pointerleave="onPointerUp"
               ></canvas>
             </div>
-            <p v-if="handError" class="text-sm text-red-600">{{ handError }}</p>
+            <p v-if="handError" class="text-sm text-destructive">{{ handError }}</p>
             </div>
 
             <div v-else-if="activeTab === 'url'" class="space-y-3">
-            <input
-              v-model="urlTitle"
-              type="text"
-              placeholder="标题（可选）"
-              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <Input v-model="urlTitle" type="text" placeholder="标题（可选）" class="rounded-none" />
             <div class="flex items-center gap-3">
-              <input
-                v-model="urlValue"
-                type="url"
-                placeholder="https://..."
-                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                type="button"
-                class="shrink-0 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-                @click="saveUrl"
-              >
-                保存
-              </button>
+              <Input v-model="urlValue" type="url" placeholder="https://..." class="rounded-none" />
+              <Button type="button" class="shrink-0 rounded-none" @click="saveUrl">保存</Button>
             </div>
-            <p v-if="urlError" class="text-sm text-red-600">{{ urlError }}</p>
+            <p v-if="urlError" class="text-sm text-destructive">{{ urlError }}</p>
             </div>
 
             <div v-else-if="activeTab === 'idea'" class="space-y-3">
-            <input
-              v-model="ideaTitle"
-              type="text"
-              placeholder="标题（可选）"
-              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <Input v-model="ideaTitle" type="text" placeholder="标题（可选）" class="rounded-none" />
             <textarea
               v-model="ideaContent"
               rows="4"
               placeholder="写下你的想法..."
-              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-none"
             ></textarea>
-            <button
-              type="button"
-              class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-              @click="saveIdea"
-            >
-              保存
-            </button>
-            <p v-if="ideaError" class="text-sm text-red-600">{{ ideaError }}</p>
+            <Button type="button" class="rounded-none" @click="saveIdea">保存</Button>
+            <p v-if="ideaError" class="text-sm text-destructive">{{ ideaError }}</p>
             </div>
 
             <div v-else-if="activeTab === 'markdown'" class="space-y-4">
               <!-- 已保存的 Markdown 文件列表 -->
               <div v-if="markdownFiles.length > 0" class="space-y-3">
                 <div class="flex items-center justify-between">
-                  <h3 class="text-sm font-semibold text-slate-900">已保存的文档 ({{ markdownFiles.length }})</h3>
+                  <h3 class="text-sm font-semibold text-foreground">已保存的文档 ({{ markdownFiles.length }})</h3>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                   <button
                     v-for="file in markdownFiles"
                     :key="file.id"
                     type="button"
-                    class="text-left rounded-lg border border-slate-200 bg-white p-3 hover:border-blue-500 hover:shadow-md transition-all"
+                    class="text-left border border-border bg-background p-3 transition hover:bg-muted/30 rounded-none"
                     @click="loadMarkdownFile(file)"
                   >
                     <div class="space-y-1">
-                      <p class="text-sm font-semibold text-slate-900 truncate" :title="file.title || '无标题'">
+                      <p class="text-sm font-semibold text-foreground truncate" :title="file.title || '无标题'">
                         {{ file.title || '无标题' }}
                       </p>
-                      <p class="text-xs text-slate-500">{{ formatTime(file.createdAt) }}</p>
-                      <p class="text-xs text-slate-400 truncate">{{ (file.content || '').substring(0, 50) }}...</p>
+                      <p class="text-xs text-muted-foreground">{{ formatTime(file.createdAt) }}</p>
+                      <p class="text-xs text-muted-foreground truncate">{{ (file.content || '').substring(0, 50) }}...</p>
                     </div>
                   </button>
                 </div>
@@ -213,33 +201,27 @@
 
               <div v-if="markdownExtractedLinks.length > 0" class="space-y-3">
                 <div class="flex items-center justify-between">
-                  <h3 class="text-sm font-semibold text-slate-900">从当前 Markdown 提取的链接 ({{ markdownExtractedLinks.length }})</h3>
+                  <h3 class="text-sm font-semibold text-foreground">从当前 Markdown 提取的链接 ({{ markdownExtractedLinks.length }})</h3>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   <div
                     v-for="link in markdownExtractedLinks"
                     :key="link.url"
-                    class="rounded-lg border border-slate-200 bg-white p-3"
+                    class="border border-border bg-background p-3 rounded-none"
                   >
                     <div class="flex items-start justify-between gap-3">
                       <div class="min-w-0">
-                        <p class="text-xs font-semibold text-slate-500">{{ link.kind }}</p>
+                        <p class="text-xs font-semibold text-muted-foreground">{{ link.kind }}</p>
                         <a
                           :href="link.url"
                           target="_blank"
                           rel="noreferrer"
-                          class="mt-1 block text-sm font-semibold text-blue-600 hover:underline break-all"
+                          class="mt-1 block text-sm font-semibold text-foreground underline underline-offset-4 break-all"
                         >
                           {{ link.url }}
                         </a>
                       </div>
-                      <button
-                        type="button"
-                        class="shrink-0 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
-                        @click="goAddResource(link.url)"
-                      >
-                        添加为资源
-                      </button>
+                      <Button type="button" size="sm" class="shrink-0 rounded-none" @click="goAddResource(link.url)">添加为资源</Button>
                     </div>
                   </div>
                 </div>
@@ -247,75 +229,51 @@
 
               <!-- 编辑器区域 -->
               <div class="space-y-3">
-                <input
-                  v-model="markdownTitle"
-                  type="text"
-                  placeholder="文档标题（可选）"
-                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              <div class="border border-slate-200 rounded-lg overflow-hidden" style="height: 600px;">
+                <Input v-model="markdownTitle" type="text" placeholder="文档标题（可选）" class="rounded-none" />
+              <div class="border border-border overflow-hidden rounded-none" style="height: 600px;">
                 <Editor
                   :value="markdownContent"
                   :plugins="bytemdPlugins"
                   @change="(v: string) => markdownContent = v"
                 />
               </div>
-                <button
-                  type="button"
-                  class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-                  @click="saveMarkdown"
-                >
-                  保存
-                </button>
-                <p v-if="markdownError" class="text-sm text-red-600">{{ markdownError }}</p>
+                <Button type="button" class="rounded-none" @click="saveMarkdown">保存</Button>
+                <p v-if="markdownError" class="text-sm text-destructive">{{ markdownError }}</p>
               </div>
             </div>
 
             <div v-else-if="activeTab === 'records'">
               <div class="flex items-center justify-between gap-4 mb-4">
-                <p class="text-sm text-slate-600">共 {{ items.length }} 条记录</p>
-                <button
-                  type="button"
-                  class="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200"
-                  :disabled="items.length === 0"
-                  @click="clearAll"
-                >
-                  清空全部
-                </button>
+                <p class="text-sm text-muted-foreground">共 {{ items.length }} 条记录</p>
+                <Button type="button" variant="outline" class="rounded-none" :disabled="items.length === 0" @click="clearAll">清空全部</Button>
               </div>
 
-              <div v-if="items.length === 0" class="text-sm text-slate-500">暂无记录</div>
+              <div v-if="items.length === 0" class="text-sm text-muted-foreground">暂无记录</div>
 
               <div v-else class="space-y-3">
           <div
             v-for="item in items"
             :key="item.id"
-            class="rounded-xl border border-slate-200 p-4"
+            class="border border-border p-4"
           >
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
-                <p class="text-sm font-semibold text-slate-900 truncate">
-                  <span class="mr-2 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">{{ item.kind }}</span>
+                <p class="text-sm font-semibold text-foreground truncate">
+                  <span class="mr-2 border border-border bg-muted/30 px-2 py-0.5 text-xs font-semibold text-muted-foreground">{{ item.kind }}</span>
                   {{ item.title || '无标题' }}
                 </p>
-                <p class="mt-1 text-xs text-slate-500">{{ formatTime(item.createdAt) }}</p>
+                <p class="mt-1 text-xs text-muted-foreground">{{ formatTime(item.createdAt) }}</p>
               </div>
-              <button
-                type="button"
-                class="shrink-0 rounded-lg bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-100"
-                @click="removeItem(item.id)"
-              >
-                删除
-              </button>
+              <Button type="button" variant="destructive" size="sm" class="shrink-0 rounded-none" @click="removeItem(item.id)">删除</Button>
             </div>
 
             <div class="mt-3">
-              <div v-if="item.kind === 'image' && item.dataUrl" class="rounded-lg bg-slate-50 p-2 border border-slate-200">
-                <img :src="item.dataUrl" alt="image" class="max-h-64 w-full rounded-md object-contain" />
+              <div v-if="item.kind === 'image' && item.dataUrl" class="bg-muted/30 p-2 border border-border">
+                <img :src="item.dataUrl" alt="image" class="max-h-64 w-full object-contain" />
               </div>
 
-              <div v-else-if="item.kind === 'hand' && item.dataUrl" class="rounded-lg bg-slate-50 p-2 border border-slate-200">
-                <img :src="item.dataUrl" alt="hand note" class="max-h-64 w-full rounded-md object-contain" />
+              <div v-else-if="item.kind === 'hand' && item.dataUrl" class="bg-muted/30 p-2 border border-border">
+                <img :src="item.dataUrl" alt="hand note" class="max-h-64 w-full object-contain" />
               </div>
 
               <div v-else-if="item.kind === 'url' && item.url" class="text-sm">
@@ -323,27 +281,27 @@
                   :href="item.url"
                   target="_blank"
                   rel="noreferrer"
-                  class="font-semibold text-blue-600 hover:underline break-all"
+                  class="font-semibold text-foreground underline underline-offset-4 break-all"
                 >
                   {{ item.url }}
                 </a>
               </div>
 
-              <div v-else-if="item.kind === 'idea' && item.content" class="text-sm text-slate-800 whitespace-pre-wrap">
+              <div v-else-if="item.kind === 'idea' && item.content" class="text-sm text-foreground whitespace-pre-wrap">
                 {{ item.content }}
               </div>
 
-              <div v-else-if="item.kind === 'markdown' && item.content" class="rounded-lg bg-slate-50 p-3 border border-slate-200">
-                <pre class="text-sm text-slate-800 whitespace-pre-wrap font-mono">{{ item.content }}</pre>
+              <div v-else-if="item.kind === 'markdown' && item.content" class="bg-muted/30 p-3 border border-border">
+                <pre class="text-sm text-foreground whitespace-pre-wrap font-mono">{{ item.content }}</pre>
               </div>
             </div>
           </div>
               </div>
             </div>
-          </div>
+          </Card>
         </main>
       </div>
-    </div>
+    </section>
   </div>
 </template>
 
@@ -357,6 +315,9 @@ import math from '@bytemd/plugin-math'
 import 'bytemd/dist/index.css'
 import 'highlight.js/styles/vs.css'
 import 'katex/dist/katex.css'
+import Card from '../components/ui/Card.vue'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 
 const bytemdPlugins = [
   gfm(),
@@ -725,6 +686,10 @@ function saveIdea() {
 const markdownTitle = ref('')
 const markdownContent = ref('')
 const markdownError = ref('')
+
+const imageItems = computed(() => {
+  return items.value.filter((item) => item.kind === 'image' && !!item.dataUrl)
+})
 
 // 筛选出所有 markdown 类型的记录
 const markdownFiles = computed(() => {

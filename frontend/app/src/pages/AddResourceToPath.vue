@@ -1,82 +1,75 @@
 <template>
-  <div class="min-h-screen bg-slate-50">
-    <div class="max-w-7xl mx-auto p-6 space-y-6">
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
       <div class="flex items-center justify-between gap-4">
         <div class="min-w-0">
-          <h1 class="text-2xl font-semibold text-slate-900 truncate">Add Resource to LearningPath</h1>
-          <p class="text-sm text-slate-600">选择一个 learningpath，并查看其内容</p>
+          <h1 class="text-xl md:text-2xl font-semibold text-foreground truncate">Add Resource to LearningPath</h1>
+          <p class="text-sm text-muted-foreground">选择一个 learningpath，并查看其内容</p>
         </div>
-        <RouterLink
-          to="/my-paths"
-          class="px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50"
-        >
+        <Button :as="RouterLinkComp" to="/my-paths" variant="outline" size="sm" class="rounded-md">
           返回 MyPaths
-        </RouterLink>
+        </Button>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Column 1: Resource -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="p-4 border-b border-slate-100 bg-slate-50">
-            <h2 class="text-slate-900 font-semibold">Resource</h2>
-            <p class="text-sm text-slate-600">根据 id 展示</p>
+        <div class="rounded-md border border-border bg-background overflow-hidden">
+          <div class="p-4 border-b border-border bg-muted/30">
+            <h2 class="text-foreground font-semibold">Resource</h2>
+            <p class="text-sm text-muted-foreground">根据 id 展示</p>
           </div>
 
-          <div v-if="resourceLoading" class="p-6 text-sm text-slate-600">Loading…</div>
-          <div v-else-if="resourceError" class="p-6 text-sm text-red-600">{{ resourceError }}</div>
+          <div v-if="resourceLoading" class="p-6 text-sm text-muted-foreground">Loading…</div>
+          <div v-else-if="resourceError" class="p-6 text-sm text-destructive">{{ resourceError }}</div>
 
           <div
             v-else-if="resource"
             class="p-4 space-y-3"
             :class="isDragging ? 'opacity-70' : ''"
           >
-            <div class="h-36 rounded-xl bg-slate-100 overflow-hidden">
+            <div class="h-36 rounded-md bg-muted overflow-hidden">
               <img :src="resource.thumbnail" :alt="resource.title" class="w-full h-full object-cover" />
             </div>
             <div class="space-y-1">
-              <div class="text-slate-900 font-semibold">{{ resource.title }}</div>
-              <div class="text-sm text-slate-600 line-clamp-3">{{ resource.summary }}</div>
+              <div class="text-foreground font-semibold">{{ resource.title }}</div>
+              <div class="text-sm text-muted-foreground line-clamp-3">{{ resource.summary }}</div>
             </div>
             <div class="flex flex-wrap gap-2">
-              <span class="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ resource.platform || '—' }}</span>
-              <span class="px-2 py-1 rounded-full bg-slate-100 text-slate-700 text-xs">{{ resource.type }}</span>
+              <span class="px-2 py-1 border border-border bg-background/90 text-foreground text-xs font-semibold">{{ formatPlatform(resource.platform) }}</span>
+              <span class="px-2 py-1 border border-border bg-background/90 text-foreground text-xs">{{ resource.type }}</span>
             </div>
 
             <div
-              class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-600"
+              class="rounded-md border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground"
             >
               拖拽此卡片到右侧 Selected Path 中添加
             </div>
 
             <div
-              class="rounded-xl border border-slate-200 bg-white p-3 cursor-grab active:cursor-grabbing"
+              class="rounded-md border border-border bg-background p-3 cursor-grab active:cursor-grabbing"
               draggable="true"
               @dragstart="onDragStart"
               @dragend="onDragEnd"
             >
-              <div class="font-semibold text-slate-900 text-sm truncate">{{ resource.title }}</div>
-              <div class="text-xs text-slate-600 truncate">{{ resource.source_url }}</div>
+              <div class="font-semibold text-foreground text-sm truncate">{{ resource.title }}</div>
+              <div class="text-xs text-muted-foreground truncate">{{ resource.source_url }}</div>
             </div>
           </div>
 
-          <div v-else class="p-6 text-sm text-slate-600">未找到该资源（id: {{ resourceId }}）</div>
+          <div v-else class="p-6 text-sm text-muted-foreground">未找到该资源（id: {{ resourceId }}）</div>
         </div>
 
         <!-- Column 2: All LearningPaths -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="p-4 border-b border-slate-100 bg-slate-50">
-            <h2 class="text-slate-900 font-semibold">My LearningPaths</h2>
-            <p class="text-sm text-slate-600">选择一个路径</p>
+        <div class="rounded-md border border-border bg-background overflow-hidden">
+          <div class="p-4 border-b border-border bg-muted/30">
+            <h2 class="text-foreground font-semibold">My LearningPaths</h2>
+            <p class="text-sm text-muted-foreground">选择一个路径</p>
           </div>
 
           <div v-if="paths.length === 0" class="p-6 space-y-3">
-            <div class="text-sm text-slate-700 font-semibold">还没有创建任何 LearningPath</div>
-            <RouterLink
-              to="/createpath"
-              class="inline-flex px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
-            >
+            <div class="text-sm text-foreground font-semibold">还没有创建任何 LearningPath</div>
+            <Button :as="RouterLinkComp" to="/createpath" size="sm" class="rounded-md bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white">
               去创建
-            </RouterLink>
+            </Button>
           </div>
 
           <div v-else class="p-3 space-y-2">
@@ -84,16 +77,16 @@
               v-for="p in paths"
               :key="p.id"
               type="button"
-              class="w-full text-left rounded-xl border px-4 py-3 hover:bg-slate-50 transition"
-              :class="selectedPathId === p.id ? 'border-blue-500 bg-blue-50/40' : 'border-slate-200 bg-white'"
+              class="w-full text-left rounded-md border px-4 py-3 hover:bg-muted/30 transition"
+              :class="selectedPathId === p.id ? 'border-foreground bg-muted/30' : 'border-border bg-background'"
               @click="selectedPathId = p.id"
             >
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
-                  <div class="font-semibold text-slate-900 truncate">{{ p.title }}</div>
-                  <div class="text-xs text-slate-600 line-clamp-2">{{ p.description || '（无介绍）' }}</div>
+                  <div class="font-semibold text-foreground truncate">{{ p.title }}</div>
+                  <div class="text-xs text-muted-foreground line-clamp-2">{{ p.description || '（无介绍）' }}</div>
                 </div>
-                <div class="text-xs text-slate-500 shrink-0">—</div>
+                <div class="text-xs text-muted-foreground shrink-0">—</div>
               </div>
             </button>
           </div>
@@ -101,41 +94,42 @@
 
         <!-- Column 3: Selected LearningPath detail -->
         <div
-          class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+          class="rounded-md border border-border bg-background overflow-hidden"
           @dragover.prevent
           @drop.prevent="onDrop"
         >
-          <div class="p-4 border-b border-slate-100 bg-slate-50">
-            <h2 class="text-slate-900 font-semibold">Selected Path</h2>
-            <p class="text-sm text-slate-600">默认展示第一条</p>
+          <div class="p-4 border-b border-border bg-muted/30">
+            <h2 class="text-foreground font-semibold">Selected Path</h2>
+            <p class="text-sm text-muted-foreground">默认展示第一条</p>
           </div>
 
-          <div v-if="!selectedPath" class="p-6 text-sm text-slate-600">暂无可展示的 LearningPath</div>
+          <div v-if="!selectedPath" class="p-6 text-sm text-muted-foreground">暂无可展示的 LearningPath</div>
 
           <div v-else class="p-4 space-y-4">
             <div>
-              <div class="text-lg font-semibold text-slate-900">{{ selectedPath.title }}</div>
-              <div class="text-sm text-slate-600 mt-1">{{ selectedPath.description || '（无介绍）' }}</div>
+              <div class="text-lg font-semibold text-foreground">{{ selectedPath.title }}</div>
+              <div class="text-sm text-muted-foreground mt-1">{{ selectedPath.description || '（无介绍）' }}</div>
             </div>
 
             <div class="flex items-center justify-between gap-3">
-              <div class="text-sm text-slate-700">
+              <div class="text-sm text-foreground">
                 <span class="font-semibold">操作：</span>
-                <span class="text-slate-600">将左侧 resource 拖到本卡片，然后点击确认</span>
+                <span class="text-muted-foreground">将左侧 resource 拖到本卡片，然后点击确认</span>
               </div>
-              <button
+              <Button
                 type="button"
-                class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                size="sm"
+                class="rounded-md bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="!selectedPath || !resource || !hasDraftChange || saving"
                 @click="confirmAddToPath"
               >
                 {{ saving ? 'Saving…' : '确认添加' }}
-              </button>
+              </Button>
             </div>
 
             <div
-              class="rounded-xl border border-dashed p-3 text-sm"
-              :class="isOverDropZone ? 'border-blue-400 bg-blue-50/40 text-blue-700' : 'border-slate-300 bg-slate-50 text-slate-600'"
+              class="rounded-md border border-dashed p-3 text-sm"
+              :class="isOverDropZone ? 'border-foreground bg-muted/30 text-foreground' : 'border-border bg-muted/30 text-muted-foreground'"
               @dragenter.prevent="isOverDropZone = true"
               @dragleave.prevent="isOverDropZone = false"
             >
@@ -143,8 +137,8 @@
             </div>
 
             <div class="space-y-2">
-              <div class="text-sm font-semibold text-slate-900">内容</div>
-              <div v-if="draftItems.length === 0" class="text-sm text-slate-600">（该路径暂无资源）</div>
+              <div class="text-sm font-semibold text-foreground">内容</div>
+              <div v-if="draftItems.length === 0" class="text-sm text-muted-foreground">（该路径暂无资源）</div>
               <div v-else class="space-y-2">
                 <div
                   v-for="(it, idx) in draftItems"
@@ -152,18 +146,18 @@
                   class="space-y-2"
                 >
                   <div
-                    class="flex items-start gap-3 rounded-xl border bg-white p-3 transition border-slate-200"
+                    class="flex items-start gap-3 rounded-md border bg-background p-3 transition border-border"
                   >
-                    <div class="h-7 w-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-xs font-semibold shrink-0">
+                    <div class="h-7 w-7 rounded-md bg-muted text-foreground flex items-center justify-center text-xs font-semibold shrink-0">
                       {{ idx + 1 }}
                     </div>
-                    <img :src="it.thumbnail" :alt="it.title" class="h-14 w-14 rounded-lg object-cover bg-slate-100 shrink-0" />
+                    <img :src="it.thumbnail" :alt="it.title" class="h-14 w-14 rounded-md object-cover bg-muted shrink-0" />
                     <div class="min-w-0 flex-1">
-                      <div class="font-semibold text-slate-900 line-clamp-1">{{ it.title }}</div>
-                      <div class="text-xs text-slate-600 line-clamp-2">{{ it.summary }}</div>
+                      <div class="font-semibold text-foreground line-clamp-1">{{ it.title }}</div>
+                      <div class="text-xs text-muted-foreground line-clamp-2">{{ it.summary }}</div>
                       <div class="mt-1 flex flex-wrap gap-2">
-                        <span class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ it.platform || '—' }}</span>
-                        <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs">{{ it.type }}</span>
+                        <span class="px-2 py-0.5 border border-border bg-background/90 text-foreground text-xs font-semibold">{{ formatPlatform(it.platform) }}</span>
+                        <span class="px-2 py-0.5 border border-border bg-background/90 text-foreground text-xs">{{ it.type }}</span>
                       </div>
                     </div>
                   </div>
@@ -175,7 +169,6 @@
           </div>
         </div>
       </div>
-    </div>
   </div>
 </template>
 
@@ -183,8 +176,13 @@
 import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
+import { Button } from '../components/ui/button'
+
 import { addResourceToMyLearningPath, listMyLearningPaths, type MyLearningPath } from '../api/learningPath'
 import { getMyResourceDetail, getResourceDetail, type DbResourceDetail } from '../api/resource'
+import { formatPlatform } from '../utils/platform'
+
+const RouterLinkComp = RouterLink
 
 const route = useRoute()
 

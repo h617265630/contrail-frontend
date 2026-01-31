@@ -1,51 +1,37 @@
 <template>
-  <div class="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-6">
-    <div class="max-w-3xl mx-auto space-y-6">
-      <div class="bg-white rounded-2xl shadow-xl p-6">
-        <div class="flex items-start justify-between gap-4">
-          <div class="min-w-0">
-            <h1 class="text-gray-900 mb-1">Edit Resource</h1>
-            <p class="text-gray-600 text-sm">修改 URL、名称和介绍</p>
-          </div>
-          <button
-            type="button"
-            class="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
-            @click="goBack"
-          >
-            Back
-          </button>
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+    <section class="border-b border-border pb-8">
+      <div class="grid gap-6 md:grid-cols-12 md:items-end">
+        <div class="md:col-span-8">
+          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Edit Resource</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Update URL, name, and description.</p>
+        </div>
+        <div class="md:col-span-4 md:flex md:justify-end md:items-end">
+          <Button type="button" variant="outline" size="sm" class="rounded-none" @click="goBack">Back</Button>
         </div>
       </div>
+    </section>
 
-      <div class="bg-white rounded-2xl shadow-xl p-6">
-        <div v-if="loading" class="text-gray-600 text-sm">Loading…</div>
+    <Card as="section" :hoverable="false" class="rounded-none">
+      <div class="p-6">
+        <div v-if="loading" class="text-sm text-muted-foreground">Loading…</div>
         <div v-else class="space-y-4">
           <div>
-            <label class="block text-gray-700 mb-2">URL</label>
-            <input
-              v-model="form.url"
-              type="url"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="https://www.youtube.com/watch?v=..."
-            />
+            <label class="block text-sm font-semibold text-foreground mb-2">URL</label>
+            <Input v-model="form.url" type="url" class="h-10 rounded-none" placeholder="https://..." />
           </div>
 
           <div>
-            <label class="block text-gray-700 mb-2">Name</label>
-            <input
-              v-model="form.title"
-              type="text"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Resource title"
-            />
+            <label class="block text-sm font-semibold text-foreground mb-2">Name</label>
+            <Input v-model="form.title" type="text" class="h-10 rounded-none" placeholder="Resource title" />
           </div>
 
           <div>
-            <label class="block text-gray-700 mb-2">Description</label>
+            <label class="block text-sm font-semibold text-foreground mb-2">Description</label>
             <textarea
               v-model="form.description"
               rows="5"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 rounded-none border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
               placeholder="Resource description"
             />
           </div>
@@ -53,31 +39,30 @@
           <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
 
           <div class="flex gap-3 justify-end">
-            <button
+            <Button type="button" variant="outline" size="sm" class="rounded-none" @click="goBack">Cancel</Button>
+            <Button
               type="button"
-              class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-              @click="goBack"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="outline"
+              size="sm"
+              class="rounded-none bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
               :disabled="saving || !form.url || !form.title"
               @click="save"
             >
               {{ saving ? 'Saving…' : 'Save' }}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import Card from '../components/ui/Card.vue'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 import { getMyResourceDetail, updateMyResource } from '../api/resource'
 
 const route = useRoute()
@@ -109,9 +94,9 @@ onMounted(async () => {
   try {
     const detail = await getMyResourceDetail(resourceId)
     form.value = {
-      url: String(detail.url || ''),
+      url: String((detail as any).source_url || ''),
       title: String(detail.title || ''),
-      description: String(detail.description || ''),
+      description: String((detail as any).summary || ''),
     }
   } catch (e: any) {
     const msg = e?.response?.data?.detail || e?.message || 'Failed to load resource'
@@ -127,9 +112,8 @@ async function save() {
   saving.value = true
   try {
     await updateMyResource(resourceId, {
-      url: form.value.url,
       title: form.value.title,
-      description: form.value.description,
+      summary: form.value.description,
     })
     router.push({ name: 'my-resources' })
   } catch (e: any) {

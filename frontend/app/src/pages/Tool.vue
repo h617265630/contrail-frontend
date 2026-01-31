@@ -1,84 +1,93 @@
 <template>
-  <div class="min-h-screen bg-slate-50">
-    <div class="max-w-7xl mx-auto p-6">
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+    <section class="border-b border-border pb-8">
+      <div class="grid gap-6 md:grid-cols-12 md:items-end">
+        <div class="md:col-span-8">
+          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Tools</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">查看数据库数据</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
       <div class="grid gap-6 lg:grid-cols-12">
         <aside class="lg:col-span-3">
-          <div class="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-            <p class="text-sm font-semibold text-slate-900">Tools</p>
-            <p class="text-xs text-slate-500 mt-1">查看数据库数据</p>
+          <Card className="rounded-none" :hoverable="false" padded>
+            <p class="text-sm font-semibold text-foreground">Tools</p>
+            <p class="text-xs text-muted-foreground mt-1">查看数据库数据</p>
 
             <div class="mt-4 space-y-2">
-              <button
+              <Button
                 type="button"
-                class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold"
-                :class="activeTab === 'category' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
+                variant="ghost"
+                class="w-full justify-start rounded-none"
+                :class="activeTab === 'category' ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
                 @click="selectTab('category')"
               >
                 Category
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold"
-                :class="activeTab === 'resource' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
+                variant="ghost"
+                class="w-full justify-start rounded-none"
+                :class="activeTab === 'resource' ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
                 @click="selectTab('resource')"
               >
                 Resource
-              </button>
-                 <button
+              </Button>
+              <Button
                 type="button"
-                class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold"
-                :class="activeTab === 'learningpath' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
+                variant="ghost"
+                class="w-full justify-start rounded-none"
+                :class="activeTab === 'learningpath' ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
                 @click="selectTab('learningpath')"
               >
                 LearningPath
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold"
-                :class="activeTab === 'myresource' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
+                variant="ghost"
+                class="w-full justify-start rounded-none"
+                :class="activeTab === 'myresource' ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
                 @click="selectTab('myresource')"
               >
                 MyResource
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold"
-                :class="activeTab === 'mylearningpath' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-50'"
+                variant="ghost"
+                class="w-full justify-start rounded-none"
+                :class="activeTab === 'mylearningpath' ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
                 @click="selectTab('mylearningpath')"
               >
                 MyPath
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
         </aside>
 
-        <main class="lg:col-span-9">
-          <div class="rounded-2xl bg-white p-5 shadow-sm border border-slate-100">
+        <main class="lg:col-span-9 space-y-4">
+          <Card className="rounded-none" :hoverable="false" padded>
             <div class="flex items-center justify-between gap-3">
               <div>
-                <h1 class="text-xl font-semibold text-slate-900">{{ title }}</h1>
-                <p class="text-sm text-slate-600 mt-1">{{ subtitle }}</p>
+                <h2 class="text-xl font-semibold text-foreground">{{ title }}</h2>
+                <p class="text-sm text-muted-foreground mt-1">{{ subtitle }}</p>
               </div>
-              <button
-                type="button"
-                class="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-black disabled:opacity-50"
-                :disabled="loading"
-                @click="reload"
-              >
+              <Button type="button" variant="outline" size="sm" class="rounded-none" :disabled="loading" @click="reload">
                 Reload
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
 
-          <div v-if="loading" class="mt-4 rounded-2xl bg-white p-6 shadow-sm text-slate-700 border border-slate-100">
-            Loading…
-          </div>
+          <Card v-if="loading" className="rounded-none" :hoverable="false" padded>
+            <div class="text-sm text-muted-foreground">Loading…</div>
+          </Card>
 
-          <div v-else-if="error" class="mt-4 rounded-2xl bg-white p-6 shadow-sm text-red-600 border border-slate-100">
-            {{ error }}
-          </div>
+          <Card v-else-if="error" className="rounded-none" :hoverable="false" padded>
+            <div class="text-sm text-destructive">{{ error }}</div>
+          </Card>
 
-          <div v-else class="mt-4 rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
+          <Card v-else className="rounded-none" :hoverable="false" padded>
             <div v-if="activeTab === 'resource' || activeTab === 'myresource'">
               <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
@@ -98,7 +107,7 @@
                       <td class="py-2 pr-3 whitespace-nowrap">{{ r.id }}</td>
                       <td class="py-2 pr-3">{{ r.title }}</td>
                       <td class="py-2 pr-3 whitespace-nowrap">{{ r.resource_type }}</td>
-                      <td class="py-2 pr-3 whitespace-nowrap">{{ r.platform || '—' }}</td>
+                      <td class="py-2 pr-3 whitespace-nowrap">{{ formatPlatform(r.platform) }}</td>
                       <td class="py-2 pr-3 whitespace-nowrap">{{ r.category_name || r.category_id || '—' }}</td>
                       <td class="py-2 pr-3">{{ r.summary || '—' }}</td>
                       <td class="py-2 pr-3">
@@ -156,10 +165,10 @@
                 </table>
               </div>
             </div>
-          </div>
+          </Card>
         </main>
       </div>
-    </div>
+    </section>
   </div>
 </template>
 
@@ -168,6 +177,9 @@ import { computed, onMounted, ref } from 'vue'
 import { listCategories, type Category } from '../api/category'
 import { listMyLearningPaths, listPublicLearningPaths, type PublicLearningPath } from '../api/learningPath'
 import { listMyResources, listResources, type DbResource } from '../api/resource'
+import Card from '../components/ui/Card.vue'
+import { Button } from '../components/ui/button'
+import { formatPlatform } from '../utils/platform'
 
 type Tab = 'resource' | 'myresource' | 'category' | 'learningpath' | 'mylearningpath'
 

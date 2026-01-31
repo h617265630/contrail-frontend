@@ -1,59 +1,61 @@
 <template>
-  <div class="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-6">
-    <div class="max-w-7xl mx-auto space-y-8">
-      <div class="bg-white rounded-2xl shadow-xl p-8">
-        <div class="flex items-start justify-between gap-4">
-          <div class="min-w-0">
-            <h1 class="text-gray-900 mb-2">分类：{{ category }}</h1>
-            <p class="text-gray-600">以瀑布流方式展示该分类下的 learning paths</p>
-          </div>
-          <RouterLink
-            to="/learningpool"
-            class="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            返回 LearningPool
-          </RouterLink>
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+    <section class="border-b border-border pb-8">
+      <div class="grid gap-6 md:grid-cols-12 md:items-end">
+        <div class="md:col-span-8">
+          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Category: {{ category }}</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Browse learning paths under this category.</p>
+        </div>
+        <div class="md:col-span-4 md:flex md:justify-end md:items-end">
+          <Button :as="RouterLinkComp" to="/learningpool" variant="outline" size="sm" class="rounded-none">Back</Button>
+        </div>
+      </div>
+    </section>
+
+    <section class="space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Results</h2>
+          <p class="text-sm text-muted-foreground">{{ filteredPaths.length }} paths</p>
         </div>
       </div>
 
-      <section class="space-y-4">
-        <div class="flex items-center justify-between">
-          <h2 class="text-xl font-semibold text-gray-900">结果</h2>
-          <span class="text-sm text-gray-500">{{ filteredPaths.length }} paths</span>
-        </div>
-
-        <div v-if="filteredPaths.length" class="columns-1 sm:columns-2 lg:columns-3 gap-4">
-          <RouterLink
-            v-for="p in filteredPaths"
-            :key="p.id"
-            :to="{ name: 'learningpath', params: { id: p.id } }"
-            class="block mb-4 break-inside-avoid"
-          >
-            <Card as="article" :hoverable="true">
-              <div class="h-32 bg-gray-100">
-                <img :src="p.thumbnail" :alt="p.title" class="w-full h-full object-cover" />
+      <div v-if="filteredPaths.length" class="columns-1 sm:columns-2 lg:columns-3 gap-4">
+        <RouterLink
+          v-for="p in filteredPaths"
+          :key="p.id"
+          :to="{ name: 'learningpath', params: { id: p.id } }"
+          class="block mb-4 break-inside-avoid"
+        >
+          <Card as="article" :hoverable="true" class="rounded-none overflow-hidden">
+            <div class="relative h-32 bg-muted">
+              <img :src="p.thumbnail" :alt="p.title" class="w-full h-full object-cover" />
+              <span
+                v-if="p.lpType"
+                class="absolute right-3 top-3 px-2 py-1 rounded-full border border-border bg-background text-[10px] font-semibold tracking-[0.14em] uppercase text-foreground"
+              >
+                {{ p.lpType }}
+              </span>
+            </div>
+            <div class="p-5 space-y-2">
+              <div class="flex items-start justify-between gap-2">
+                <h3 class="text-foreground font-semibold line-clamp-2" :title="p.title">{{ p.title }}</h3>
               </div>
-              <div class="p-5 space-y-2">
-                <div class="flex items-start justify-between gap-2">
-                  <h3 class="text-gray-900 font-semibold line-clamp-2" :title="p.title">{{ p.title }}</h3>
-                  <span v-if="p.isAI" class="px-2 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-semibold">AI</span>
-                </div>
-                <p class="text-gray-600 text-sm whitespace-pre-wrap">{{ p.description }}</p>
-                <div class="flex flex-wrap gap-2">
-                  <span class="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ p.category }}</span>
-                  <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs">{{ p.level }}</span>
-                  <span class="px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs">{{ p.items }} items</span>
-                </div>
+              <p class="text-muted-foreground text-sm whitespace-pre-wrap">{{ p.description }}</p>
+              <div class="flex flex-wrap gap-2">
+                <span class="px-2 py-1 rounded-none border border-border bg-background text-xs font-semibold text-foreground">{{ p.category }}</span>
+                <span class="px-2 py-1 rounded-none border border-border bg-background text-xs text-muted-foreground">{{ p.level }}</span>
+                <span class="px-2 py-1 rounded-none border border-border bg-background text-xs text-muted-foreground">{{ p.items }} items</span>
               </div>
-            </Card>
-          </RouterLink>
-        </div>
+            </div>
+          </Card>
+        </RouterLink>
+      </div>
 
-        <div v-else class="bg-white rounded-xl border border-gray-200 p-5 text-sm text-gray-700">
-          当前分类下没有 learning paths：{{ category }}。
-        </div>
-      </section>
-    </div>
+      <Card v-else as="section" :hoverable="false" class="rounded-none">
+        <div class="p-6 text-sm text-muted-foreground">No learning paths found for category: {{ category }}.</div>
+      </Card>
+    </section>
   </div>
 </template>
 
@@ -61,7 +63,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import Card from '../components/ui/Card.vue'
+import { Button } from '../components/ui/button'
 import { listPublicLearningPaths, mapPublicLearningPathToDisplayBase } from '../api/learningPath'
+
+const RouterLinkComp = RouterLink
 
 const route = useRoute()
 const category = computed(() => decodeURIComponent(String(route.params.category || '')))
@@ -75,7 +80,7 @@ type PoolCard = {
   items: number
   thumbnail: string
   hotScore: number
-  isAI: boolean
+  lpType: string
 }
 
 const dynamicPaths = ref<PoolCard[]>([])
@@ -108,7 +113,7 @@ function mapDbToPool(p: any): PoolCard {
     items: 0,
     thumbnail,
     hotScore: 50,
-    isAI: cat === 'AI',
+    lpType: String((p as any)?.type || '').trim(),
   }
 }
 

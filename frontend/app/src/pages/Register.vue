@@ -1,138 +1,152 @@
 <template>
-  <div class="min-h-[calc(100vh-120px)] flex items-center justify-center pt-6">
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-      <div class="text-center mb-8">
-        <h1 class="text-gray-900 mb-2">Create Account</h1>
-        <p class="text-gray-600">Sign up to get started</p>
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+    <section class="border-b border-border pb-8">
+      <div class="grid gap-6 md:grid-cols-12 md:items-end">
+        <div class="md:col-span-8">
+          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Register</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Sign up to get started</p>
+        </div>
       </div>
+    </section>
 
-      <form @submit.prevent="submit" class="space-y-6">
+    <section class="flex justify-center">
+      <Card className="w-full max-w-md" :hoverable="false" padded>
+        <form @submit.prevent="submit" class="space-y-6">
         <div>
-          <label for="name" class="block text-gray-700 mb-2">Username</label>
+          <label for="name" class="block text-sm font-medium text-foreground mb-2">Username</label>
           <div class="relative">
-            <User class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
+            <User class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
               id="name"
               type="text"
               v-model="form.username"
               @blur="onBlur('username')"
-              @input="onInput('username')"
               :class="[
-                'w-full pl-11 pr-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-                fieldErrors.username ? 'border-red-500 pt-2 pb-6' : 'border-gray-300 py-3',
+                'pl-9',
+                fieldErrors.username ? 'border-destructive' : '',
               ]"
               placeholder="your username"
+              @update:modelValue="onInput('username')"
             />
 
-            <span v-if="fieldErrors.username" class="absolute left-11 bottom-1 text-xs text-red-500 pointer-events-none">
+            <span v-if="fieldErrors.username" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none">
               {{ fieldErrors.username }}
             </span>
           </div>
         </div>
 
         <div>
-          <label for="email" class="block text-gray-700 mb-2">Email</label>
+          <label for="email" class="block text-sm font-medium text-foreground mb-2">Email</label>
           <div class="relative">
-            <Mail class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
+            <Mail class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
               id="email"
               type="email"
               v-model="form.email"
               @blur="onBlur('email')"
-              @input="onInput('email')"
               :class="[
-                'w-full pl-11 pr-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-                fieldErrors.email ? 'border-red-500 pt-2 pb-6' : 'border-gray-300 py-3',
+                'pl-9',
+                fieldErrors.email ? 'border-destructive' : '',
               ]"
               placeholder="you@example.com"
+              @update:modelValue="onInput('email')"
             />
 
-            <span v-if="fieldErrors.email" class="absolute left-11 bottom-1 text-xs text-red-500 pointer-events-none">
+            <span v-if="fieldErrors.email" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none">
               {{ fieldErrors.email }}
             </span>
           </div>
         </div>
 
         <div>
-          <label for="password" class="block text-gray-700 mb-2">Password</label>
+          <label for="password" class="block text-sm font-medium text-foreground mb-2">Password</label>
           <div class="relative">
-            <Lock class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
+            <Lock class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
               id="password"
               :type="showPassword ? 'text' : 'password'"
               v-model="form.password"
               @blur="onBlur('password')"
-              @input="onInput('password')"
               :class="[
-                'w-full pl-11 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-                fieldErrors.password ? 'border-red-500 pt-2 pb-6' : 'border-gray-300 py-3',
+                'pl-9 pr-10',
+                fieldErrors.password ? 'border-destructive' : '',
               ]"
               placeholder="Create a password"
+              @update:modelValue="onInput('password')"
             />
-            <button type="button" @click="showPassword = !showPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-              <EyeOff v-if="showPassword" class="w-5 h-5" />
-              <Eye v-else class="w-5 h-5" />
-            </button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              class="absolute right-1 top-1/2 -translate-y-1/2"
+              @click="showPassword = !showPassword"
+            >
+              <EyeOff v-if="showPassword" class="w-4 h-4" />
+              <Eye v-else class="w-4 h-4" />
+            </Button>
 
-            <span v-if="fieldErrors.password" class="absolute left-11 bottom-1 text-xs text-red-500 pointer-events-none">
+            <span v-if="fieldErrors.password" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none">
               {{ fieldErrors.password }}
             </span>
           </div>
         </div>
 
         <div>
-          <label for="confirmPassword" class="block text-gray-700 mb-2">Confirm Password</label>
+          <label for="confirmPassword" class="block text-sm font-medium text-foreground mb-2">Confirm Password</label>
           <div class="relative">
-            <Lock class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
+            <Lock class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
               id="confirmPassword"
               :type="showConfirmPassword ? 'text' : 'password'"
               v-model="form.confirm_password"
               @blur="onBlur('confirm_password')"
-              @input="onInput('confirm_password')"
               :class="[
-                'w-full pl-11 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-                fieldErrors.confirm_password ? 'border-red-500 pt-2 pb-6' : 'border-gray-300 py-3',
+                'pl-9 pr-10',
+                fieldErrors.confirm_password ? 'border-destructive' : '',
               ]"
               placeholder="Confirm your password"
+              @update:modelValue="onInput('confirm_password')"
             />
-            <button type="button" @click="showConfirmPassword = !showConfirmPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-              <EyeOff v-if="showConfirmPassword" class="w-5 h-5" />
-              <Eye v-else class="w-5 h-5" />
-            </button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              class="absolute right-1 top-1/2 -translate-y-1/2"
+              @click="showConfirmPassword = !showConfirmPassword"
+            >
+              <EyeOff v-if="showConfirmPassword" class="w-4 h-4" />
+              <Eye v-else class="w-4 h-4" />
+            </Button>
 
-            <span v-if="fieldErrors.confirm_password" class="absolute left-11 bottom-1 text-xs text-red-500 pointer-events-none">
+            <span v-if="fieldErrors.confirm_password" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none">
               {{ fieldErrors.confirm_password }}
             </span>
           </div>
         </div>
 
         <div class="flex items-start">
-          <input type="checkbox" id="terms" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1" />
-          <label for="terms" class="ml-2 text-gray-700">
-            I agree to the <a href="#" class="text-blue-600 hover:text-blue-700">Terms of Service</a> and
-            <a href="#" class="text-blue-600 hover:text-blue-700"> Privacy Policy</a>
+          <input type="checkbox" id="terms" class="w-4 h-4 border-input rounded-md mt-1" />
+          <label for="terms" class="ml-2 text-sm text-muted-foreground">
+            I agree to the <a href="#" class="text-foreground underline underline-offset-4">Terms of Service</a> and
+            <a href="#" class="text-foreground underline underline-offset-4"> Privacy Policy</a>
           </label>
         </div>
 
-        <button
-          type="submit"
-          :disabled="loading || !isFormValid"
-          class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-        >
+        <Button type="submit" :disabled="loading || !isFormValid" class="w-full rounded-md">
           {{ loading ? 'Creating...' : 'Create Account' }}
-        </button>
-        <p v-if="formError" class="text-red-600 text-sm text-center">{{ formError }}</p>
-        <p v-if="successMessage" class="text-green-600 text-sm text-center">{{ successMessage }}</p>
-      </form>
+        </Button>
+        <p v-if="formError" class="text-destructive text-sm text-center">{{ formError }}</p>
+        <p v-if="successMessage" class="text-foreground text-sm text-center">{{ successMessage }}</p>
+        </form>
 
       <div class="mt-6 text-center">
-        <p class="text-gray-600">
+        <p class="text-sm text-muted-foreground">
           Already have an account?
-          <RouterLink to="/login" class="text-blue-600 hover:text-blue-700"> Sign in</RouterLink>
+          <RouterLink to="/login" class="text-foreground underline underline-offset-4"> Sign in</RouterLink>
         </p>
       </div>
-    </div>
+      </Card>
+    </section>
   </div>
 </template>
 
@@ -141,6 +155,9 @@ import { computed, reactive, ref, watch } from 'vue'
 import { Eye, EyeOff, Lock, Mail, User } from 'lucide-vue-next'
 import { register } from '../api/auth'
 import { useRouter, RouterLink } from 'vue-router'
+import Card from '../components/ui/Card.vue'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 
 defineOptions({
   name: 'SignUpSection',

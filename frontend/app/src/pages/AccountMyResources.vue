@@ -1,47 +1,49 @@
 <template>
-  <div class="space-y-4">
-    <div class="rounded-2xl bg-white p-5 shadow-sm border border-slate-100">
-      <h1 class="text-xl font-semibold text-slate-900">My Resources</h1>
-      <p class="text-sm text-slate-600 mt-1">Resources you added</p>
+  <div class="space-y-6">
+    <div>
+      <h3 class="text-lg font-semibold text-foreground">My Resources</h3>
+      <p class="mt-2 text-sm text-muted-foreground">Resources you added</p>
     </div>
 
-    <div v-if="loading" class="rounded-2xl bg-white p-6 shadow-sm text-slate-700">Loading…</div>
+    <div v-if="loading" class="rounded-md border border-border bg-muted/30 p-6 text-sm text-muted-foreground">Loading…</div>
 
-    <div v-else-if="filtered.length === 0" class="rounded-2xl bg-white p-6 shadow-sm">
-      <p class="text-slate-700 font-semibold">No resources yet</p>
-      <RouterLink to="/resources" class="inline-flex mt-4 px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700">
+    <div v-else-if="filtered.length === 0" class="rounded-md border border-border bg-muted/30 p-6">
+      <p class="text-sm font-semibold text-foreground">No resources yet</p>
+      <Button :as="RouterLinkComp" to="/resources" size="sm" class="mt-4 rounded-md">
         Add Resource
-      </RouterLink>
+      </Button>
     </div>
 
-    <div v-else class="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-      <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-4">
+    <div v-else class="space-y-4">
+      <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div class="relative flex-1 w-full">
-          <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-          <input
-            v-model="q"
-            type="text"
-            placeholder="Search my resources..."
-            class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input v-model="q" type="text" placeholder="Search my resources..." class="h-10 w-full rounded-md pl-9" />
         </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <button
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Card
           v-for="r in filtered"
           :key="r.id"
-          type="button"
-          class="text-left rounded-xl border border-slate-100 bg-slate-50 hover:bg-slate-100 overflow-hidden"
+          as="article"
+          :hoverable="true"
+          className="rounded-md cursor-pointer"
           @click="open(r.id)"
         >
-          <img :src="r.thumbnail" :alt="r.title" class="w-full h-36 object-cover" />
-          <div class="p-4 space-y-2">
-            <p class="font-semibold text-slate-900 line-clamp-1">{{ r.title }}</p>
-            <p class="text-sm text-slate-600 line-clamp-2">{{ r.description || '—' }}</p>
-            <div class="text-xs text-slate-500">{{ r.source }}</div>
+          <div class="relative h-36 bg-muted">
+            <img :src="r.thumbnail" :alt="r.title" class="h-full w-full object-cover" />
+            <div class="absolute bottom-3 left-3">
+              <span class="px-2 py-1 border border-border bg-background/90 text-foreground text-xs">
+                {{ r.source }}
+              </span>
+            </div>
           </div>
-        </button>
+          <div class="p-4 space-y-2">
+            <p class="text-sm font-semibold text-foreground line-clamp-1">{{ r.title }}</p>
+            <p class="text-sm text-muted-foreground line-clamp-2">{{ r.description || '—' }}</p>
+          </div>
+        </Card>
       </div>
     </div>
   </div>
@@ -52,8 +54,12 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { Search } from 'lucide-vue-next'
 import { listMyResources, type DbResource } from '../api/resource'
+import Card from '../components/ui/Card.vue'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 
 const router = useRouter()
+const RouterLinkComp = RouterLink
 const loading = ref(false)
 const q = ref('')
 
@@ -69,12 +75,13 @@ const items = ref<Ui[]>([])
 const fallbackThumb = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=225&fit=crop'
 
 function mapDb(r: DbResource): Ui {
+  const anyR = r as any
   return {
     id: r.id,
     title: r.title,
-    description: (r.description || '').trim(),
-    source: (r.source || '').trim() || 'youtube',
-    thumbnail: (r.thumbnail_url || '').trim() || fallbackThumb,
+    description: String(anyR.summary || anyR.description || '').trim(),
+    source: String(anyR.platform || anyR.source || '').trim() || '—',
+    thumbnail: String(anyR.thumbnail || anyR.thumbnail_url || '').trim() || fallbackThumb,
   }
 }
 

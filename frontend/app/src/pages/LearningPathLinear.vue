@@ -1,46 +1,50 @@
 <template>
-  <div class="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-6">
-    <div class="max-w-5xl mx-auto">
-      <!-- Banner (similar to /learningpath/:id detail banner) -->
-      <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
-        <div class="h-44 bg-gray-100">
-          <img v-if="path" :src="path.thumbnail" :alt="path.title" class="w-full h-full object-cover" />
+  <div class="mx-auto max-w-7xl space-y-6 px-4 py-6">
+    <section class="pb-0">
+      <div class="grid gap-6 md:grid-cols-12 md:items-end">
+        <div class="md:col-span-8">
+          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">{{ path?.title || learningPath.title }}</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
+            {{ path?.description || learningPath.description }}
+          </p>
         </div>
-        <div class="p-8">
-          <div class="flex flex-col gap-4">
-            <div class="min-w-0">
-              <h1 class="text-gray-900 mb-2">{{ path?.title || learningPath.title }}</h1>
-              <p class="text-gray-600 whitespace-pre-wrap">
-                {{ path?.description || learningPath.description }}
-              </p>
-              <div class="mt-4 flex flex-wrap gap-2 text-sm">
-                <span v-if="path" class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold">{{ path.category }}</span>
-                <span v-if="path" class="px-3 py-1 rounded-full bg-gray-100 text-gray-700">{{ path.level }}</span>
-                <span v-if="path" class="px-3 py-1 rounded-full bg-green-50 text-green-700">{{ path.items }} items</span>
-              </div>
-            </div>
-
-            <!-- Overall Progress -->
-            <div>
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-gray-700">Overall Progress</span>
-                <span class="text-blue-600">{{ learningPath.totalProgress }}%</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-3">
-                <div
-                  class="bg-blue-600 h-3 rounded-full transition-all duration-300"
-                  :style="{ width: `${learningPath.totalProgress}%` }"
-                />
-              </div>
-            </div>
+        <div class="md:col-span-4 md:flex md:justify-end md:items-end">
+          <div class="text-right">
+            <p class="text-xs font-medium tracking-[0.14em] uppercase text-muted-foreground">Overall Progress</p>
+            <p class="mt-2 text-2xl font-semibold text-foreground">{{ learningPath.totalProgress }}%</p>
           </div>
         </div>
       </div>
 
+      <div v-if="path" class="mt-6 flex flex-wrap gap-2 text-xs">
+        <span class="px-2 py-1 border border-border bg-background text-foreground font-semibold">{{ path.category }}</span>
+        <span class="px-2 py-1 border border-border bg-background text-muted-foreground">{{ path.level }}</span>
+        <span class="px-2 py-1 border border-border bg-background text-muted-foreground">{{ path.items }} items</span>
+      </div>
+
+      <div class="mt-6">
+        <div class="h-2 w-full bg-muted">
+          <div class="h-2 bg-foreground transition-all duration-300" :style="{ width: `${learningPath.totalProgress}%` }" />
+        </div>
+      </div>
+    </section>
+
+    <Card as="section" :hoverable="false" className="-mt-6 rounded-none overflow-hidden" v-if="path">
+      <div class="relative h-56 md:h-64 bg-muted">
+        <img :src="path.thumbnail" :alt="path.title" class="w-full h-full object-cover" />
+        <span
+          v-if="path.type"
+          class="absolute right-3 top-3 px-2 py-1 rounded-full border border-border bg-background text-[10px] font-semibold tracking-[0.14em] uppercase text-foreground"
+        >
+          {{ path.type }}
+        </span>
+      </div>
+    </Card>
+
       <!-- Learning Path Timeline (from temp.vue) -->
       <div class="relative">
         <!-- Vertical Line -->
-        <div class="absolute left-6 top-0 bottom-0 w-0.5 bg-blue-200" />
+        <div class="absolute left-6 top-0 bottom-0 w-0.5 bg-border" />
 
         <!-- Path Items -->
         <div class="space-y-8">
@@ -52,10 +56,10 @@
                   class="w-12 h-12 rounded-full flex items-center justify-center"
                   :class="
                     item.completed
-                      ? 'bg-green-500 text-white'
+                      ? 'bg-foreground text-background'
                       : item.progress > 0
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-white border-4 border-gray-300 text-gray-400'
+                        ? 'bg-foreground text-background'
+                        : 'bg-background border-4 border-border text-muted-foreground'
                   "
                 >
                   <CheckCircle2 v-if="item.completed" class="w-6 h-6" />
@@ -64,21 +68,28 @@
               </div>
 
               <!-- Card Content - 水平分为左右两个子卡片 -->
-              <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
+              <Card :hoverable="false" class="rounded-none overflow-hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border">
                   <!-- 左边的Card - 内容展示 -->
                   <div class="p-6">
                     <!-- 缩略图 -->
-                    <div class="relative mb-4 rounded-lg overflow-hidden bg-gray-100 group">
+                    <div
+                      class="relative mb-4 overflow-hidden bg-muted group cursor-pointer"
+                      role="button"
+                      tabindex="0"
+                      @click="goToResource(item)"
+                      @keydown.enter.prevent="goToResource(item)"
+                      @keydown.space.prevent="goToResource(item)"
+                    >
                       <img :src="item.thumbnail" :alt="item.title" class="w-full h-48 object-cover" />
 
                       <!-- 视频播放图标覆盖层 -->
                       <div
                         v-if="item.type === 'video'"
-                        class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-                          <Play class="w-8 h-8 text-blue-600 ml-1" />
+                        <div class="w-16 h-16 bg-background rounded-full flex items-center justify-center">
+                          <Play class="w-8 h-8 text-foreground ml-1" />
                         </div>
                       </div>
 
@@ -93,37 +104,33 @@
 
                     <!-- 标题和描述 -->
                     <div class="mb-4">
-                      <h3 class="text-gray-900 mb-2">{{ item.title }}</h3>
-                      <p class="text-gray-600">{{ item.summary }}</p>
+                      <h3 class="text-foreground mb-2">{{ item.title }}</h3>
+                      <p class="text-sm text-muted-foreground">{{ item.summary }}</p>
                     </div>
 
                     <!-- Continue Learning 按钮 -->
-                    <button
-                      type="button"
-                      class="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                      @click="goToResource(item)"
-                    >
+                    <Button type="button" class="w-full rounded-none" @click="goToResource(item)">
                       <Play v-if="item.type === 'video'" class="w-4 h-4" />
                       {{ item.progress === 0 ? 'Start Learning' : 'Continue Learning' }}
-                    </button>
+                    </Button>
                   </div>
 
                   <!-- 右边的Card - 进度和笔记 -->
-                  <div class="p-6 bg-gray-50">
+                  <div class="p-6 bg-muted/30">
                     <!-- 学习进度 -->
                     <div class="mb-6">
-                      <h4 class="text-gray-900 mb-3">Learning Progress</h4>
+                      <h4 class="text-foreground mb-3">Learning Progress</h4>
 
                       <!-- 进度条 -->
                       <div class="mb-4">
                         <div class="flex items-center justify-between mb-2">
-                          <span class="text-sm text-gray-600">Completion</span>
-                          <span class="text-sm text-blue-600">{{ item.progress }}%</span>
+                          <span class="text-sm text-muted-foreground">Completion</span>
+                          <span class="text-sm text-foreground">{{ item.progress }}%</span>
                         </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="h-2 w-full bg-muted">
                           <div
-                            class="h-2.5 rounded-full transition-all duration-300"
-                            :class="item.completed ? 'bg-green-500' : 'bg-blue-500'"
+                            class="h-2 transition-all duration-300"
+                            :class="item.completed ? 'bg-foreground' : 'bg-foreground'"
                             :style="{ width: `${item.progress}%` }"
                           />
                         </div>
@@ -132,24 +139,24 @@
                       <!-- 详细进度信息 -->
                       <div class="space-y-2">
                         <div v-if="item.type === 'video'" class="flex items-center justify-between text-sm">
-                          <span class="text-gray-600">Duration:</span>
-                          <span class="text-gray-900">{{ item.duration || '—' }}</span>
+                          <span class="text-muted-foreground">Duration:</span>
+                          <span class="text-foreground">{{ item.duration || '—' }}</span>
                         </div>
                         <div v-else class="flex items-center justify-between text-sm">
-                          <span class="text-gray-600">Pages:</span>
-                          <span class="text-gray-900">{{ typeof item.totalPages === 'number' ? item.totalPages : '—' }}</span>
+                          <span class="text-muted-foreground">Pages:</span>
+                          <span class="text-foreground">{{ typeof item.totalPages === 'number' ? item.totalPages : '—' }}</span>
                         </div>
 
                         <div class="flex items-center justify-between text-sm">
-                          <span class="text-gray-600">Status:</span>
+                          <span class="text-muted-foreground">Status:</span>
                           <span
-                            class="px-2 py-1 rounded-full text-xs"
+                            class="px-2 py-1 border border-border bg-background text-xs"
                             :class="
                               item.completed
-                                ? 'bg-green-100 text-green-700'
+                                ? 'text-foreground'
                                 : item.progress > 0
-                                  ? 'bg-blue-100 text-blue-700'
-                                  : 'bg-gray-200 text-gray-700'
+                                  ? 'text-foreground'
+                                  : 'text-muted-foreground'
                             "
                           >
                             {{ item.completed ? 'Completed' : item.progress > 0 ? 'In Progress' : 'Not Started' }}
@@ -161,45 +168,33 @@
                     <!-- 笔记区域 -->
                     <div>
                       <div class="flex items-center gap-2 mb-3">
-                        <StickyNote class="w-4 h-4 text-gray-600" />
-                        <h4 class="text-gray-900">My Notes</h4>
+                        <StickyNote class="w-4 h-4 text-muted-foreground" />
+                        <h4 class="text-foreground">My Notes</h4>
                       </div>
 
                       <div v-if="editingNotes === item.id">
                         <textarea
                           v-model="noteDraft"
-                          class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                          class="w-full resize-none border border-border bg-background p-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-none"
                           rows="6"
                           placeholder="Add your notes here..."
                         />
                         <div class="flex gap-2 mt-2">
-                          <button
-                            type="button"
-                            class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
-                            @click="saveNotes(item.id)"
-                          >
-                            Save
-                          </button>
-                          <button
-                            type="button"
-                            class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors text-sm"
-                            @click="cancelNotes()"
-                          >
-                            Cancel
-                          </button>
+                          <Button type="button" size="sm" class="rounded-none" @click="saveNotes(item.id)">Save</Button>
+                          <Button type="button" variant="outline" size="sm" class="rounded-none" @click="cancelNotes()">Cancel</Button>
                         </div>
                       </div>
 
                       <div v-else class="cursor-pointer" @click="startEdit(item.id)">
                         <div
                           v-if="item.notes"
-                          class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-gray-700 hover:bg-yellow-100 transition-colors min-h-30 whitespace-pre-wrap"
+                          class="min-h-30 whitespace-pre-wrap border border-border bg-muted/30 p-3 text-sm text-foreground"
                         >
                           {{ item.notes }}
                         </div>
                         <div
                           v-else
-                          class="p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-400 hover:border-gray-400 hover:text-gray-500 transition-colors min-h-30 flex items-center justify-center"
+                          class="min-h-30 flex items-center justify-center border border-dashed border-border p-3 text-sm text-muted-foreground"
                         >
                           Click to add notes...
                         </div>
@@ -207,14 +202,14 @@
                     </div>
                   </div>
                 </div>
-              </div>
+              </Card>
             </div>
 
             <!-- Arrow between cards -->
             <div v-if="index < learningPath.items.length - 1" class="relative pl-16 py-4">
               <div class="absolute left-6 top-0 bottom-0 flex items-center justify-center">
                 <div class="flex flex-col items-center">
-                  <ArrowDown class="w-6 h-6 text-blue-400 animate-bounce" />
+                  <ArrowDown class="w-6 h-6 text-muted-foreground animate-bounce" />
                 </div>
               </div>
             </div>
@@ -225,51 +220,42 @@
         <div class="relative pl-16 mt-8">
           <div class="absolute left-0 top-6 w-12 h-12 flex items-center justify-center">
             <div
-              class="w-12 h-12 rounded-full flex items-center justify-center bg-linear-to-br from-yellow-400 to-orange-500 text-white shadow-lg"
+              class="w-12 h-12 rounded-full flex items-center justify-center bg-foreground text-background"
             >
               <Award class="w-6 h-6" />
             </div>
           </div>
 
-          <div class="bg-linear-to-br from-purple-50 to-pink-50 rounded-xl shadow-lg p-8 border-2 border-purple-200">
+          <Card :hoverable="false" class="rounded-none p-8">
             <div class="text-center">
               <div class="flex items-center justify-center gap-2 mb-4">
-                <Sparkles class="w-8 h-8 text-purple-600" />
-                <h2 class="text-gray-900">Congratulations!</h2>
-                <Sparkles class="w-8 h-8 text-purple-600" />
+                <Sparkles class="w-6 h-6 text-muted-foreground" />
+                <h2 class="text-foreground">Congratulations!</h2>
+                <Sparkles class="w-6 h-6 text-muted-foreground" />
               </div>
 
-              <p class="text-gray-700 mb-4 text-lg">🎉 您已完成整个学习路径的旅程！</p>
+              <p class="text-foreground mb-4 text-lg">您已完成整个学习路径的旅程！</p>
 
-              <div class="space-y-2 text-gray-600 mb-6">
+              <div class="space-y-2 text-muted-foreground mb-6">
                 <p>
-                  从这里开始，您已经掌握了 <span class="text-purple-600">{{ learningPath.title }}</span> 的所有核心知识。
+                  从这里开始，您已经掌握了 <span class="text-foreground">{{ learningPath.title }}</span> 的所有核心知识。
                 </p>
                 <p>每一步的努力都值得骄傲，每一个笔记都是您成长的见证。</p>
-                <p class="text-gray-700">继续保持这份热情，将所学应用到实践中，创造属于您的精彩项目！</p>
+                <p class="text-foreground">继续保持这份热情，将所学应用到实践中，创造属于您的精彩项目！</p>
               </div>
 
-              <div class="flex items-center justify-center gap-4">
-                <button
-                  type="button"
-                  class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-                >
+              <div class="flex flex-wrap items-center justify-center gap-2">
+                <Button type="button" size="sm" class="rounded-none">
                   <Award class="w-4 h-4" />
                   View Certificate
-                </button>
-                <button
-                  type="button"
-                  class="px-6 py-3 bg-white text-purple-600 border-2 border-purple-600 rounded-lg hover:bg-purple-50 transition-colors"
-                >
-                  Start New Path
-                </button>
+                </Button>
+                <Button type="button" variant="outline" size="sm" class="rounded-none">Start New Path</Button>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
       </div>
     </div>
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -290,6 +276,8 @@ import {
 import { getMyLearningPathDetail, type MyLearningPathDetail } from '../api/learningPath'
 import { getMyResourceDetail, type DbResourceDetail } from '../api/resource'
 import { listMyProgressForLearningPath, type ProgressRow } from '../api/progress'
+import Card from '../components/ui/Card.vue'
+import { Button } from '../components/ui/button'
 
 type PathItem = {
   id: number
@@ -351,6 +339,7 @@ const path = computed(() => {
     title: lp.value.title,
     description: lp.value.description || '',
     thumbnail: (cover?.thumbnail || '').trim(),
+    type: String((lp.value as any)?.type || '').trim(),
     category: lp.value.category_name || 'My Paths',
     level: lp.value.is_public ? 'Public' : 'Private',
     items: (lp.value.path_items || []).length,

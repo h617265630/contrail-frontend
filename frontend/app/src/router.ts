@@ -27,6 +27,8 @@ const LearningPathEdit = () => import('./pages/LearningPathEdit.vue')
 const Notification = () => import('./pages/Notification.vue')
 const Creator = () => import('./pages/Creator.vue')
 
+const UiUxProMax = () => import('./pages/UiUxProMax.vue')
+
 const Account = () => import('./pages/Account.vue')
 const AccountMyResources = () => import('./pages/AccountMyResources.vue')
 const AccountMyPaths = () => import('./pages/AccountMyPaths.vue')
@@ -35,6 +37,9 @@ const AccountChangePassword = () => import('./pages/AccountChangePassword.vue')
 const AccountPlan = () => import('./pages/AccountPlan.vue')
 
 const About = () => import('./pages/About.vue')
+const AboutResources = () => import('./pages/AboutResources.vue')
+const AboutLearningPaths = () => import('./pages/AboutLearningPaths.vue')
+const AboutProgress = () => import('./pages/AboutProgress.vue')
 const Plan = () => import('./pages/Plan.vue')
 const Tool = () => import('./pages/Tool.vue')
 
@@ -112,6 +117,9 @@ const routes: RouteRecordRaw[] = [
   { path: '/plan', name: 'plan', component: Plan },
   { path: '/tools', name: 'tools', component: Tool },
   { path: '/about', name: 'about', component: About },
+  { path: '/about/resources', name: 'about-resources', component: AboutResources },
+  { path: '/about/learning-paths', name: 'about-learning-paths', component: AboutLearningPaths },
+  { path: '/about/progress', name: 'about-progress', component: AboutProgress },
 ]
 
 const router = createRouter({
