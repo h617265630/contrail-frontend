@@ -174,71 +174,63 @@
             <p v-if="ideaError" class="text-sm text-destructive">{{ ideaError }}</p>
             </div>
 
-            <div v-else-if="activeTab === 'markdown'" class="space-y-4">
-              <!-- 已保存的 Markdown 文件列表 -->
-              <div v-if="markdownFiles.length > 0" class="space-y-3">
+            <div v-else-if="activeTab === 'markdown'" class="flex gap-4 min-h-[calc(100vh-160px)]">
+              <!-- 左侧文件列表（可折叠） -->
+              <div
+                v-if="!mdSidebarCollapsed"
+                class="w-56 shrink-0 flex flex-col gap-3 border-r border-border pr-4"
+              >
                 <div class="flex items-center justify-between">
-                  <h3 class="text-sm font-semibold text-foreground">已保存的文档 ({{ markdownFiles.length }})</h3>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                  <h3 class="text-sm font-semibold text-foreground">文档 ({{ userTextFiles.length }})</h3>
                   <button
-                    v-for="file in markdownFiles"
+                    type="button"
+                    class="text-xs text-muted-foreground hover:text-foreground"
+                    @click="mdSidebarCollapsed = true"
+                  >
+                    收起
+                  </button>
+                </div>
+
+                <div v-if="userFilesLoading" class="text-sm text-muted-foreground">Loading…</div>
+                <div v-else-if="userFilesError" class="text-sm text-destructive">{{ userFilesError }}</div>
+                <div v-else-if="userTextFiles.length === 0" class="text-sm text-muted-foreground">暂无文档</div>
+                <div v-else class="flex flex-col gap-2 overflow-y-auto flex-1">
+                  <button
+                    v-for="file in userTextFiles"
                     :key="file.id"
                     type="button"
-                    class="text-left border border-border bg-background p-3 transition hover:bg-muted/30 rounded-none"
-                    @click="loadMarkdownFile(file)"
+                    class="text-left border border-border bg-background p-2 transition hover:bg-muted/30 rounded-none"
+                    :class="selectedMdFileId === file.id ? 'ring-2 ring-ring' : ''"
+                    @click="loadUserTextFile(file)"
                   >
-                    <div class="space-y-1">
-                      <p class="text-sm font-semibold text-foreground truncate" :title="file.title || '无标题'">
-                        {{ file.title || '无标题' }}
-                      </p>
-                      <p class="text-xs text-muted-foreground">{{ formatTime(file.createdAt) }}</p>
-                      <p class="text-xs text-muted-foreground truncate">{{ (file.content || '').substring(0, 50) }}...</p>
-                    </div>
+                    <p class="text-sm font-semibold text-foreground truncate" :title="file.title || '无标题'">
+                      {{ file.title || '无标题' }}
+                    </p>
+                    <p class="text-xs text-muted-foreground">{{ formatUserFileTime(file.created_at) }}</p>
                   </button>
                 </div>
               </div>
 
-              <div v-if="markdownExtractedLinks.length > 0" class="space-y-3">
-                <div class="flex items-center justify-between">
-                  <h3 class="text-sm font-semibold text-foreground">从当前 Markdown 提取的链接 ({{ markdownExtractedLinks.length }})</h3>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  <div
-                    v-for="link in markdownExtractedLinks"
-                    :key="link.url"
-                    class="border border-border bg-background p-3 rounded-none"
+              <!-- 右侧编辑器区域 -->
+              <div class="flex flex-col gap-3 flex-1 min-h-0">
+                <div class="flex items-center gap-3">
+                  <button
+                    v-if="mdSidebarCollapsed"
+                    type="button"
+                    class="text-xs text-muted-foreground hover:text-foreground border border-border px-2 py-1"
+                    @click="mdSidebarCollapsed = false"
                   >
-                    <div class="flex items-start justify-between gap-3">
-                      <div class="min-w-0">
-                        <p class="text-xs font-semibold text-muted-foreground">{{ link.kind }}</p>
-                        <a
-                          :href="link.url"
-                          target="_blank"
-                          rel="noreferrer"
-                          class="mt-1 block text-sm font-semibold text-foreground underline underline-offset-4 break-all"
-                        >
-                          {{ link.url }}
-                        </a>
-                      </div>
-                      <Button type="button" size="sm" class="shrink-0 rounded-none" @click="goAddResource(link.url)">添加为资源</Button>
-                    </div>
-                  </div>
+                    展开文件列表
+                  </button>
+                  <Input v-model="markdownTitle" type="text" placeholder="文档标题（可选）" class="rounded-none flex-1" />
                 </div>
-              </div>
-
-              <!-- 编辑器区域 -->
-              <div class="space-y-3">
-                <Input v-model="markdownTitle" type="text" placeholder="文档标题（可选）" class="rounded-none" />
-              <div class="border border-border overflow-hidden rounded-none" style="height: 600px;">
-                <Editor
-                  :value="markdownContent"
-                  :plugins="bytemdPlugins"
-                  @change="(v: string) => markdownContent = v"
-                />
-              </div>
-                <Button type="button" class="rounded-none" @click="saveMarkdown">保存</Button>
-                <p v-if="markdownError" class="text-sm text-destructive">{{ markdownError }}</p>
+                <div class="border border-border overflow-hidden rounded-none flex-1 min-h-0">
+                  <CodeMirrorEditor v-model="markdownContent" />
+                </div>
+                <div class="flex items-center gap-3">
+                  <Button type="button" class="rounded-none" :disabled="savingUserFile" @click="saveMarkdown">保存</Button>
+                  <p v-if="markdownError" class="text-sm text-destructive">{{ markdownError }}</p>
+                </div>
               </div>
             </div>
 
@@ -290,10 +282,6 @@
               <div v-else-if="item.kind === 'idea' && item.content" class="text-sm text-foreground whitespace-pre-wrap">
                 {{ item.content }}
               </div>
-
-              <div v-else-if="item.kind === 'markdown' && item.content" class="bg-muted/30 p-3 border border-border">
-                <pre class="text-sm text-foreground whitespace-pre-wrap font-mono">{{ item.content }}</pre>
-              </div>
             </div>
           </div>
               </div>
@@ -308,22 +296,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Editor } from '@bytemd/vue-next'
-import gfm from '@bytemd/plugin-gfm'
-import highlight from '@bytemd/plugin-highlight'
-import math from '@bytemd/plugin-math'
-import 'bytemd/dist/index.css'
-import 'highlight.js/styles/vs.css'
-import 'katex/dist/katex.css'
+import CodeMirrorEditor from '../components/CodeMirrorEditor.vue'
 import Card from '../components/ui/Card.vue'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
+import { fetchUserFileText, listMyUserFiles, uploadMyUserFile, type UserFile } from '../api/userFile'
 
-const bytemdPlugins = [
-  gfm(),
-  highlight(),
-  math(),
-]
 
 type CreatorTab = 'image' | 'hand' | 'url' | 'idea' | 'markdown' | 'records'
 type CreatorItemKind = 'image' | 'hand' | 'url' | 'idea' | 'markdown'
@@ -343,35 +321,6 @@ const tabTitle = computed(() => {
     default: return 'Creator'
   }
 })
-
-function extractUrls(text: string) {
-  const input = String(text || '')
-  const matches = input.match(/https?:\/\/[^\s)\]>]+/g) || []
-  const cleaned = matches
-    .map((u) => u.replace(/[),.;\]]+$/g, ''))
-    .map((u) => u.trim())
-    .filter(Boolean)
-  return Array.from(new Set(cleaned))
-}
-
-function guessUrlKind(url: string) {
-  const u = String(url || '').toLowerCase()
-  if (u.includes('youtube.com') || u.includes('youtu.be') || u.includes('bilibili.com') || u.includes('vimeo.com')) return 'video'
-  if (u.endsWith('.pdf') || u.endsWith('.doc') || u.endsWith('.docx') || u.endsWith('.ppt') || u.endsWith('.pptx') || u.endsWith('.xls') || u.endsWith('.xlsx')) return 'document'
-  if (u.includes('github.com') || u.includes('medium.com')) return 'document'
-  return 'link'
-}
-
-const markdownExtractedLinks = computed(() => {
-  return extractUrls(markdownContent.value).map((url) => ({
-    url,
-    kind: guessUrlKind(url),
-  }))
-})
-
-function goAddResource(url: string) {
-  router.push({ name: 'add-resource', query: { url } })
-}
 
 const tabSubtitle = computed(() => {
   switch (activeTab.value) {
@@ -403,6 +352,17 @@ const STORAGE_KEY = 'creator.items.v1'
 
 const items = ref<CreatorItem[]>([])
 
+const userFilesLoading = ref(false)
+const userFilesError = ref('')
+const userFiles = ref<UserFile[]>([])
+const savingUserFile = ref(false)
+const mdSidebarCollapsed = ref(false)
+const selectedMdFileId = ref<number | null>(null)
+
+const userTextFiles = computed(() => {
+  return userFiles.value.filter((f) => f.file_type === 'md' || f.file_type === 'txt')
+})
+
 function loadItems(): CreatorItem[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -424,6 +384,12 @@ function createId(prefix: string) {
 
 function formatTime(ts: number) {
   return new Date(ts).toLocaleString()
+}
+
+function formatUserFileTime(ts: string) {
+  const d = new Date(ts)
+  if (Number.isNaN(d.getTime())) return String(ts || '')
+  return d.toLocaleString()
 }
 
 function removeItem(id: string) {
@@ -692,17 +658,33 @@ const imageItems = computed(() => {
 })
 
 // 筛选出所有 markdown 类型的记录
-const markdownFiles = computed(() => {
-  return items.value.filter(item => item.kind === 'markdown')
-})
-
-// 加载 markdown 文件内容到编辑器
-function loadMarkdownFile(item: CreatorItem) {
-  markdownTitle.value = item.title || ''
-  markdownContent.value = item.content || ''
+async function loadUserFiles() {
+  userFilesError.value = ''
+  userFilesLoading.value = true
+  try {
+    userFiles.value = await listMyUserFiles()
+  } catch (e: any) {
+    userFilesError.value = e?.response?.data?.detail || e?.message || 'Failed to load files'
+    userFiles.value = []
+  } finally {
+    userFilesLoading.value = false
+  }
 }
 
-function saveMarkdown() {
+// 加载用户文件内容到编辑器
+async function loadUserTextFile(file: UserFile) {
+  markdownError.value = ''
+  selectedMdFileId.value = file.id
+  try {
+    const text = typeof file.content === 'string' ? file.content : await fetchUserFileText(file.file_url)
+    markdownTitle.value = String(file.title || file.original_filename || '')
+    markdownContent.value = String(text || '')
+  } catch (e: any) {
+    markdownError.value = e?.response?.data?.detail || e?.message || 'Failed to load file content'
+  }
+}
+
+async function saveMarkdown() {
   markdownError.value = ''
   const content = markdownContent.value.trim()
   if (!content) {
@@ -710,28 +692,35 @@ function saveMarkdown() {
     return
   }
 
-  const nextItem: CreatorItem = {
-    id: createId('md'),
-    kind: 'markdown',
-    title: markdownTitle.value.trim() || undefined,
-    createdAt: Date.now(),
-    content,
+  savingUserFile.value = true
+  const title = markdownTitle.value.trim() || 'Untitled'
+  const blob = new Blob([content], { type: 'text/markdown' })
+  const file = new File([blob], `${title}.md`, { type: 'text/markdown' })
+
+  try {
+    await uploadMyUserFile({ file, title })
+    markdownTitle.value = ''
+    markdownContent.value = ''
+    await loadUserFiles()
+  } catch (e: any) {
+    markdownError.value = e?.response?.data?.detail || e?.message || 'Failed to save file'
+  } finally {
+    savingUserFile.value = false
   }
-
-  const updated = [nextItem, ...items.value]
-  items.value = updated
-  persistItems(updated)
-
-  markdownTitle.value = ''
-  markdownContent.value = ''
 }
 
 const totalCount = computed(() => items.value.length)
 
 onMounted(async () => {
-  items.value = loadItems()
+  const loaded = loadItems().filter((i) => i.kind !== 'markdown')
+  items.value = loaded
+  persistItems(loaded)
   await nextTick()
   ensureCanvasSize()
   window.addEventListener('resize', ensureCanvasSize)
+  await loadUserFiles()
 })
 </script>
+
+<style scoped>
+</style>

@@ -13,7 +13,8 @@
       <div class="p-4">
         <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
           <div class="flex flex-col sm:flex-row gap-3 flex-1 w-full lg:w-auto">
-            <div class="relative flex-1">
+            <div class="flex gap-3 flex-1">
+              <div class="relative flex-1">
               <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 ref="searchInputEl"
@@ -22,6 +23,7 @@
                 v-model="searchQuery"
                 class="h-10 w-full rounded-none pl-10"
               />
+            </div>
             </div>
 
             <div class="relative">
@@ -60,16 +62,6 @@
               </Button>
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              class="rounded-none"
-              @click="focusSearch"
-            >
-              <Search class="w-4 h-4" />
-              Search
-            </Button>
           </div>
         </div>
       </div>
@@ -86,10 +78,6 @@
         <p class="text-muted-foreground mb-6">
           {{ searchQuery || selectedCategory !== 'All' ? 'Try adjusting your filters' : 'Start by adding your first resource' }}
         </p>
-        <Button type="button" variant="outline" size="sm" class="rounded-none" @click="focusSearch">
-          <Search class="w-4 h-4" />
-          Search
-        </Button>
       </div>
     </Card>
 
@@ -109,11 +97,6 @@
                   {{ displayResourceType(resource) }}
                 </span>
               </div>
-              <div class="absolute bottom-3 left-3">
-                <span class="px-2 py-1 border border-border bg-background/90 text-foreground text-xs">
-                  {{ formatPlatform((resource as any).platform) }}
-                </span>
-              </div>
             </div>
 
             <div class="p-4 flex min-h-0 flex-1 flex-col">
@@ -122,18 +105,27 @@
 
               <div class="mt-3 space-y-1 text-xs text-muted-foreground">
                 <div class="flex items-center justify-between gap-3">
-                  <span>分类</span>
+                  <span>Source</span>
+                  <span class="truncate text-foreground">{{ formatPlatform((resource as any).platform) || '—' }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                  <span>Category</span>
                   <span class="truncate text-foreground">{{ resourceCategoryLabel(resource) }}</span>
                 </div>
                 <div class="flex items-center justify-between gap-3">
-                  <span>发布时间</span>
+                  <span>Published</span>
                   <span class="text-foreground">{{ formatExtractDate(getCardMeta(resource.id)?.publish_date || null) || '—' }}</span>
                 </div>
               </div>
 
               <div class="mt-auto pt-4">
                 <div class="grid grid-cols-2 gap-2">
-                  <Button type="button" size="sm" class="rounded-none" @click.stop="viewResource(resource)">
+                  <Button
+                    type="button"
+                    size="sm"
+                    class="rounded-none bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white"
+                    @click.stop="viewResource(resource)"
+                  >
                     View
                   </Button>
                   <Button
@@ -181,28 +173,33 @@
                       <h3 class="truncate text-sm font-semibold text-foreground">{{ resource.title }}</h3>
                       <p class="mt-2 line-clamp-2 text-sm text-muted-foreground">{{ resource.summary || '' }}</p>
                     </div>
-
-                    <div class="shrink-0">
-                      <span class="px-2 py-1 border border-border bg-background/90 text-foreground text-xs">
-                        {{ formatPlatform((resource as any).platform) }}
-                      </span>
-                    </div>
                   </div>
 
                   <div class="mt-3 grid grid-cols-1 gap-2 text-xs text-muted-foreground sm:grid-cols-2">
                     <div class="flex items-center justify-between gap-3">
-                      <span>分类</span>
+                      <span>Source</span>
+                      <span class="truncate text-foreground">{{ formatPlatform((resource as any).platform) || '—' }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                      <span>Category</span>
                       <span class="truncate text-foreground">{{ resourceCategoryLabel(resource) }}</span>
                     </div>
                     <div class="flex items-center justify-between gap-3">
-                      <span>发布时间</span>
+                      <span>Published</span>
                       <span class="text-foreground">{{ formatExtractDate(getCardMeta(resource.id)?.publish_date || null) || '—' }}</span>
                     </div>
                   </div>
                 </div>
 
                 <div class="flex shrink-0 flex-col gap-2">
-                  <Button type="button" size="sm" class="rounded-none" @click.stop="viewResource(resource)">View</Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    class="rounded-none bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white"
+                    @click.stop="viewResource(resource)"
+                  >
+                    View
+                  </Button>
                   <Button
                     type="button"
                     variant="outline"
@@ -348,7 +345,7 @@ function getCardMeta(id: number) {
 }
 
 function resourceCategoryLabel(resource: DbResource) {
-  return String((resource as any).category_name || '').trim() || '其他'
+  return String((resource as any).category_name || '').trim() || 'Other'
 }
 
 function normalizeResourceType(resourceType: string) {

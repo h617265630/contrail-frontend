@@ -68,11 +68,6 @@
                 {{ resource.type }}
               </span>
             </div>
-            <div class="absolute bottom-3 left-3">
-              <span class="px-2 py-1 border border-border bg-background/90 text-foreground text-xs">
-                {{ formatPlatform(resource.platform) }}
-              </span>
-            </div>
           </div>
 
           <div class="p-4 flex min-h-0 flex-1 flex-col">
@@ -80,6 +75,9 @@
             <p class="mt-2 line-clamp-3 text-sm text-muted-foreground">{{ resource.summary }}</p>
 
             <div class="mt-3 space-y-1 text-xs text-muted-foreground">
+              <div class="flex items-center justify-between gap-3">
+                <span class="truncate text-foreground">来源：{{ formatPlatform(resource.platform) }}</span>
+              </div>
               <div class="flex items-center justify-between gap-3">
                 <span>Category</span>
                 <span class="truncate text-foreground">{{ resource.category || '—' }}</span>
@@ -91,24 +89,45 @@
             </div>
 
             <div class="mt-auto pt-4">
-              <div class="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  class="rounded-none"
-                  @click.stop="togglePublic(resource)"
-                  :disabled="publicUpdatingId === resource.id"
-                >
-                  {{ resource.is_system_public ? 'Public' : 'Private' }}
-                </Button>
+              <div class="flex items-center justify-end gap-3">
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    class="relative inline-flex h-7 w-24 items-center rounded-full border border-border bg-muted/30 p-0.5 transition-colors"
+                    @click.stop="togglePublic(resource)"
+                    :disabled="publicUpdatingId === resource.id"
+                    aria-label="Toggle privacy"
+                  >
+                    <span
+                      class="absolute inset-y-0.5 left-0.5 w-[calc(50%-0.25rem)] rounded-full shadow-sm transition-transform"
+                      :class="[
+                        resource.is_system_public ? 'bg-[#f9a8d4]' : 'bg-[#8ecbff]',
+                        resource.is_system_public ? 'translate-x-[calc(100%+0.25rem)]' : 'translate-x-0',
+                      ]"
+                    />
+                    <span class="relative z-10 flex w-full text-[11px] font-semibold">
+                      <span
+                        class="flex w-1/2 justify-center"
+                        :class="resource.is_system_public ? 'text-muted-foreground' : 'text-white'"
+                      >
+                        Private
+                      </span>
+                      <span
+                        class="flex w-1/2 justify-center"
+                        :class="resource.is_system_public ? 'text-white' : 'text-muted-foreground'"
+                      >
+                        Public
+                      </span>
+                    </span>
+                  </button>
+                </div>
               </div>
 
               <div class="mt-2 grid grid-cols-3 gap-2">
                 <Button
                   type="button"
                   size="sm"
-                  class="rounded-none bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white"
+                  class="rounded-none bg-[#8ecbff]/90 text-white hover:bg-[#8ecbff] hover:text-white"
                   @click.stop="viewResource(resource)"
                 >
                   View
@@ -116,9 +135,9 @@
                 <Button type="button" variant="outline" size="sm" class="rounded-none" @click.stop="editResource(resource)">Edit</Button>
                 <Button
                   type="button"
-                  variant="destructive"
+                  variant="outline"
                   size="sm"
-                  class="rounded-none"
+                  class="rounded-none hover:border-[#8ecbff] hover:bg-[#8ecbff] hover:text-white"
                   :disabled="deletingId === resource.id"
                   @click.stop="deleteResource(resource)"
                 >
@@ -226,12 +245,17 @@ function mapDbToUi(r: DbResource): UiResource {
     thumbnail: String((r as any).thumbnail || '').trim() || fallbackThumb,
     type,
     addedDate: formatDate(r.created_at),
-    is_system_public: (r as any).is_system_public,
+    is_system_public: Boolean((r as any).is_system_public),
   }
 }
 
 async function togglePublic(resource: UiResource) {
-  alert('Public/Private toggle is not supported yet.')
+  publicUpdatingId.value = resource.id
+  resources.value = resources.value.map(r => {
+    if (r.id !== resource.id) return r
+    return { ...r, is_system_public: !Boolean(r.is_system_public) }
+  })
+  publicUpdatingId.value = null
 }
 
 async function load() {

@@ -15,8 +15,32 @@
     </section>
 
     <Card as="section" :hoverable="false" class="rounded-none">
-      <div class="p-6 space-y-6">
-        <!-- 平台选择和URL输入 -->
+      <div class="border-b border-border bg-background px-6 py-4">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              class="gen-btn"
+              :class="mode === 'url' ? 'gen-btn--active' : ''"
+              @click="setMode('url')"
+            >
+              add resource from url
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              class="gen-btn"
+              :class="mode === 'md' ? 'gen-btn--active' : ''"
+              @click="setMode('md')"
+            >
+              generate resources from .md
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="mode === 'url'" class="p-6 space-y-6">
         <div>
           <label class="block text-sm font-semibold text-foreground mb-3">URL</label>
           <div class="flex gap-3">
@@ -39,7 +63,6 @@
           <p v-if="extractError" class="mt-2 text-sm text-destructive">{{ extractError }}</p>
         </div>
 
-        <!-- 分类选择 -->
         <div>
           <label class="block text-sm font-semibold text-foreground mb-3">Category</label>
           <div class="relative">
@@ -55,7 +78,6 @@
           </div>
         </div>
 
-        <!-- 资源状态 -->
         <div>
           <label class="block text-sm font-semibold text-foreground mb-3">Visibility</label>
           <div class="flex items-center space-x-4">
@@ -70,7 +92,6 @@
           </div>
         </div>
 
-        <!-- 解析信息 -->
         <div class="rounded-none border border-border bg-muted/30 p-6">
           <div class="flex items-center justify-between gap-3 mb-4">
             <h3 class="text-foreground text-base font-semibold">Preview</h3>
@@ -153,6 +174,76 @@
         <p v-if="submitError" class="text-sm text-destructive">{{ submitError }}</p>
       </div>
 
+      <div v-else class="p-6 space-y-6">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div class="text-sm font-semibold text-foreground">Your Markdown/TXT files</div>
+          <Button type="button" size="sm" class="gen-btn" @click="goToCreator">
+            Go to Markdown editor
+          </Button>
+        </div>
+
+        <div v-if="mdFilesError" class="text-sm text-destructive">{{ mdFilesError }}</div>
+
+        <div v-else class="grid gap-6 lg:grid-cols-12">
+          <div class="lg:col-span-3">
+            <div v-if="mdFilesLoading" class="text-sm text-muted-foreground">Loading…</div>
+            <div v-else-if="mdFiles.length === 0" class="text-sm text-muted-foreground">No markdown files yet.</div>
+            <div v-else class="grid grid-cols-1 gap-3">
+              <button
+                v-for="f in mdFiles"
+                :key="f.id"
+                type="button"
+                class="text-left border border-border bg-background p-3 transition rounded-none hover:bg-muted/30"
+                :class="selectedMdFile?.id === f.id ? 'ring-2 ring-ring' : ''"
+                @click="selectMdFile(f)"
+              >
+                <div class="text-sm font-semibold text-foreground truncate">{{ f.title || f.original_filename || 'Untitled' }}</div>
+                <div class="mt-1 text-xs text-muted-foreground truncate">{{ f.file_type }}</div>
+              </button>
+            </div>
+          </div>
+
+          <div class="lg:col-span-9 grid gap-6 lg:grid-cols-12">
+            <div class="lg:col-span-6">
+              <div class="text-xs font-semibold text-muted-foreground">Content</div>
+              <div class="mt-2 rounded-none border border-border bg-background p-4">
+                <pre class="max-h-[520px] overflow-auto whitespace-pre-wrap text-sm text-foreground">{{ mdSelectedContent || 'Select a file to preview.' }}</pre>
+              </div>
+            </div>
+            <div class="lg:col-span-6">
+              <div class="flex items-center justify-between">
+                <div class="text-xs font-semibold text-muted-foreground">URLs ({{ mdExtractedUrls.length }})</div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  class="rounded-none"
+                  :disabled="mdExtractedUrls.length === 0"
+                  @click="useFirstMdUrl"
+                >
+                  Use first URL
+                </Button>
+              </div>
+              <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div
+                  v-for="u in mdExtractedUrls"
+                  :key="u"
+                  class="rounded-none border border-border bg-background p-3"
+                >
+                  <div class="text-xs font-semibold text-muted-foreground">{{ guessUrlKind(u) }}</div>
+                  <div class="mt-1 text-sm text-foreground break-all">{{ u }}</div>
+                  <div class="mt-3 flex justify-end">
+                    <Button type="button" size="sm" class="gen-btn" @click="useMdUrl(u)">
+                      Use this URL
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="border-t border-border bg-muted/30 p-6">
         <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Button type="button" variant="outline" size="sm" class="rounded-none" @click="$router.back()">
@@ -162,7 +253,7 @@
             type="button"
             variant="outline"
             size="sm"
-            class="rounded-none bg-foreground text-background hover:bg-foreground/90 hover:text-background"
+            class="rounded-none border-border bg-black px-3 text-xs font-semibold tracking-[0.14em] uppercase text-white transition-all hover:-translate-y-px hover:bg-[#8ecbff] hover:text-white hover:shadow-sm active:translate-y-0"
             @click="confirmAdd"
             :disabled="!urlInput || extracting || !extractedMeta?.title || submitting"
           >
@@ -183,9 +274,78 @@ import { listCategories, type Category } from '../api/category'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import Card from '../components/ui/Card.vue'
+import { listMyUserFiles, type UserFile } from '../api/userFile'
 
 const route = useRoute()
 const router = useRouter()
+
+const mode = computed(() => ((route.query as any)?.mode === 'md' ? 'md' : 'url'))
+
+function setMode(next: 'url' | 'md') {
+  const current = (route.query as any) || {}
+  router.replace({ query: { ...current, mode: next } })
+}
+
+const mdFilesLoading = ref(false)
+const mdFilesError = ref('')
+const mdFiles = ref<UserFile[]>([])
+const selectedMdFile = ref<UserFile | null>(null)
+const mdSelectedContent = ref('')
+
+function extractUrls(text: string) {
+  const input = String(text || '')
+  const matches = input.match(/https?:\/\/[^\s)\]>]+/g) || []
+  const cleaned = matches
+    .map((u) => u.replace(/[),.;\]]+$/g, ''))
+    .map((u) => u.trim())
+    .filter(Boolean)
+  return Array.from(new Set(cleaned))
+}
+
+function guessUrlKind(url: string) {
+  const u = String(url || '').toLowerCase()
+  if (u.includes('youtube.com') || u.includes('youtu.be') || u.includes('bilibili.com') || u.includes('vimeo.com')) return 'video'
+  if (u.endsWith('.pdf') || u.endsWith('.doc') || u.endsWith('.docx') || u.endsWith('.ppt') || u.endsWith('.pptx') || u.endsWith('.xls') || u.endsWith('.xlsx')) return 'document'
+  if (u.includes('github.com') || u.includes('medium.com') || u.includes('substack.com') || u.includes('dev.to')) return 'document'
+  return 'link'
+}
+
+const mdExtractedUrls = computed(() => extractUrls(mdSelectedContent.value))
+
+async function loadMdFiles() {
+  mdFilesError.value = ''
+  mdFilesLoading.value = true
+  try {
+    const files = await listMyUserFiles()
+    mdFiles.value = files.filter((f) => f.file_type === 'md' || f.file_type === 'txt')
+  } catch (e: any) {
+    mdFilesError.value = e?.response?.data?.detail || e?.message || 'Failed to load markdown files'
+    mdFiles.value = []
+  } finally {
+    mdFilesLoading.value = false
+  }
+}
+
+function selectMdFile(file: UserFile) {
+  selectedMdFile.value = file
+  mdSelectedContent.value = String(file.content || '')
+}
+
+function goToCreator() {
+  router.push({ name: 'creator' })
+}
+
+function useMdUrl(url: string) {
+  urlInput.value = url
+  setMode('url')
+  const detected = detectPlatformFromUrl(url)
+  if (detected) selectedPlatform.value = detected
+}
+
+function useFirstMdUrl() {
+  if (mdExtractedUrls.value.length === 0) return
+  useMdUrl(mdExtractedUrls.value[0])
+}
 
 const supportedPlatforms = [
   { key: 'youtube', label: 'YouTube', placeholder: 'https://www.youtube.com/watch?v=...' },
@@ -316,6 +476,9 @@ watch(
 onMounted(() => {
   void loadCategories()
   applyPrefillFromRoute()
+  if (mode.value === 'md') {
+    void loadMdFiles()
+  }
 })
 
 watch(

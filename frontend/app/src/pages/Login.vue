@@ -76,7 +76,11 @@
           <a href="#" class="text-sm text-foreground underline underline-offset-4">Forgot password?</a>
         </div>
 
-        <Button type="submit" :disabled="loading || !isFormValid" class="w-full rounded-md">
+        <Button
+          type="submit"
+          :disabled="loading || !isFormValid"
+          class="w-full rounded-md hover:bg-[#8ecbff] hover:text-white"
+        >
           {{ loading ? 'Signing in...' : 'Sign In' }}
         </Button>
 

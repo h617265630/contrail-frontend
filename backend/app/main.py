@@ -7,6 +7,7 @@ from app.routers import progress
 from app.routers import category
 from app.routers import reader
 from app.routers import user_image
+from app.routers import user_file
 from app.routers.rbac import role, user, permission, user_role, role_permission
 
 
@@ -36,6 +37,7 @@ import app.models.path_item
 import app.models.category
 import app.models.progress
 import app.models.user_image
+import app.models.user_file
 Base.metadata.create_all(bind=engine)
 
 """
@@ -83,6 +85,7 @@ app.include_router(permission.router)
 app.include_router(user_role.router)
 app.include_router(role_permission.router)
 app.include_router(user_image.router)
+app.include_router(user_file.router)
 
 @app.on_event("startup")
 async def startup_event():

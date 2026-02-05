@@ -44,20 +44,6 @@
             </div>
         </Card>
 
-        <div
-          v-if="playerFailed"
-          class="rounded-md border border-border bg-muted/30 p-4 text-sm text-muted-foreground"
-        >
-          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              Unable to load the embedded player. This is usually caused by network restrictions or browser extensions.
-            </div>
-            <Button type="button" variant="outline" size="sm" class="rounded-md" @click="openSource">
-              Open Source URL
-            </Button>
-          </div>
-        </div>
-
         <div class="space-y-3">
           <h2 class="text-xl sm:text-2xl font-semibold text-foreground">{{ resource.title }}</h2>
 
@@ -93,6 +79,16 @@
             <div class="flex items-center gap-2">
               <Button type="button" variant="outline" size="sm" class="rounded-md" @click="goSaveToPath">
                 Save to path
+              </Button>
+              <Button
+                v-if="openOnYouTubeUrl"
+                type="button"
+                variant="outline"
+                size="sm"
+                class="rounded-md"
+                @click="openOnYouTube"
+              >
+                Open on YouTube
               </Button>
               <Button
                 v-if="pathItemId != null"
@@ -141,12 +137,12 @@
 // --- YouTube iframe 强制播放工具函数 ---
 function isYouTubeUrl(url: string | undefined | null): boolean {
   if (!url) return false;
-  return /youtube\.com\/watch\?v=|youtu\.be\//.test(url);
+  return /youtube\.com\/watch\?v=|youtu\.be\//.test(url) || /youtube\.com\/shorts\//.test(url) || /youtube-nocookie\.com\/embed\//.test(url);
 }
 
 function toYouTubeEmbed(url: string | undefined | null): string {
   if (!url) return '';
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([\w-]+)/);
   return match ? `https://www.youtube.com/embed/${match[1]}` : url;
 }
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -328,6 +324,12 @@ function extractYouTubeId(url: string): string {
       const parts = u.pathname.split('/').filter(Boolean)
       // /embed/<id>
       if (parts[0] === 'embed' && parts[1]) return parts[1]
+      // /shorts/<id>
+      if (parts[0] === 'shorts' && parts[1]) return parts[1]
+    }
+    if (host === 'youtube-nocookie.com') {
+      const parts = u.pathname.split('/').filter(Boolean)
+      if (parts[0] === 'embed' && parts[1]) return parts[1]
     }
   } catch {
     // ignore
@@ -356,16 +358,30 @@ const embedUrl = computed(() => {
   const rawUrl = String(resource.value.source_url || '').trim()
   const start = Math.max(0, Number(startSeconds.value || 0))
 
+  const origin = (() => {
+    try {
+      return typeof window !== 'undefined' ? window.location.origin : ''
+    } catch {
+      return ''
+    }
+  })()
+
   // Prefer a proper YouTube embed URL (even if videoId parsing fails).
   if (isYouTubeUrl(rawUrl)) {
     const vid = String(videoId.value || '').trim()
     if (vid) {
-      const qs = start ? `?start=${start}&rel=0` : '?rel=0'
-      return `https://www.youtube.com/embed/${encodeURIComponent(vid)}${qs}`
+      const qs = new URLSearchParams()
+      qs.set('rel', '0')
+      if (start) qs.set('start', String(start))
+      if (origin) qs.set('origin', origin)
+      return `https://www.youtube.com/embed/${encodeURIComponent(vid)}?${qs.toString()}`
     }
     const base = toYouTubeEmbed(rawUrl)
     if (!base) return ''
-    return start ? `${base}${base.includes('?') ? '&' : '?'}start=${start}` : base
+    const qs = new URLSearchParams()
+    if (start) qs.set('start', String(start))
+    if (origin) qs.set('origin', origin)
+    return qs.toString() ? `${base}${base.includes('?') ? '&' : '?'}${qs.toString()}` : base
   }
 
   return rawUrl || ''
@@ -495,6 +511,18 @@ function seekTo(seconds: number) {
 
 function openSource() {
   const url = String(resource.value.source_url || '').trim()
+  if (!url) return
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+const openOnYouTubeUrl = computed(() => {
+  const vid = String(videoId.value || '').trim()
+  if (!vid) return ''
+  return `https://www.youtube.com/watch?v=${encodeURIComponent(vid)}`
+})
+
+function openOnYouTube() {
+  const url = String(openOnYouTubeUrl.value || '').trim()
   if (!url) return
   window.open(url, '_blank', 'noopener,noreferrer')
 }
