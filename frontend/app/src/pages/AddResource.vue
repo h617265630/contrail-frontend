@@ -78,20 +78,6 @@
           </div>
         </div>
 
-        <div>
-          <label class="block text-sm font-semibold text-foreground mb-3">Visibility</label>
-          <div class="flex items-center space-x-4">
-            <label class="flex items-center cursor-pointer">
-              <input type="radio" v-model="isPublic" :value="true" class="mr-2">
-              <span class="text-muted-foreground">Public</span>
-            </label>
-            <label class="flex items-center cursor-pointer">
-              <input type="radio" v-model="isPublic" :value="false" class="mr-2">
-              <span class="text-muted-foreground">Private</span>
-            </label>
-          </div>
-        </div>
-
         <div class="rounded-none border border-border bg-muted/30 p-6">
           <div class="flex items-center justify-between gap-3 mb-4">
             <h3 class="text-foreground text-base font-semibold">Preview</h3>
@@ -102,72 +88,157 @@
             Paste a URL to preview extracted metadata.
           </div>
 
-          <div v-else class="grid gap-4 md:grid-cols-2">
-            <div class="space-y-3">
-              <div class="text-xs font-semibold text-muted-foreground">Thumbnail</div>
-              <div class="rounded-none border border-border bg-background p-3">
-                <div class="h-56 w-full rounded-none bg-muted">
-                  <img
-                    v-if="extractedMeta?.thumbnail_url"
-                    :src="extractedMeta.thumbnail_url"
-                    :alt="extractedMeta?.title || 'thumbnail'"
-                    class="h-full w-full object-contain rounded-none"
-                  />
-                  <div v-else class="h-full w-full flex items-center justify-center text-sm text-muted-foreground">
-                    No image
+          <div v-else class="grid gap-6 lg:grid-cols-12">
+            <!-- Left: Card Preview (deck-card-ui-skill style) -->
+            <div class="lg:col-span-4 flex flex-col items-center pt-8">
+              <div class="text-xs font-semibold text-muted-foreground mb-3">Card Preview</div>
+              <div
+                :class="['w-56 h-72 rounded-md border shadow-sm cursor-pointer hover:shadow-xl transition-all duration-300 card-hover', weightCardClass]"
+              >
+                <div class="h-full flex flex-col overflow-hidden rounded-md">
+                  <!-- Card Header with Category -->
+                  <div class="px-3 py-2 border-b border-border flex items-center justify-between">
+                    <span
+                      class="px-2 py-0.5 text-xs font-medium rounded"
+                      :style="{ backgroundColor: '#3b82f620', color: '#3b82f6' }"
+                    >
+                      {{ selectedPlatform || 'video' }}
+                    </span>
+                    <span class="text-xs text-muted-foreground">#{{ extractedMeta?.video_id?.slice(0, 6) || '---' }}</span>
+                  </div>
+
+                  <!-- Card Image -->
+                  <div class="relative h-28 bg-white overflow-hidden px-2">
+                    <img
+                      v-if="extractedMeta?.thumbnail_url"
+                      :src="extractedMeta.thumbnail_url"
+                      :alt="extractedMeta?.title || 'thumbnail'"
+                      class="w-full h-full object-cover"
+                    />
+                    <div v-else class="w-full h-full flex items-center justify-center">
+                      <div class="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white bg-blue-500">
+                        {{ (extractedMeta?.title || 'R').charAt(0) }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Card Title -->
+                  <div class="px-3 py-2 border-b border-border bg-white">
+                    <h3 class="text-sm font-bold text-foreground line-clamp-1">
+                      {{ extractedMeta?.title || 'Untitled' }}
+                    </h3>
+                  </div>
+
+                  <!-- Card Description -->
+                  <div class="px-3 py-2 flex-1 bg-muted/30">
+                    <p class="text-xs text-muted-foreground line-clamp-2">
+                      {{ extractedMeta?.description || 'No description' }}
+                    </p>
+                  </div>
+
+                  <!-- Card Footer -->
+                  <div class="px-3 py-2 border-t border-border flex items-center justify-between">
+                    <span class="text-xs text-muted-foreground">{{ extractedMeta?.author || '—' }}</span>
+                    <span class="text-xs font-medium text-foreground">{{ formatExtractDate(extractedMeta?.publish_date || null) || '—' }}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="space-y-4">
+            <!-- Right: Detailed Data -->
+            <div class="lg:col-span-8 space-y-4">
+              <!-- Thumbnail -->
               <div>
-                <div class="text-xs font-semibold text-muted-foreground mb-1">Title</div>
-                <div class="text-sm text-foreground">{{ extractedMeta?.title || '—' }}</div>
+                <div class="text-xs font-semibold text-muted-foreground mb-2">Thumbnail</div>
+                <div class="rounded-none border border-border bg-background p-2">
+                  <div class="h-40 w-full rounded-none bg-muted">
+                    <img
+                      v-if="extractedMeta?.thumbnail_url"
+                      :src="extractedMeta.thumbnail_url"
+                      :alt="extractedMeta?.title || 'thumbnail'"
+                      class="h-full w-full object-contain rounded-none"
+                    />
+                    <div v-else class="h-full w-full flex items-center justify-center text-sm text-muted-foreground">
+                      No image
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Title -->
+              <div>
+                <div class="text-xs font-semibold text-muted-foreground mb-1">Title</div>
+                <div class="text-sm text-foreground font-medium">{{ extractedMeta?.title || '—' }}</div>
+              </div>
+
+              <!-- Author & Video ID -->
+              <div class="grid grid-cols-2 gap-4">
                 <div>
                   <div class="text-xs font-semibold text-muted-foreground mb-1">Author</div>
                   <div class="text-sm text-foreground">{{ extractedMeta?.author || '—' }}</div>
                 </div>
                 <div>
-                  <div class="text-xs font-semibold text-muted-foreground mb-1">Published</div>
-                  <div class="text-sm text-foreground">{{ formatExtractDate(extractedMeta?.publish_date || null) || '—' }}</div>
+                  <div class="text-xs font-semibold text-muted-foreground mb-1">Video ID</div>
+                  <div class="text-sm text-foreground font-mono">{{ extractedMeta?.video_id || '—' }}</div>
                 </div>
               </div>
 
-              <div>
-                <div class="text-xs font-semibold text-muted-foreground mb-1">Video ID</div>
-                <div class="text-sm text-foreground">{{ extractedMeta?.video_id || '—' }}</div>
-              </div>
-
+              <!-- Description -->
               <div>
                 <div class="text-xs font-semibold text-muted-foreground mb-1">Description</div>
-                <div class="text-sm text-foreground whitespace-pre-wrap max-h-48 overflow-auto">{{ extractedMeta?.description || '—' }}</div>
+                <div class="text-sm text-foreground whitespace-pre-wrap max-h-32 overflow-auto border border-border rounded-none p-2 bg-background">{{ extractedMeta?.description || '—' }}</div>
               </div>
 
-              <div>
-                <div class="text-xs font-semibold text-muted-foreground mb-1">Chapters</div>
-                <div v-if="(extractedMeta?.chapters || []).length === 0" class="text-sm text-foreground">—</div>
-                <div v-else class="max-h-64 overflow-auto rounded-none border border-border bg-background">
-                  <div
-                    v-for="ch in (extractedMeta?.chapters || []).slice(0, 12)"
-                    :key="ch.start_seconds + ':' + ch.title"
-                    class="flex items-start justify-between gap-3 px-3 py-2 border-b border-border last:border-b-0"
-                  >
-                    <div class="min-w-0">
-                      <div class="text-sm text-foreground">{{ ch.title }}</div>
-                      <div v-if="ch.description" class="text-xs text-muted-foreground mt-0.5">{{ ch.description }}</div>
+              <!-- Additional Options -->
+              <div class="border-t border-border pt-4">
+                <div class="text-xs font-semibold text-muted-foreground mb-3">Additional Options</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <!-- Category -->
+                  <div>
+                    <label class="block text-sm font-medium text-foreground mb-2">Category</label>
+                    <select
+                      v-model="categoryId"
+                      class="w-full h-10 px-3 border border-border rounded-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background bg-background cursor-pointer"
+                    >
+                      <option value="">Select category</option>
+                      <option v-for="c in dbCategories" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
+                    </select>
+                  </div>
+
+                  <!-- Visibility -->
+                  <div>
+                    <label class="block text-sm font-medium text-foreground mb-2">Visibility</label>
+                    <div class="flex items-center gap-4 h-10">
+                      <label class="flex items-center cursor-pointer">
+                        <input type="radio" v-model="isPublic" :value="true" class="mr-2">
+                        <span class="text-muted-foreground">Public</span>
+                      </label>
+                      <label class="flex items-center cursor-pointer">
+                        <input type="radio" v-model="isPublic" :value="false" class="mr-2">
+                        <span class="text-muted-foreground">Private</span>
+                      </label>
                     </div>
-                    <div class="shrink-0 text-xs font-semibold text-muted-foreground">{{ ch.timestamp }}</div>
+                  </div>
+
+                  <!-- Weight -->
+                  <div>
+                    <label class="block text-sm font-medium text-foreground mb-2">Weight</label>
+                    <select
+                      v-model="selectedWeight"
+                      class="w-full h-10 px-3 border border-border rounded-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background bg-background cursor-pointer"
+                    >
+                      <option value="">Select weight</option>
+                      <option value="soil">Soil</option>
+                      <option value="iron">Iron</option>
+                      <option value="bronze">Bronze</option>
+                      <option value="silver">Silver</option>
+                      <option value="gold">Gold</option>
+                    </select>
                   </div>
                 </div>
-                <div v-if="(extractedMeta?.chapters || []).length > 12" class="mt-1 text-xs text-muted-foreground">
-                  Showing first 12 chapters only.
-                </div>
               </div>
-            </div>
+
+                          </div>
           </div>
         </div>
 
@@ -368,6 +439,19 @@ const isPublic = ref(true)
 
 const dbCategories = ref<Category[]>([])
 const categoryId = ref('')
+const selectedWeight = ref('')
+
+type Weight = '' | 'soil' | 'iron' | 'bronze' | 'silver' | 'gold'
+
+const weightCardClass = computed(() => {
+  const w = (selectedWeight.value || '') as Weight
+  if (w === 'soil') return 'border-stone-200 bg-stone-50'
+  if (w === 'iron') return 'border-slate-300 bg-slate-50'
+  if (w === 'bronze') return 'border-amber-300 bg-amber-50'
+  if (w === 'silver') return 'border-zinc-200 bg-zinc-50'
+  if (w === 'gold') return 'border-yellow-300 bg-yellow-50'
+  return 'border-border bg-card'
+})
 
 const selectedPlatformPlaceholder = computed(() => {
   if (!selectedPlatform.value) return 'Select a platform first'
@@ -488,3 +572,35 @@ watch(
   },
 )
 </script>
+
+<style scoped>
+.card-hover:hover {
+  animation: card-tilt-up 0.4s ease forwards;
+}
+
+@keyframes card-tilt-up {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  30% {
+    transform: rotate(-6deg) scale(1.08);
+  }
+  100% {
+    transform: rotate(0deg) scale(1.25);
+  }
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+</style>

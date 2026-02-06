@@ -25,12 +25,13 @@
           <h2 class="text-lg font-semibold text-foreground mb-4">{{ deck.name }}</h2>
 
           <!-- Cards Stack (Horizontal) -->
-          <div
-            class="relative h-72 overflow-visible"
-            @mouseenter="hoveredDeck = deckIndex"
-            @mouseleave="hoveredDeck = null"
-          >
-            <div class="flex items-center h-full" :style="{ paddingLeft: '20px' }">
+          <div class="relative h-72 overflow-visible">
+            <div
+              class="inline-flex items-center h-full"
+              :style="{ paddingLeft: '20px' }"
+              @mouseenter="hoveredDeck = deckIndex"
+              @mouseleave="hoveredDeck = null"
+            >
               <div
                 v-for="(card, cardIndex) in deck.cards"
                 :key="card.id"
@@ -394,6 +395,7 @@ function getDeckCardStyle(deckIndex: number, cardIndex: number) {
 }
 
 function openCard(card: Card) {
+  hoveredDeck.value = null  // Reset all decks to collapsed state
   activeCard.value = card
 }
 </script>

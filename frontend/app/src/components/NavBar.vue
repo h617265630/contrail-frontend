@@ -210,16 +210,51 @@
           Login
         </Button>
 
-        <Button
-          :as="RouterLinkComp"
-          to="/createpath"
-          variant="outline"
-          size="sm"
-          class="hidden md:inline-flex h-9 rounded-none border-border bg-black px-3 text-xs font-semibold tracking-[0.14em] uppercase text-white transition-all hover:-translate-y-px hover:bg-[#8ecbff] hover:text-white hover:shadow-sm active:translate-y-0"
-        >
-          <Plus class="h-4 w-4" />
-          <span class="hidden lg:inline">{{ t('CreatePath') }}</span>
-        </Button>
+        <div ref="createMenuRef" class="relative hidden md:inline-flex">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            class="h-9 rounded-full border border-border px-3 text-xs font-medium tracking-[0.14em] uppercase shadow-sm transition-colors"
+            :class="createMenuOpen
+              ? 'bg-[#8ecbff] text-white hover:bg-[#8ecbff]'
+              : 'bg-background text-foreground hover:bg-[#8ecbff]/30'"
+            @click="createMenuOpen = !createMenuOpen"
+          >
+            <Plus class="h-4 w-4" />
+            <span>Create</span>
+          </Button>
+
+          <div
+            v-if="createMenuOpen"
+            class="absolute left-0 top-full mt-0 w-56 rounded-xl border border-border bg-background p-1 shadow-xl"
+          >
+            <RouterLink
+              class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-[#8ecbff]/30"
+              to="/createpath"
+              @click="createMenuOpen = false"
+            >
+              <Plus class="h-4 w-4" />
+              <span>{{ t('Create path') }}</span>
+            </RouterLink>
+            <RouterLink
+              class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-[#8ecbff]/30"
+              to="/my-resources/add"
+              @click="createMenuOpen = false"
+            >
+              <Library class="h-4 w-4" />
+              <span>Add resource</span>
+            </RouterLink>
+            <RouterLink
+              class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-[#8ecbff]/30"
+              to="/creator"
+              @click="createMenuOpen = false"
+            >
+              <PenLine class="h-4 w-4" />
+              <span>Write note</span>
+            </RouterLink>
+          </div>
+        </div>
 
         <div ref="langMenuRef" class="relative">
           <Button
@@ -275,6 +310,8 @@
         <RouterLink class="py-2 hover:text-foreground" to="/resources" @click="open = false">Resources</RouterLink>
         <div class="my-1 h-px bg-border"></div>
         <RouterLink class="py-2 hover:text-foreground" to="/createpath" @click="open = false">{{ t('CreatePath') }}</RouterLink>
+        <RouterLink class="py-2 hover:text-foreground" to="/my-resources/add" @click="open = false">Add resource</RouterLink>
+        <RouterLink class="py-2 hover:text-foreground" to="/creator" @click="open = false">Write note</RouterLink>
         <RouterLink v-if="!isAuthed" class="py-2 hover:text-foreground" to="/login" @click="open = false">Login</RouterLink>
         <button
           type="button"
@@ -295,7 +332,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { Library, Plus, Search, User, ChevronDown, LogOut, Globe, Moon, Sun, Menu, X } from 'lucide-vue-next'
+import { Library, Plus, Search, User, ChevronDown, LogOut, Globe, Moon, Sun, Menu, X, PenLine } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -321,6 +358,8 @@ const { lang, setLang, t, languages } = useI18n()
 
 const langMenuOpen = ref(false)
 const langMenuRef = ref<HTMLElement | null>(null)
+const createMenuOpen = ref(false)
+const createMenuRef = ref<HTMLElement | null>(null)
 const displayName = computed(() => user.value?.username || 'User')
 const avatarUrl = computed(() => {
   const explicit = String((user.value as any)?.avatar_url || '').trim()
@@ -355,10 +394,16 @@ function selectLang(next: AppLang) {
 }
 
 function onDocumentClick(event: MouseEvent) {
-  if (!langMenuOpen.value) return
   const target = event.target as Node | null
-  if (target && langMenuRef.value && !langMenuRef.value.contains(target)) {
-    langMenuOpen.value = false
+  if (langMenuOpen.value) {
+    if (target && langMenuRef.value && !langMenuRef.value.contains(target)) {
+      langMenuOpen.value = false
+    }
+  }
+  if (createMenuOpen.value) {
+    if (target && createMenuRef.value && !createMenuRef.value.contains(target)) {
+      createMenuOpen.value = false
+    }
   }
 }
 

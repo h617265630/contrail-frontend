@@ -29,7 +29,7 @@
               @update:modelValue="onInput('username')"
             />
 
-            <span v-if="fieldErrors.username" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none">
+            <span v-if="fieldErrors.username" class="absolute left-9 -bottom-5 text-xs text-red-500 pointer-events-none">
               {{ fieldErrors.username }}
             </span>
           </div>
@@ -52,7 +52,7 @@
               @update:modelValue="onInput('email')"
             />
 
-            <span v-if="fieldErrors.email" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none">
+            <span v-if="fieldErrors.email" class="absolute left-9 -bottom-5 text-xs text-red-500 pointer-events-none">
               {{ fieldErrors.email }}
             </span>
           </div>
@@ -85,7 +85,7 @@
               <Eye v-else class="w-4 h-4" />
             </Button>
 
-            <span v-if="fieldErrors.password" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none">
+            <span v-if="fieldErrors.password" class="absolute left-9 -bottom-5 text-xs text-red-500 pointer-events-none">
               {{ fieldErrors.password }}
             </span>
           </div>
@@ -118,7 +118,7 @@
               <Eye v-else class="w-4 h-4" />
             </Button>
 
-            <span v-if="fieldErrors.confirm_password" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none">
+            <span v-if="fieldErrors.confirm_password" class="absolute left-9 -bottom-5 text-xs text-red-500 pointer-events-none">
               {{ fieldErrors.confirm_password }}
             </span>
           </div>
@@ -132,10 +132,16 @@
           </label>
         </div>
 
-        <Button type="submit" :disabled="loading || !isFormValid" class="w-full rounded-md">
+        <Button
+          type="submit"
+          :disabled="loading || !isFormValid"
+          variant="outline"
+          size="lg"
+          class="w-full rounded-none border-border bg-[#8ecbff] text-white transition-all hover:-translate-y-px hover:bg-[#8ecbff]/90 hover:text-white hover:shadow-sm active:translate-y-0"
+        >
           {{ loading ? 'Creating...' : 'Create Account' }}
         </Button>
-        <p v-if="formError" class="text-destructive text-sm text-center">{{ formError }}</p>
+        <p v-if="formError" class="text-red-500 text-sm text-center">{{ formError }}</p>
         <p v-if="successMessage" class="text-foreground text-sm text-center">{{ successMessage }}</p>
         </form>
 

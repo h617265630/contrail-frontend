@@ -79,7 +79,9 @@
         <Button
           type="submit"
           :disabled="loading || !isFormValid"
-          class="w-full rounded-md hover:bg-[#8ecbff] hover:text-white"
+          variant="outline"
+          size="lg"
+          class="w-full rounded-none border-border bg-[#8ecbff] text-white transition-all hover:-translate-y-px hover:bg-[#8ecbff]/90 hover:text-white hover:shadow-sm active:translate-y-0"
         >
           {{ loading ? 'Signing in...' : 'Sign In' }}
         </Button>

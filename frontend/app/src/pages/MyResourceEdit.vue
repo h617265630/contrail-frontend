@@ -4,7 +4,7 @@
       <div class="grid gap-6 md:grid-cols-12 md:items-end">
         <div class="md:col-span-8">
           <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Edit Resource</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Update URL, name, and description.</p>
+          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Update URL, title, and description.</p>
         </div>
         <div class="md:col-span-4 md:flex md:justify-end md:items-end">
           <Button type="button" variant="outline" size="sm" class="rounded-none" @click="goBack">Back</Button>
@@ -22,7 +22,7 @@
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-foreground mb-2">Name</label>
+            <label class="block text-sm font-semibold text-foreground mb-2">Title</label>
             <Input v-model="form.title" type="text" class="h-10 rounded-none" placeholder="Resource title" />
           </div>
 

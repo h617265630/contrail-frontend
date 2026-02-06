@@ -53,102 +53,149 @@
         <p class="text-sm text-muted-foreground">No resources yet</p>
       </div>
 
-      <div v-else class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+      <div v-else class="grid grid-cols-1 gap-6 justify-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
         <Card
           v-for="resource in filteredResources"
           :key="resource.id"
-          class="rounded-none cursor-pointer"
-          :hoverable="true"
-          @click="viewResource(resource)"
+          class="shrink-0 w-56 min-h-72 rounded-md border border-border bg-card shadow-sm transition-all duration-300 ease-out cursor-pointer hover:shadow-xl hover:!z-[100] card-hover"
+          :hoverable="false"
+          @click="openCard(resource)"
         >
-          <div class="relative h-32 bg-muted">
-            <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="h-full w-full object-cover" />
-            <div class="absolute top-3 right-3">
-              <span class="px-2 py-1 border border-border bg-background text-foreground text-xs font-semibold">
-                {{ resource.type }}
+          <div class="h-full flex flex-col overflow-hidden rounded-md">
+            <div class="px-3 py-2 border-b border-border flex items-center justify-between">
+              <span
+                class="px-2 py-0.5 text-xs font-medium rounded"
+                :style="{
+                  backgroundColor: getCategoryColor(resource.category) + '20',
+                  color: getCategoryColor(resource.category),
+                }"
+              >
+                {{ resource.category || '—' }}
               </span>
-            </div>
-          </div>
-
-          <div class="p-4 flex min-h-0 flex-1 flex-col">
-            <h3 class="truncate text-sm font-semibold text-foreground">{{ resource.title }}</h3>
-            <p class="mt-2 line-clamp-3 text-sm text-muted-foreground">{{ resource.summary }}</p>
-
-            <div class="mt-3 space-y-1 text-xs text-muted-foreground">
-              <div class="flex items-center justify-between gap-3">
-                <span class="truncate text-foreground">来源：{{ formatPlatform(resource.platform) }}</span>
-              </div>
-              <div class="flex items-center justify-between gap-3">
-                <span>Category</span>
-                <span class="truncate text-foreground">{{ resource.category || '—' }}</span>
-              </div>
-              <div class="flex items-center justify-between gap-3">
-                <span>Added</span>
-                <span class="text-foreground">{{ resource.addedDate || '—' }}</span>
-              </div>
+              <span class="text-xs text-muted-foreground">#{{ String(resource.id).padStart(3, '0') }}</span>
             </div>
 
-            <div class="mt-auto pt-4">
-              <div class="flex items-center justify-end gap-3">
-                <div class="flex items-center gap-2">
-                  <button
-                    type="button"
-                    class="relative inline-flex h-7 w-24 items-center rounded-full border border-border bg-muted/30 p-0.5 transition-colors"
-                    @click.stop="togglePublic(resource)"
-                    :disabled="publicUpdatingId === resource.id"
-                    aria-label="Toggle privacy"
-                  >
-                    <span
-                      class="absolute inset-y-0.5 left-0.5 w-[calc(50%-0.25rem)] rounded-full shadow-sm transition-transform"
-                      :class="[
-                        resource.is_system_public ? 'bg-[#f9a8d4]' : 'bg-[#8ecbff]',
-                        resource.is_system_public ? 'translate-x-[calc(100%+0.25rem)]' : 'translate-x-0',
-                      ]"
-                    />
-                    <span class="relative z-10 flex w-full text-[11px] font-semibold">
-                      <span
-                        class="flex w-1/2 justify-center"
-                        :class="resource.is_system_public ? 'text-muted-foreground' : 'text-white'"
-                      >
-                        Private
-                      </span>
-                      <span
-                        class="flex w-1/2 justify-center"
-                        :class="resource.is_system_public ? 'text-white' : 'text-muted-foreground'"
-                      >
-                        Public
-                      </span>
-                    </span>
-                  </button>
-                </div>
-              </div>
+            <div class="relative h-28 bg-white overflow-hidden px-2">
+              <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="w-full h-full object-cover" />
+            </div>
 
-              <div class="mt-2 grid grid-cols-3 gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  class="rounded-none bg-[#8ecbff]/90 text-white hover:bg-[#8ecbff] hover:text-white"
-                  @click.stop="viewResource(resource)"
-                >
-                  View
-                </Button>
-                <Button type="button" variant="outline" size="sm" class="rounded-none" @click.stop="editResource(resource)">Edit</Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  class="rounded-none hover:border-[#8ecbff] hover:bg-[#8ecbff] hover:text-white"
-                  :disabled="deletingId === resource.id"
-                  @click.stop="deleteResource(resource)"
-                >
-                  {{ deletingId === resource.id ? 'Deleting…' : 'Delete' }}
-                </Button>
-              </div>
+            <div class="px-3 py-2 border-b border-border bg-white">
+              <h3 class="text-sm font-bold text-foreground line-clamp-1" :title="resource.title">{{ resource.title }}</h3>
+            </div>
+
+            <div class="px-3 py-2 flex-1 bg-muted/30">
+              <p class="text-xs text-muted-foreground line-clamp-2">{{ resource.summary }}</p>
+            </div>
+
+            <div class="px-3 py-2 border-t border-border flex items-center justify-between">
+              <span class="text-xs text-muted-foreground">{{ formatPlatform(resource.platform) }}</span>
+              <span class="text-xs font-medium text-foreground">{{ resource.type }}</span>
             </div>
           </div>
         </Card>
       </div>
     </section>
+
+    <Teleport to="body">
+      <Transition name="modal">
+        <div
+          v-if="activeResource"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4"
+          @click.self="closeActiveResource"
+        >
+          <div class="absolute inset-0 bg-black/50"></div>
+          <div class="relative w-full max-w-md rounded-md overflow-hidden bg-card border border-border shadow-xl">
+            <div class="relative h-48 bg-muted overflow-hidden">
+              <img
+                :src="activeResource.thumbnail || fallbackThumb"
+                :alt="activeResource.title"
+                class="w-full h-full object-cover"
+              />
+              <button
+                class="absolute top-3 right-3 w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white hover:bg-red-600 transition"
+                @click="closeActiveResource"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div class="p-4 border-b border-border">
+              <div class="flex items-center gap-2 mb-2">
+                <span
+                  class="px-2 py-0.5 text-xs font-medium rounded"
+                  :style="{
+                    backgroundColor: getCategoryColor(activeResource.category) + '20',
+                    color: getCategoryColor(activeResource.category),
+                  }"
+                >
+                  {{ activeResource.category || '—' }}
+                </span>
+                <span class="text-xs text-muted-foreground">#{{ String(activeResource.id).padStart(3, '0') }}</span>
+              </div>
+              <h2 class="text-xl font-bold text-foreground">{{ activeResource.title }}</h2>
+            </div>
+
+            <div class="p-4">
+              <p class="text-sm text-muted-foreground mb-4">{{ activeResource.summary }}</p>
+              <div class="flex items-center gap-4 text-sm text-muted-foreground">
+                <span>{{ formatPlatform(activeResource.platform) }}</span>
+                <span>•</span>
+                <span>{{ activeResource.type }}</span>
+              </div>
+            </div>
+
+            <div class="p-4 border-t border-border flex flex-col gap-3">
+              <Button
+                type="button"
+                class="w-full rounded-none bg-foreground text-background font-medium hover:bg-foreground/90"
+                @click="seeDetail(activeResource)"
+              >
+                See detail
+              </Button>
+
+              <div class="flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  class="relative inline-flex h-8 w-28 items-center rounded-full border border-border bg-muted/30 p-0.5 transition-colors"
+                  @click.stop="togglePublic(activeResource)"
+                  :disabled="publicUpdatingId === activeResource.id"
+                  aria-label="Toggle privacy"
+                >
+                  <span
+                    class="absolute inset-y-0.5 left-0.5 w-[calc(50%-0.25rem)] rounded-full shadow-sm transition-transform"
+                    :class="[
+                      activeResource.is_system_public ? 'bg-[#f9a8d4]' : 'bg-[#8ecbff]',
+                      activeResource.is_system_public ? 'translate-x-[calc(100%+0.25rem)]' : 'translate-x-0',
+                    ]"
+                  />
+                  <span class="relative z-10 flex w-full text-[11px] font-semibold">
+                    <span class="flex w-1/2 justify-center" :class="activeResource.is_system_public ? 'text-muted-foreground' : 'text-white'">
+                      Private
+                    </span>
+                    <span class="flex w-1/2 justify-center" :class="activeResource.is_system_public ? 'text-white' : 'text-muted-foreground'">
+                      Public
+                    </span>
+                  </span>
+                </button>
+
+                <div class="flex items-center gap-2">
+                  <Button type="button" variant="outline" class="rounded-none" @click.stop="editFromModal(activeResource)">Edit</Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    class="rounded-none hover:border-[#8ecbff] hover:bg-[#8ecbff] hover:text-white"
+                    :disabled="deletingId === activeResource.id"
+                    @click.stop="deleteFromModal(activeResource)"
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
     <div v-if="showDeleteConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
       <Card class="w-full max-w-md rounded-none" :hoverable="false">
@@ -218,6 +265,12 @@ const filterType = ref('')
 const loading = ref(false)
 const deletingId = ref<number | null>(null)
 const publicUpdatingId = ref<number | null>(null)
+
+const activeResourceId = ref<number | null>(null)
+const activeResource = computed(() => {
+  if (activeResourceId.value === null) return null
+  return resources.value.find(r => r.id === activeResourceId.value) || null
+})
 
 const showDeleteConfirm = ref(false)
 const deleteTarget = ref<UiResource | null>(null)
@@ -309,6 +362,39 @@ function getResourceTypeClass(type: string) {
   }
 }
 
+function getCategoryColor(category?: string) {
+  const key = String(category || '').trim().toLowerCase() || 'other'
+  const palette = ['#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316', '#84cc16']
+  let hash = 0
+  for (let i = 0; i < key.length; i += 1) {
+    hash = (hash * 31 + key.charCodeAt(i)) >>> 0
+  }
+  return palette[hash % palette.length]
+}
+
+function openCard(resource: UiResource) {
+  activeResourceId.value = resource.id
+}
+
+function closeActiveResource() {
+  activeResourceId.value = null
+}
+
+function seeDetail(resource: UiResource) {
+  closeActiveResource()
+  viewResource(resource)
+}
+
+function editFromModal(resource: UiResource) {
+  closeActiveResource()
+  editResource(resource)
+}
+
+function deleteFromModal(resource: UiResource) {
+  closeActiveResource()
+  deleteResource(resource)
+}
+
 function viewResource(resource: UiResource) {
   const name = resource.type === 'video'
     ? 'my-resource-video'
@@ -354,3 +440,21 @@ async function confirmDelete() {
   }
 }
 </script>
+
+<style scoped>
+.card-hover:hover {
+  animation: card-tilt-up 0.4s ease forwards;
+}
+
+@keyframes card-tilt-up {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  30% {
+    transform: rotate(-6deg) scale(1.08);
+  }
+  100% {
+    transform: rotate(0deg) scale(1.25);
+  }
+}
+</style>
