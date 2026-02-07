@@ -21,6 +21,7 @@ class ResourceUpdateRequest(BaseModel):
     difficulty: Optional[int] = None
     tags: Optional[dict[str, Any]] = None
     raw_meta: Optional[dict[str, Any]] = None
+    manual_weight: Optional[int] = None
     model_config = ConfigDict(from_attributes=True)
 
 

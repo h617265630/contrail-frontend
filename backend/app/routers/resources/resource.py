@@ -79,22 +79,24 @@ def delete_resource(resource_id: int, db: Session = Depends(get_db_dep), current
 
 @router.get("/me/{resource_id}", response_model=ResourceDetailResponse)
 def get_my_resource_detail(resource_id: int, db: Session = Depends(get_db_dep), current_user=Depends(get_current_user)):
-    hit = (
-        db.query(Resource, UserResource)
-        .join(UserResource, UserResource.resource_id == Resource.id)
-        .filter(UserResource.user_id == current_user.id, Resource.id == resource_id)
+    assoc = (
+        db.query(UserResource)
+        .filter(UserResource.user_id == current_user.id, UserResource.resource_id == resource_id)
         .first()
     )
-    if not hit:
+    if not assoc:
         raise HTTPException(status_code=404, detail="resource not found")
 
-    obj, assoc = hit
+    obj = db.query(Resource).filter(Resource.id == resource_id).first()
+    if not obj:
+        raise HTTPException(status_code=404, detail="resource not found")
 
     # Engagement tracking
     try:
         assoc.last_opened = datetime.now()
         assoc.open_count = int(getattr(assoc, "open_count", 0) or 0) + 1
         db.commit()
+        db.refresh(assoc)
     except Exception:
         db.rollback()
 
@@ -403,17 +405,39 @@ def update_my_resource(
             tags=payload.tags,
             raw_meta=payload.raw_meta,
         )
+
+        assoc = (
+            db.query(UserResource)
+            .filter(UserResource.user_id == current_user.id, UserResource.resource_id == resource_id)
+            .first()
+        )
+        if not assoc:
+            raise ValueError("user_resource association not found")
+
+        if payload.manual_weight is not None:
+            assoc.manual_weight = int(payload.manual_weight)
+            assoc.effective_weight = int(payload.manual_weight)
+
         db.commit()
         db.refresh(obj)
+        db.refresh(assoc)
     except ValueError as e:
         db.rollback()
         msg = str(e)
         if "not found" in msg:
             raise HTTPException(status_code=404, detail=msg)
+        if "association not found" in msg:
+            raise HTTPException(status_code=404, detail=msg)
         raise HTTPException(status_code=400, detail=msg)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=f"更新失败: {e}")
+
+    assoc = (
+        db.query(UserResource)
+        .filter(UserResource.user_id == current_user.id, UserResource.resource_id == resource_id)
+        .first()
+    )
 
     return ResourceResponse(
         id=obj.id,
@@ -428,6 +452,16 @@ def update_my_resource(
         difficulty=getattr(obj, "difficulty", None),
         tags=getattr(obj, "tags", None),
         raw_meta=getattr(obj, "raw_meta", None),
+        manual_weight=getattr(assoc, "manual_weight", None) if assoc else None,
+        behavior_weight=getattr(assoc, "behavior_weight", None) if assoc else None,
+        effective_weight=getattr(assoc, "effective_weight", None) if assoc else None,
+        added_at=getattr(assoc, "added_at", None) if assoc else None,
+        last_opened=getattr(assoc, "last_opened", None) if assoc else None,
+        open_count=getattr(assoc, "open_count", None) if assoc else None,
+        completion_status=getattr(assoc, "completion_status", None) if assoc else None,
+        community_score=getattr(obj, "community_score", None),
+        save_count=getattr(obj, "save_count", None),
+        trending_score=getattr(obj, "trending_score", None),
         created_at=getattr(obj, "created_at", None),
     )
 

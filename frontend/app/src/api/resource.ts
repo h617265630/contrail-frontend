@@ -133,6 +133,7 @@ export function updateMyResource(
     difficulty?: number | null
     tags?: Record<string, any> | null
     raw_meta?: Record<string, any> | null
+    manual_weight?: number | null
   },
 ) {
   return request.patch<DbResource, DbResource>(`/resources/me/${resourceId}`, payload)

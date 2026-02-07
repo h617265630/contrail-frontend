@@ -36,6 +36,39 @@
             />
           </div>
 
+          <div>
+            <label class="block text-sm font-semibold text-foreground mb-2">Weight</label>
+            <select
+              v-model.number="form.manual_weight"
+              class="h-10 w-full rounded-none border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <option :value="1">Soil</option>
+              <option :value="2">Iron</option>
+              <option :value="3">Bronze</option>
+              <option :value="4">Silver</option>
+              <option :value="5">Gold</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-foreground mb-2">Preview</label>
+            <div
+              :class="[
+                'w-full max-w-md rounded-md border border-border bg-card shadow-sm overflow-hidden',
+                getWeightCardClass(form.manual_weight),
+              ]"
+            >
+              <div class="px-4 py-3 border-b border-border flex items-center justify-between">
+                <div class="text-sm font-semibold text-foreground line-clamp-1">{{ form.title || 'Untitled resource' }}</div>
+                <div class="text-xs text-muted-foreground">Weight: {{ form.manual_weight }}</div>
+              </div>
+              <div class="p-4">
+                <div class="text-xs text-muted-foreground line-clamp-3">{{ form.description || 'No description' }}</div>
+                <div class="mt-3 text-xs text-muted-foreground line-clamp-1">{{ form.url || 'https://...' }}</div>
+              </div>
+            </div>
+          </div>
+
           <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
 
           <div class="flex gap-3 justify-end">
@@ -78,7 +111,17 @@ const form = ref({
   url: '',
   title: '',
   description: '',
+  manual_weight: 1,
 })
+
+function getWeightCardClass(w: number) {
+  const n = Number(w)
+  if (n >= 5) return 'weight-gold'
+  if (n === 4) return 'weight-silver'
+  if (n === 3) return 'weight-bronze'
+  if (n === 2) return 'weight-iron'
+  return 'weight-soil'
+}
 
 function goBack() {
   router.push({ name: 'my-resources' })
@@ -97,6 +140,7 @@ onMounted(async () => {
       url: String((detail as any).source_url || ''),
       title: String(detail.title || ''),
       description: String((detail as any).summary || ''),
+      manual_weight: Number((detail as any).manual_weight ?? 1) || 1,
     }
   } catch (e: any) {
     const msg = e?.response?.data?.detail || e?.message || 'Failed to load resource'
@@ -114,6 +158,7 @@ async function save() {
     await updateMyResource(resourceId, {
       title: form.value.title,
       summary: form.value.description,
+      manual_weight: form.value.manual_weight,
     })
     router.push({ name: 'my-resources' })
   } catch (e: any) {
@@ -124,3 +169,37 @@ async function save() {
   }
 }
 </script>
+
+<style scoped>
+.weight-gold {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box,
+    linear-gradient(45deg, #FFD700, #FFF8DC, #FFD700) border-box;
+}
+
+.weight-silver {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box,
+    linear-gradient(45deg, #C0C0C0, #F8F8FF, #C0C0C0) border-box;
+}
+
+.weight-bronze {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box,
+    linear-gradient(45deg, #CD7F32, #FFE1C2, #CD7F32) border-box;
+}
+
+.weight-iron {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box,
+    linear-gradient(45deg, #94A3B8, #E2E8F0, #94A3B8) border-box;
+}
+
+.weight-soil {
+  border: 1px solid hsl(var(--border));
+}
+</style>

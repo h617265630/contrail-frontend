@@ -6,14 +6,26 @@
           <h1 class="text-2xl font-bold text-foreground">My Resources</h1>
           <p class="text-muted-foreground mt-1">Manage the learning resources you saved.</p>
         </div>
-        <Button
-          type="button"
-          size="sm"
-          class="rounded-none hover:bg-[#8ecbff] hover:text-white"
-          @click="router.push({ name: 'add-resource' })"
-        >
-          Add Resource
-        </Button>
+        <div class="flex items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            class="rounded-none"
+            @click="expandAll = !expandAll"
+          >
+            {{ expandAll ? '收起全部' : '展开全部' }}
+          </Button>
+
+          <Button
+            type="button"
+            size="sm"
+            class="rounded-none hover:bg-[#8ecbff] hover:text-white"
+            @click="router.push({ name: 'add-resource' })"
+          >
+            Add Resource
+          </Button>
+        </div>
       </header>
 
       <div class="mb-8 grid gap-4 md:grid-cols-12 md:items-center">
@@ -64,7 +76,10 @@
                 <div
                   v-for="(resource, cardIndex) in deck.cards"
                   :key="resource.id"
-                  class="shrink-0 w-56 h-72 rounded-md border border-border bg-card shadow-sm transition-all duration-300 ease-out cursor-pointer hover:shadow-xl hover:!z-[100] card-hover"
+                  :class="[
+                    'shrink-0 w-56 h-72 rounded-md border border-border bg-card shadow-sm transition-all duration-300 ease-out cursor-pointer hover:shadow-xl hover:!z-[100] card-hover',
+                    getWeightCardClass(resource),
+                  ]"
                   :style="getDeckCardStyle(deck.key, cardIndex)"
                   @click="openCard(resource)"
                 >
@@ -249,8 +264,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Search, X } from 'lucide-vue-next'
 import { deleteMyResource, listMyResources, type DbResource } from '../api/resource'
 import Card from '../components/ui/Card.vue'
@@ -258,6 +273,7 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { formatPlatform } from '../utils/platform'
 
+const route = useRoute()
 const router = useRouter()
 
 type UiResource = {
@@ -270,6 +286,7 @@ type UiResource = {
   type: 'video' | 'document' | 'article'
   addedDate?: string
   is_system_public?: boolean
+  manual_weight?: number | null
 }
 
 const resources = ref<UiResource[]>([])
@@ -312,7 +329,17 @@ function mapDbToUi(r: DbResource): UiResource {
     type,
     addedDate: formatDate(r.created_at),
     is_system_public: Boolean((r as any).is_system_public),
+    manual_weight: (r as any).manual_weight ?? null,
   }
+}
+
+function getWeightCardClass(resource: UiResource) {
+  const w = Number(resource.manual_weight)
+  if (w >= 5) return 'weight-gold'
+  if (w === 4) return 'weight-silver'
+  if (w === 3) return 'weight-bronze'
+  if (w === 2) return 'weight-iron'
+  return 'weight-soil'
 }
 
 async function togglePublic(resource: UiResource) {
@@ -340,7 +367,28 @@ async function load() {
 
 onMounted(() => {
   load()
+
+  window.addEventListener('focus', load)
+  document.addEventListener('visibilitychange', onVisibilityChange)
 })
+
+function onVisibilityChange() {
+  if (document.visibilityState === 'visible') {
+    load()
+  }
+}
+
+onUnmounted(() => {
+  window.removeEventListener('focus', load)
+  document.removeEventListener('visibilitychange', onVisibilityChange)
+})
+
+watch(
+  () => route.fullPath,
+  () => {
+    load()
+  },
+)
 
 const filteredResources = computed(() => {
   const q = searchKeyword.value.trim().toLowerCase()
@@ -369,6 +417,7 @@ type Deck = {
 }
 
 const hoveredDeckKey = ref<string | null>(null)
+const expandAll = ref(false)
 
 const decks = computed<Deck[]>(() => {
   const map = new Map<string, UiResource[]>()
@@ -386,7 +435,7 @@ const decks = computed<Deck[]>(() => {
 
 function getDeckCardStyle(deckKey: string, cardIndex: number) {
   const isHovered = hoveredDeckKey.value === deckKey
-  const isExpanded = isHovered
+  const isExpanded = expandAll.value || isHovered
   const total = decks.value.find(d => d.key === deckKey)?.cards.length || 0
 
   if (isExpanded) {
@@ -499,6 +548,38 @@ async function confirmDelete() {
 <style scoped>
 .card-hover:hover {
   animation: card-tilt-up 0.4s ease forwards;
+}
+
+.weight-gold {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box,
+    linear-gradient(45deg, #FFD700, #FFF8DC, #FFD700) border-box;
+}
+
+.weight-silver {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box,
+    linear-gradient(45deg, #C0C0C0, #F8F8FF, #C0C0C0) border-box;
+}
+
+.weight-bronze {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box,
+    linear-gradient(45deg, #CD7F32, #FFE1C2, #CD7F32) border-box;
+}
+
+.weight-iron {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box,
+    linear-gradient(45deg, #94A3B8, #E2E8F0, #94A3B8) border-box;
+}
+
+.weight-soil {
+  border: 1px solid hsl(var(--border));
 }
 
 @keyframes card-tilt-up {
