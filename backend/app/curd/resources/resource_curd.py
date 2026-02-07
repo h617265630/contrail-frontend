@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Optional
 from urllib.parse import urlparse
 from html import unescape
@@ -167,6 +168,10 @@ class ResourceCURD:
         if meta.get("og_video") or meta.get("twitter_player"):
             return "video"
 
+        # If HTML indicates an inline video player but missing OG tags, treat as video
+        if meta.get("has_video"):
+            return "video"
+
         # GitHub is usually docs/technical content
         if host.endswith("github.com"):
             return "document"
@@ -252,6 +257,15 @@ class ResourceCURD:
                 og_video = _find_meta(text, prop="og:video") or _find_meta(text, prop="og:video:url")
                 twitter_player = _find_meta(text, name="twitter:player")
 
+                # Some sites don't expose OG video tags; detect video elements/streams in HTML.
+                has_video = False
+                if re.search(r"<video\b", text, flags=re.IGNORECASE):
+                    has_video = True
+                elif re.search(r"\.(mp4|m3u8)(?:\?|\"|'|\s)", text, flags=re.IGNORECASE):
+                    has_video = True
+                elif re.search(r"<iframe[^>]+(?:player|embed)", text, flags=re.IGNORECASE):
+                    has_video = True
+
                 if platform:
                     platform = platform.strip() or None
                 host = (urlparse(raw).hostname or "").lower().removeprefix("www.") or None
@@ -269,6 +283,7 @@ class ResourceCURD:
                     "og_type": og_type,
                     "og_video": og_video,
                     "twitter_player": twitter_player,
+                    "has_video": has_video,
                     "chapters": [],
                 }
         except Exception:
@@ -406,14 +421,60 @@ class ResourceCURD:
 
     @staticmethod
     def attach_to_user(db: Session, *, user_id: int, resource_id: int, is_public: bool = False) -> None:
+        ResourceCURD.attach_to_user_with_weight(
+            db,
+            user_id=user_id,
+            resource_id=resource_id,
+            is_public=is_public,
+            manual_weight=None,
+        )
+
+    @staticmethod
+    def attach_to_user_with_weight(
+        db: Session,
+        *,
+        user_id: int,
+        resource_id: int,
+        is_public: bool = False,
+        manual_weight: Optional[int] = None,
+    ) -> None:
         hit = (
             db.query(UserResource)
             .filter(UserResource.user_id == user_id, UserResource.resource_id == resource_id)
             .first()
         )
+
+        # Policy:
+        # - default manual_weight=1 when user doesn't set explicitly
+        # - if already exists and request includes manual_weight, overwrite it
         if hit:
+            if manual_weight is not None:
+                hit.manual_weight = int(manual_weight)
+                hit.effective_weight = int(manual_weight)
             return
-        db.add(UserResource(user_id=user_id, resource_id=resource_id, is_public=is_public))
+
+        default_weight = 1 if manual_weight is None else int(manual_weight)
+        db.add(
+            UserResource(
+                user_id=user_id,
+                resource_id=resource_id,
+                is_public=is_public,
+                manual_weight=default_weight,
+                effective_weight=default_weight,
+                added_at=datetime.now(),
+                open_count=0,
+                completion_status=False,
+            )
+        )
+
+        # Community metric: increment save_count on first attach.
+        obj = db.query(Resource).filter(Resource.id == resource_id).first()
+        if obj is not None:
+            try:
+                obj.save_count = int(getattr(obj, "save_count", 0) or 0) + 1
+            except Exception:
+                obj.save_count = 1
+
         db.flush()
 
     @staticmethod
@@ -439,6 +500,7 @@ class ResourceCURD:
         category_id: int,
         is_system_public: bool = False,
         is_public: bool = False,
+        manual_weight: Optional[int] = None,
     ) -> Resource:
         meta = ResourceCURD.extract_from_url(url)
         normalized = (url or "").strip()
@@ -502,7 +564,13 @@ class ResourceCURD:
             db.add(a)
             db.flush()
 
-        ResourceCURD.attach_to_user(db, user_id=user_id, resource_id=obj.id, is_public=is_public)
+        ResourceCURD.attach_to_user_with_weight(
+            db,
+            user_id=user_id,
+            resource_id=obj.id,
+            is_public=is_public,
+            manual_weight=manual_weight,
+        )
         return obj
 
     @staticmethod

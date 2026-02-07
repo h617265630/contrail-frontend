@@ -71,7 +71,7 @@
 								to="/learningpool"
 								variant="default"
 								size="sm"
-								class="rounded-none"
+								class="rounded-none bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								Explore
 								<span aria-hidden>→</span>

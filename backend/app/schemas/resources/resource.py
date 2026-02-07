@@ -8,6 +8,7 @@ class ResourceCreateFromUrl(BaseModel):
     url: HttpUrl
     category_id: int
     is_public: Optional[bool] = False
+    manual_weight: Optional[int] = None
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -56,6 +57,18 @@ class ResourceResponse(BaseModel):
     tags: Optional[dict[str, Any]] = None
     raw_meta: Optional[dict[str, Any]] = None
     is_system_public: Optional[bool] = None
+
+    manual_weight: Optional[int] = None
+    behavior_weight: Optional[int] = None
+    effective_weight: Optional[int] = None
+    added_at: Optional[datetime] = None
+    last_opened: Optional[datetime] = None
+    open_count: Optional[int] = None
+    completion_status: Optional[bool] = None
+
+    community_score: Optional[int] = None
+    save_count: Optional[int] = None
+    trending_score: Optional[int] = None
 
     created_at: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)

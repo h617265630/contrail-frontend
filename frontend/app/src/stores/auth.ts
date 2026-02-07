@@ -57,6 +57,7 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(readToken())
   const user = ref<UserProfile | null>(readUser())
   const isAuthed = computed(() => !!token.value)
+  const avatarBuster = ref(0)
 
   function setToken(next: string | null) {
     token.value = next
@@ -64,8 +65,17 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function setUser(next: UserProfile | null) {
+    const prevAvatar = String((user.value as any)?.avatar_url || '').trim()
+    const nextAvatar = String((next as any)?.avatar_url || '').trim()
     user.value = next
     persistUser(next)
+    if (next && nextAvatar && nextAvatar !== prevAvatar) {
+      avatarBuster.value += 1
+    }
+  }
+
+  function bumpAvatarBuster() {
+    avatarBuster.value += 1
   }
 
   function logout() {
@@ -98,9 +108,11 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     token,
     user,
+    avatarBuster,
     isAuthed,
     setToken,
     setUser,
+    bumpAvatarBuster,
     logout,
     fetchProfile,
   }

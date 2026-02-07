@@ -124,7 +124,7 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   type="button"
-                  class="rounded-none border border-gray-200 bg-white p-3 text-left transition hover:bg-gray-50"
+                  class="rounded-none border border-gray-200 bg-white p-3 text-left transition hover:bg-[#8ecbff]/30 active:bg-[#8ecbff]/60"
                   :class="selectedTemplate === 'github_trends' ? 'border-blue-600' : ''"
                   @click="applyTemplate('github_trends')"
                 >
@@ -133,7 +133,7 @@
                 </button>
                 <button
                   type="button"
-                  class="rounded-none border border-gray-200 bg-white p-3 text-left transition hover:bg-gray-50"
+                  class="rounded-none border border-gray-200 bg-white p-3 text-left transition hover:bg-[#8ecbff]/30 active:bg-[#8ecbff]/60"
                   :class="selectedTemplate === 'social_news' ? 'border-blue-600' : ''"
                   @click="applyTemplate('social_news')"
                 >

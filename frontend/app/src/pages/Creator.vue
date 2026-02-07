@@ -294,8 +294,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import CodeMirrorEditor from '../components/CodeMirrorEditor.vue'
 import Card from '../components/ui/Card.vue'
 import { Button } from '../components/ui/button'
@@ -308,6 +308,19 @@ type CreatorItemKind = 'image' | 'hand' | 'url' | 'idea' | 'markdown'
 
 const activeTab = ref<CreatorTab>('image')
 
+function normalizeCreatorTab(value: unknown): CreatorTab | null {
+  const t = String(value || '').trim()
+  if (!t) return null
+  if (t === 'image' || t === 'hand' || t === 'url' || t === 'idea' || t === 'markdown' || t === 'records') return t
+  return null
+}
+
+function syncTabFromRoute() {
+  const next = normalizeCreatorTab((route.query as any)?.tab)
+  if (next && next !== activeTab.value) activeTab.value = next
+}
+
+const route = useRoute()
 const router = useRouter()
 
 const tabTitle = computed(() => {
@@ -712,6 +725,7 @@ async function saveMarkdown() {
 const totalCount = computed(() => items.value.length)
 
 onMounted(async () => {
+  syncTabFromRoute()
   const loaded = loadItems().filter((i) => i.kind !== 'markdown')
   items.value = loaded
   persistItems(loaded)
@@ -720,6 +734,11 @@ onMounted(async () => {
   window.addEventListener('resize', ensureCanvasSize)
   await loadUserFiles()
 })
+
+watch(
+  () => (route.query as any)?.tab,
+  () => syncTabFromRoute(),
+)
 </script>
 
 <style scoped>

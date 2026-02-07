@@ -75,6 +75,37 @@ Each card follows this vertical layout:
 - Background: `bg-card`
 - Border radius: `rounded-md`
 
+## Resources Card (Library) Implementation Notes
+
+When implementing the `/resources` and `/my-resources` pages as a card grid, use the Pokemon-style layout above with:
+
+- Card container:
+  - `w-56 min-h-72 rounded-md border border-border bg-card shadow-sm`
+  - `transition-all duration-300 ease-out cursor-pointer hover:shadow-xl`
+  - Ensure hovered card appears above others when cards are tightly packed: `hover:!z-[100]`
+- Header row:
+  - Left: category badge using computed category color with 20% alpha background
+  - Right: `#{{ String(id).padStart(3, '0') }}`
+- Image area:
+  - `relative h-28 bg-white overflow-hidden px-2`
+  - `img` uses `object-cover`
+- Title row:
+  - `bg-white`, `font-bold`, `line-clamp-1`
+- Description row:
+  - `bg-muted/30`, `line-clamp-2`
+- Footer row:
+  - Left: platform/source label
+  - Right: resource type label
+
+### Action Placement (Modal)
+
+For a cleaner card surface, keep the card itself button-free:
+
+- Clicking a card opens a detail modal.
+- Modal footer contains primary actions.
+  - `/resources`: `View` and `Add`
+  - `/my-resources`: `See detail` plus management actions (e.g., edit/delete/privacy)
+
 ## Weight Variants (Border + Background)
 
 Use `card.weight` to switch card border/background style (importance level).

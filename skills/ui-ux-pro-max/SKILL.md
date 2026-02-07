@@ -73,6 +73,96 @@ Reference these guidelines when:
 - `transform-performance` - Use transform/opacity, not width/height
 - `loading-states` - Skeleton screens or spinners
 
+### Card UI Effects (Recipes)
+
+Use these as copy/paste snippets for deck cards / resource cards.
+
+#### 1) Gold / Silver Gradient Border
+
+```css
+.card.gold {
+  border: 2px solid;
+  border-image: linear-gradient(45deg, #FFD700, #FFF8DC, #FFD700) 1;
+}
+
+.card.silver {
+  border: 2px solid;
+  border-image: linear-gradient(45deg, #C0C0C0, #F8F8FF, #C0C0C0) 1;
+}
+```
+
+#### 2) Holo (Rainbow Overlay)
+
+```css
+.card.holo {
+  position: relative;
+  overflow: hidden;
+}
+
+.card.holo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+```
+
+#### 3) Hover Shine Sweep (Recommended)
+
+```css
+.card {
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.35),
+    transparent
+  );
+  transform: skewX(-20deg);
+  pointer-events: none;
+}
+
+.card:hover::before {
+  animation: shine 1.2s linear;
+}
+
+@keyframes shine {
+  from {
+    transform: translateX(-100%) skewX(-20deg);
+  }
+  to {
+    transform: translateX(300%) skewX(-20deg);
+  }
+}
+```
+
+#### 4) Glass Card (Futuristic)
+
+```css
+.card.glass {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+```
+
 ### 7. Style Selection (MEDIUM)
 
 - `style-match` - Match style to product type

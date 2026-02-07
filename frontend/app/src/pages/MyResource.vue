@@ -1,26 +1,22 @@
 <template>
-  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
-    <section class="border-b border-border pb-8">
-      <div class="grid gap-6 md:grid-cols-12 md:items-end">
-        <div class="md:col-span-8">
-          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">My Resources</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Manage the learning resources you saved.</p>
+  <div class="min-h-screen bg-background">
+    <section class="container mx-auto px-4 py-8">
+      <header class="mb-8 flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-foreground">My Resources</h1>
+          <p class="text-muted-foreground mt-1">Manage the learning resources you saved.</p>
         </div>
-        <div class="md:col-span-4 md:flex md:justify-end md:items-end">
-          <div class="flex gap-2">
-            <Button
-              type="button"
-              size="sm"
-              class="rounded-none hover:bg-[#8ecbff] hover:text-white"
-              @click="router.push({ name: 'add-resource' })"
-            >
-              Add Resource
-            </Button>
-          </div>
-        </div>
-      </div>
+        <Button
+          type="button"
+          size="sm"
+          class="rounded-none hover:bg-[#8ecbff] hover:text-white"
+          @click="router.push({ name: 'add-resource' })"
+        >
+          Add Resource
+        </Button>
+      </header>
 
-      <div class="mt-6 grid gap-4 md:grid-cols-12 md:items-center">
+      <div class="mb-8 grid gap-4 md:grid-cols-12 md:items-center">
         <div class="md:col-span-8">
           <div class="relative">
             <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -28,210 +24,227 @@
           </div>
         </div>
         <div class="md:col-span-4 md:flex md:justify-end">
-          <div class="flex items-center gap-2">
-            <select
-              v-model="filterType"
-              class="h-10 w-full md:w-auto border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-none"
-            >
-              <option value="">All types</option>
-              <option value="video">Video</option>
-              <option value="article">Article</option>
-              <option value="document">Document</option>
-            </select>
-          </div>
+          <select
+            v-model="filterType"
+            class="h-10 w-full md:w-auto border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-none"
+          >
+            <option value="">All types</option>
+            <option value="video">Video</option>
+            <option value="article">Article</option>
+            <option value="document">Document</option>
+          </select>
         </div>
       </div>
-    </section>
 
-    <section>
-      <div v-if="loading" class="py-12 text-center">
-        <div class="inline-block h-8 w-8 animate-spin border-b-2 border-foreground" />
-        <p class="mt-3 text-sm text-muted-foreground">Loading...</p>
-      </div>
+      <main class="flex flex-col gap-12">
+        <div v-if="loading" class="py-12 text-center">
+          <div class="inline-block h-8 w-8 animate-spin border-b-2 border-foreground" />
+          <p class="mt-3 text-sm text-muted-foreground">Loading...</p>
+        </div>
 
-      <div v-else-if="resources.length === 0" class="py-12 text-center">
-        <p class="text-sm text-muted-foreground">No resources yet</p>
-      </div>
+        <div v-else-if="resources.length === 0" class="py-12 text-center">
+          <p class="text-sm text-muted-foreground">No resources yet</p>
+        </div>
 
-      <div v-else class="grid grid-cols-1 gap-6 justify-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-        <Card
-          v-for="resource in filteredResources"
-          :key="resource.id"
-          class="shrink-0 w-56 min-h-72 rounded-md border border-border bg-card shadow-sm transition-all duration-300 ease-out cursor-pointer hover:shadow-xl hover:!z-[100] card-hover"
-          :hoverable="false"
-          @click="openCard(resource)"
-        >
-          <div class="h-full flex flex-col overflow-hidden rounded-md">
-            <div class="px-3 py-2 border-b border-border flex items-center justify-between">
-              <span
-                class="px-2 py-0.5 text-xs font-medium rounded"
-                :style="{
-                  backgroundColor: getCategoryColor(resource.category) + '20',
-                  color: getCategoryColor(resource.category),
-                }"
+        <template v-else>
+          <div
+            v-for="deck in decks"
+            :key="deck.key"
+            class="flex flex-col"
+          >
+            <h2 class="text-lg font-semibold text-foreground mb-4">{{ deck.name }}</h2>
+
+            <div class="relative h-72 overflow-visible">
+              <div
+                class="inline-flex items-center h-full"
+                :style="{ paddingLeft: '20px' }"
+                @mouseenter="hoveredDeckKey = deck.key"
+                @mouseleave="hoveredDeckKey = null"
               >
-                {{ resource.category || '—' }}
-              </span>
-              <span class="text-xs text-muted-foreground">#{{ String(resource.id).padStart(3, '0') }}</span>
-            </div>
-
-            <div class="relative h-28 bg-white overflow-hidden px-2">
-              <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="w-full h-full object-cover" />
-            </div>
-
-            <div class="px-3 py-2 border-b border-border bg-white">
-              <h3 class="text-sm font-bold text-foreground line-clamp-1" :title="resource.title">{{ resource.title }}</h3>
-            </div>
-
-            <div class="px-3 py-2 flex-1 bg-muted/30">
-              <p class="text-xs text-muted-foreground line-clamp-2">{{ resource.summary }}</p>
-            </div>
-
-            <div class="px-3 py-2 border-t border-border flex items-center justify-between">
-              <span class="text-xs text-muted-foreground">{{ formatPlatform(resource.platform) }}</span>
-              <span class="text-xs font-medium text-foreground">{{ resource.type }}</span>
-            </div>
-          </div>
-        </Card>
-      </div>
-    </section>
-
-    <Teleport to="body">
-      <Transition name="modal">
-        <div
-          v-if="activeResource"
-          class="fixed inset-0 z-50 flex items-center justify-center p-4"
-          @click.self="closeActiveResource"
-        >
-          <div class="absolute inset-0 bg-black/50"></div>
-          <div class="relative w-full max-w-md rounded-md overflow-hidden bg-card border border-border shadow-xl">
-            <div class="relative h-48 bg-muted overflow-hidden">
-              <img
-                :src="activeResource.thumbnail || fallbackThumb"
-                :alt="activeResource.title"
-                class="w-full h-full object-cover"
-              />
-              <button
-                class="absolute top-3 right-3 w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white hover:bg-red-600 transition"
-                @click="closeActiveResource"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div class="p-4 border-b border-border">
-              <div class="flex items-center gap-2 mb-2">
-                <span
-                  class="px-2 py-0.5 text-xs font-medium rounded"
-                  :style="{
-                    backgroundColor: getCategoryColor(activeResource.category) + '20',
-                    color: getCategoryColor(activeResource.category),
-                  }"
+                <div
+                  v-for="(resource, cardIndex) in deck.cards"
+                  :key="resource.id"
+                  class="shrink-0 w-56 h-72 rounded-md border border-border bg-card shadow-sm transition-all duration-300 ease-out cursor-pointer hover:shadow-xl hover:!z-[100] card-hover"
+                  :style="getDeckCardStyle(deck.key, cardIndex)"
+                  @click="openCard(resource)"
                 >
-                  {{ activeResource.category || '—' }}
-                </span>
-                <span class="text-xs text-muted-foreground">#{{ String(activeResource.id).padStart(3, '0') }}</span>
-              </div>
-              <h2 class="text-xl font-bold text-foreground">{{ activeResource.title }}</h2>
-            </div>
+                  <div class="h-full flex flex-col overflow-hidden rounded-md">
+                    <div class="px-3 py-2 border-b border-border flex items-center justify-between">
+                      <span
+                        class="px-2 py-0.5 text-xs font-medium rounded"
+                        :style="{
+                          backgroundColor: getCategoryColor(resource.category) + '20',
+                          color: getCategoryColor(resource.category),
+                        }"
+                      >
+                        {{ resource.category || '—' }}
+                      </span>
+                      <span class="text-xs text-muted-foreground">#{{ String(resource.id).padStart(3, '0') }}</span>
+                    </div>
 
-            <div class="p-4">
-              <p class="text-sm text-muted-foreground mb-4">{{ activeResource.summary }}</p>
-              <div class="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>{{ formatPlatform(activeResource.platform) }}</span>
-                <span>•</span>
-                <span>{{ activeResource.type }}</span>
-              </div>
-            </div>
+                    <div class="relative h-28 bg-white overflow-hidden px-2">
+                      <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="w-full h-full object-cover" />
+                    </div>
 
-            <div class="p-4 border-t border-border flex flex-col gap-3">
-              <Button
-                type="button"
-                class="w-full rounded-none bg-foreground text-background font-medium hover:bg-foreground/90"
-                @click="seeDetail(activeResource)"
-              >
-                See detail
-              </Button>
+                    <div class="px-3 py-2 border-b border-border bg-white">
+                      <h3 class="text-sm font-bold text-foreground line-clamp-1" :title="resource.title">{{ resource.title }}</h3>
+                    </div>
 
-              <div class="flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  class="relative inline-flex h-8 w-28 items-center rounded-full border border-border bg-muted/30 p-0.5 transition-colors"
-                  @click.stop="togglePublic(activeResource)"
-                  :disabled="publicUpdatingId === activeResource.id"
-                  aria-label="Toggle privacy"
-                >
-                  <span
-                    class="absolute inset-y-0.5 left-0.5 w-[calc(50%-0.25rem)] rounded-full shadow-sm transition-transform"
-                    :class="[
-                      activeResource.is_system_public ? 'bg-[#f9a8d4]' : 'bg-[#8ecbff]',
-                      activeResource.is_system_public ? 'translate-x-[calc(100%+0.25rem)]' : 'translate-x-0',
-                    ]"
-                  />
-                  <span class="relative z-10 flex w-full text-[11px] font-semibold">
-                    <span class="flex w-1/2 justify-center" :class="activeResource.is_system_public ? 'text-muted-foreground' : 'text-white'">
-                      Private
-                    </span>
-                    <span class="flex w-1/2 justify-center" :class="activeResource.is_system_public ? 'text-white' : 'text-muted-foreground'">
-                      Public
-                    </span>
-                  </span>
-                </button>
+                    <div class="px-3 py-2 flex-1 bg-muted/30">
+                      <p class="text-xs text-muted-foreground line-clamp-2">{{ resource.summary }}</p>
+                    </div>
 
-                <div class="flex items-center gap-2">
-                  <Button type="button" variant="outline" class="rounded-none" @click.stop="editFromModal(activeResource)">Edit</Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    class="rounded-none hover:border-[#8ecbff] hover:bg-[#8ecbff] hover:text-white"
-                    :disabled="deletingId === activeResource.id"
-                    @click.stop="deleteFromModal(activeResource)"
-                  >
-                    Delete
-                  </Button>
+                    <div class="px-3 py-2 border-t border-border flex items-center justify-between">
+                      <span class="text-xs text-muted-foreground">{{ formatPlatform(resource.platform) }}</span>
+                      <span class="text-xs font-medium text-foreground">{{ resource.type }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+
+            <p class="text-sm text-muted-foreground mt-4">{{ deck.cards.length }} cards</p>
+          </div>
+        </template>
+      </main>
+    </section>
+  </div>
+
+  <Teleport to="body">
+    <Transition name="modal">
+      <div
+        v-if="activeResource"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        @click.self="closeActiveResource"
+      >
+        <div class="absolute inset-0 bg-black/50"></div>
+        <div class="relative w-full max-w-md rounded-md overflow-hidden bg-card border border-border shadow-xl">
+          <div class="relative h-48 bg-muted overflow-hidden">
+            <img
+              :src="activeResource.thumbnail || fallbackThumb"
+              :alt="activeResource.title"
+              class="w-full h-full object-cover"
+            />
+            <button
+              class="absolute top-3 right-3 w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white hover:bg-red-600 transition"
+              @click="closeActiveResource"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div class="p-4 border-b border-border">
+            <div class="flex items-center gap-2 mb-2">
+              <span
+                class="px-2 py-0.5 text-xs font-medium rounded"
+                :style="{
+                  backgroundColor: getCategoryColor(activeResource.category) + '20',
+                  color: getCategoryColor(activeResource.category),
+                }"
+              >
+                {{ activeResource.category || '—' }}
+              </span>
+              <span class="text-xs text-muted-foreground">#{{ String(activeResource.id).padStart(3, '0') }}</span>
+            </div>
+            <h2 class="text-xl font-bold text-foreground">{{ activeResource.title }}</h2>
+          </div>
+
+          <div class="p-4">
+            <p class="text-sm text-muted-foreground mb-4">{{ activeResource.summary }}</p>
+            <div class="flex items-center gap-4 text-sm text-muted-foreground">
+              <span>{{ formatPlatform(activeResource.platform) }}</span>
+              <span>•</span>
+              <span>{{ activeResource.type }}</span>
+            </div>
+          </div>
+
+          <div class="p-4 border-t border-border flex flex-col gap-3">
+            <Button
+              type="button"
+              class="w-full rounded-none bg-foreground text-background font-medium hover:bg-foreground/90"
+              @click="seeDetail(activeResource)"
+            >
+              See detail
+            </Button>
+
+            <div class="flex items-center justify-between gap-3">
+              <button
+                type="button"
+                class="relative inline-flex h-8 w-28 items-center rounded-full border border-border bg-muted/30 p-0.5 transition-colors"
+                @click.stop="togglePublic(activeResource)"
+                :disabled="publicUpdatingId === activeResource.id"
+                aria-label="Toggle privacy"
+              >
+                <span
+                  class="absolute inset-y-0.5 left-0.5 w-[calc(50%-0.25rem)] rounded-full shadow-sm transition-transform"
+                  :class="[
+                    activeResource.is_system_public ? 'bg-[#f9a8d4]' : 'bg-[#8ecbff]',
+                    activeResource.is_system_public ? 'translate-x-[calc(100%+0.25rem)]' : 'translate-x-0',
+                  ]"
+                />
+                <span class="relative z-10 flex w-full text-[11px] font-semibold">
+                  <span class="flex w-1/2 justify-center" :class="activeResource.is_system_public ? 'text-muted-foreground' : 'text-white'">
+                    Private
+                  </span>
+                  <span class="flex w-1/2 justify-center" :class="activeResource.is_system_public ? 'text-white' : 'text-muted-foreground'">
+                    Public
+                  </span>
+                </span>
+              </button>
+
+              <div class="flex items-center gap-2">
+                <Button type="button" variant="outline" class="rounded-none" @click.stop="editFromModal(activeResource)">Edit</Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  class="rounded-none hover:border-[#8ecbff] hover:bg-[#8ecbff] hover:text-white"
+                  :disabled="deletingId === activeResource.id"
+                  @click.stop="deleteFromModal(activeResource)"
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
-      </Transition>
-    </Teleport>
+      </div>
+    </Transition>
+  </Teleport>
 
-    <div v-if="showDeleteConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
-      <Card class="w-full max-w-md rounded-none" :hoverable="false">
-        <div class="flex items-center justify-between border-b border-border p-6">
-          <h2 class="text-lg font-semibold text-foreground">Confirm delete</h2>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            class="rounded-none"
-            @click="closeDeleteConfirm"
-            :disabled="deletingId !== null"
-          >
-            <X class="h-5 w-5" />
-          </Button>
-        </div>
+  <div v-if="showDeleteConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
+    <Card class="w-full max-w-md rounded-none" :hoverable="false">
+      <div class="flex items-center justify-between border-b border-border p-6">
+        <h2 class="text-lg font-semibold text-foreground">Confirm delete</h2>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          class="rounded-none"
+          @click="closeDeleteConfirm"
+          :disabled="deletingId !== null"
+        >
+          <X class="h-5 w-5" />
+        </Button>
+      </div>
 
-        <div class="space-y-3 p-6">
-          <div class="text-sm text-foreground">Are you sure you want to delete this resource?</div>
-          <div v-if="deleteTarget" class="border border-border bg-muted/30 p-3">
-            <div class="line-clamp-1 font-semibold text-foreground">{{ deleteTarget.title }}</div>
-            <div class="mt-1 line-clamp-1 text-xs text-muted-foreground">ID: {{ deleteTarget.id }}</div>
-          </div>
-          <p v-if="deleteError" class="text-sm text-destructive">{{ deleteError }}</p>
+      <div class="space-y-3 p-6">
+        <div class="text-sm text-foreground">Are you sure you want to delete this resource?</div>
+        <div v-if="deleteTarget" class="border border-border bg-muted/30 p-3">
+          <div class="line-clamp-1 font-semibold text-foreground">{{ deleteTarget.title }}</div>
+          <div class="mt-1 line-clamp-1 text-xs text-muted-foreground">ID: {{ deleteTarget.id }}</div>
         </div>
+        <p v-if="deleteError" class="text-sm text-destructive">{{ deleteError }}</p>
+      </div>
 
-        <div class="flex justify-end gap-2 border-t border-border bg-muted/30 p-6">
-          <Button type="button" variant="outline" class="rounded-none" @click="closeDeleteConfirm" :disabled="deletingId !== null">
-            Cancel
-          </Button>
-          <Button type="button" variant="destructive" class="rounded-none" @click="confirmDelete" :disabled="deletingId !== null">
-            {{ deletingId !== null ? 'Deleting...' : 'Confirm' }}
-          </Button>
-        </div>
-      </Card>
-    </div>
+      <div class="flex justify-end gap-2 border-t border-border bg-muted/30 p-6">
+        <Button type="button" variant="outline" class="rounded-none" @click="closeDeleteConfirm" :disabled="deletingId !== null">
+          Cancel
+        </Button>
+        <Button type="button" variant="destructive" class="rounded-none" @click="confirmDelete" :disabled="deletingId !== null">
+          {{ deletingId !== null ? 'Deleting...' : 'Confirm' }}
+        </Button>
+      </div>
+    </Card>
   </div>
 </template>
 
@@ -348,6 +361,48 @@ const filteredResources = computed(() => {
     )
   })
 })
+
+type Deck = {
+  key: string
+  name: string
+  cards: UiResource[]
+}
+
+const hoveredDeckKey = ref<string | null>(null)
+
+const decks = computed<Deck[]>(() => {
+  const map = new Map<string, UiResource[]>()
+  for (const r of filteredResources.value) {
+    const key = String(r.category || '').trim() || 'Other'
+    const list = map.get(key)
+    if (list) list.push(r)
+    else map.set(key, [r])
+  }
+
+  return Array.from(map.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([name, cards]) => ({ key: name, name, cards }))
+})
+
+function getDeckCardStyle(deckKey: string, cardIndex: number) {
+  const isHovered = hoveredDeckKey.value === deckKey
+  const isExpanded = isHovered
+  const total = decks.value.find(d => d.key === deckKey)?.cards.length || 0
+
+  if (isExpanded) {
+    return {
+      marginLeft: cardIndex === 0 ? '0' : '16px',
+      zIndex: cardIndex,
+    }
+  }
+
+  const reverseIndex = total - 1 - cardIndex
+  return {
+    marginLeft: cardIndex === 0 ? '0' : '-210px',
+    zIndex: cardIndex,
+    transform: `rotate(${reverseIndex * 0.3}deg)`,
+  }
+}
 
 function getResourceTypeClass(type: string) {
   switch (type) {

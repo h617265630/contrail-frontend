@@ -215,22 +215,21 @@
             type="button"
             variant="ghost"
             size="sm"
-            class="h-9 rounded-full border border-border px-3 text-xs font-medium tracking-[0.14em] uppercase shadow-sm transition-colors"
+            class="h-9 rounded-full border border-border px-3 text-xs font-medium tracking-[0.14em] uppercase text-white shadow-sm transition-colors"
             :class="createMenuOpen
-              ? 'bg-[#8ecbff] text-white hover:bg-[#8ecbff]'
-              : 'bg-background text-foreground hover:bg-[#8ecbff]/30'"
+              ? 'bg-[#8ecbff]/80 hover:bg-[#8ecbff]/80'
+              : 'bg-[#8ecbff] hover:bg-[#8ecbff]/90'"
             @click="createMenuOpen = !createMenuOpen"
           >
-            <Plus class="h-4 w-4" />
-            <span>Create</span>
+            <span><span class="font-bold">+</span>CREATE</span>
           </Button>
 
           <div
             v-if="createMenuOpen"
-            class="absolute left-0 top-full mt-0 w-56 rounded-xl border border-border bg-background p-1 shadow-xl"
+            class="absolute left-0 top-full mt-0 w-56 rounded-md border border-border bg-background p-1 shadow-xl"
           >
             <RouterLink
-              class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-[#8ecbff]/30"
+              class="flex w-full items-center gap-3 rounded-md border border-transparent px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted/30 active:bg-muted/60"
               to="/createpath"
               @click="createMenuOpen = false"
             >
@@ -238,7 +237,7 @@
               <span>{{ t('Create path') }}</span>
             </RouterLink>
             <RouterLink
-              class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-[#8ecbff]/30"
+              class="flex w-full items-center gap-3 rounded-md border border-transparent px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted/30 active:bg-muted/60"
               to="/my-resources/add"
               @click="createMenuOpen = false"
             >
@@ -246,8 +245,8 @@
               <span>Add resource</span>
             </RouterLink>
             <RouterLink
-              class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-[#8ecbff]/30"
-              to="/creator"
+              class="flex w-full items-center gap-3 rounded-md border border-transparent px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted/30 active:bg-muted/60"
+              to="/creator?tab=markdown"
               @click="createMenuOpen = false"
             >
               <PenLine class="h-4 w-4" />
@@ -311,7 +310,7 @@
         <div class="my-1 h-px bg-border"></div>
         <RouterLink class="py-2 hover:text-foreground" to="/createpath" @click="open = false">{{ t('CreatePath') }}</RouterLink>
         <RouterLink class="py-2 hover:text-foreground" to="/my-resources/add" @click="open = false">Add resource</RouterLink>
-        <RouterLink class="py-2 hover:text-foreground" to="/creator" @click="open = false">Write note</RouterLink>
+        <RouterLink class="py-2 hover:text-foreground" to="/creator?tab=markdown" @click="open = false">Write note</RouterLink>
         <RouterLink v-if="!isAuthed" class="py-2 hover:text-foreground" to="/login" @click="open = false">Login</RouterLink>
         <button
           type="button"
@@ -353,7 +352,7 @@ function isActive(prefix: string) {
 const open = ref(false)
 const searchQuery = ref('')
 const authStore = useAuthStore()
-const { user, isAuthed } = storeToRefs(authStore)
+const { user, isAuthed, avatarBuster } = storeToRefs(authStore)
 const { lang, setLang, t, languages } = useI18n()
 
 const langMenuOpen = ref(false)
@@ -363,7 +362,15 @@ const createMenuRef = ref<HTMLElement | null>(null)
 const displayName = computed(() => user.value?.username || 'User')
 const avatarUrl = computed(() => {
   const explicit = String((user.value as any)?.avatar_url || '').trim()
-  if (explicit) return explicit
+  if (explicit) {
+    const abs = explicit.startsWith('http://') || explicit.startsWith('https://')
+      ? explicit
+      : `http://localhost:8000${explicit.startsWith('/') ? '' : '/'}${explicit}`
+    const sep0 = abs.includes('?') ? '&' : '?'
+    const withV = `${abs}${sep0}v=${avatarBuster.value}`
+    const sep = explicit.includes('?') ? '&' : '?'
+    return withV
+  }
   const uid = Number((user.value as any)?.id || 0)
   return uid ? getOrCreateDefaultAvatarForUser(uid) : ''
 })

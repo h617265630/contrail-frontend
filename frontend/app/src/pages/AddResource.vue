@@ -242,7 +242,6 @@
           </div>
         </div>
 
-        <p v-if="submitError" class="text-sm text-destructive">{{ submitError }}</p>
       </div>
 
       <div v-else class="p-6 space-y-6">
@@ -316,20 +315,24 @@
       </div>
 
       <div class="border-t border-border bg-muted/30 p-6">
-        <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Button type="button" variant="outline" size="sm" class="rounded-none" @click="$router.back()">
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            class="rounded-none border-border bg-black px-3 text-xs font-semibold tracking-[0.14em] uppercase text-white transition-all hover:-translate-y-px hover:bg-[#8ecbff] hover:text-white hover:shadow-sm active:translate-y-0"
-            @click="confirmAdd"
-            :disabled="!urlInput || extracting || !extractedMeta?.title || submitting"
-          >
-            {{ submitting ? 'Saving…' : 'Add resource' }}
-          </Button>
+        <div class="space-y-4">
+          <p v-if="submitError" class="text-sm text-destructive">{{ submitError }}</p>
+
+          <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Button type="button" variant="outline" size="sm" class="rounded-none" @click="$router.back()">
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              class="rounded-none border-border bg-black px-3 text-xs font-semibold tracking-[0.14em] uppercase text-white transition-all hover:-translate-y-px hover:bg-[#8ecbff] hover:text-white hover:shadow-sm active:translate-y-0"
+              @click="confirmAdd"
+              :disabled="!urlInput || extracting || !extractedMeta?.title || submitting"
+            >
+              {{ submitting ? 'Saving…' : 'Add resource' }}
+            </Button>
+          </div>
         </div>
       </div>
     </Card>
@@ -441,7 +444,28 @@ const dbCategories = ref<Category[]>([])
 const categoryId = ref('')
 const selectedWeight = ref('')
 
+function getErrorMessage(e: any, fallback: string) {
+  const detail = e?.response?.data?.detail
+  if (typeof detail === 'string' && detail.trim()) return detail
+  if (Array.isArray(detail) && detail.length > 0) {
+    const first = detail[0]
+    const msg = (first && (first.msg || first.message)) ? String(first.msg || first.message) : ''
+    return msg || fallback
+  }
+  const msg = e?.message
+  if (typeof msg === 'string' && msg.trim()) return msg
+  return fallback
+}
+
 type Weight = '' | 'soil' | 'iron' | 'bronze' | 'silver' | 'gold'
+
+function toManualWeight(w: Weight): number {
+  if (w === 'gold') return 5
+  if (w === 'silver') return 4
+  if (w === 'bronze') return 3
+  if (w === 'iron') return 2
+  return 1
+}
 
 const weightCardClass = computed(() => {
   const w = (selectedWeight.value || '') as Weight
@@ -505,14 +529,15 @@ async function confirmAdd() {
   try {
     const catId = categoryId.value ? Number(categoryId.value) : NaN
     if (!Number.isFinite(catId)) throw new Error('请选择分类')
+    const manualWeight = toManualWeight((selectedWeight.value || '') as Weight)
     await createMyResourceFromUrl(urlInput.value, { 
       category_id: catId,
-      is_public: isPublic.value
+      is_public: isPublic.value,
+      manual_weight: manualWeight,
     })
     router.push({ name: 'my-resources' })
   } catch (e: any) {
-    const msg = e?.response?.data?.detail || e?.message || 'Failed to add resource'
-    submitError.value = String(msg)
+    submitError.value = getErrorMessage(e, 'Failed to add resource')
   } finally {
     submitting.value = false
   }
@@ -547,8 +572,7 @@ watch(
           if (selectedPlatform.value === 'other') {
             extractError.value = 'Not supported yet.'
           } else {
-            const msg = err?.response?.data?.detail || err?.message || '解析失败'
-            extractError.value = String(msg)
+            extractError.value = getErrorMessage(err, '解析失败')
           }
           extracting.value = false
         })

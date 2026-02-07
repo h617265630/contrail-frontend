@@ -26,6 +26,7 @@ const CreatePath = () => import('./pages/CreatePath.vue')
 const LearningPathEdit = () => import('./pages/LearningPathEdit.vue')
 const Notification = () => import('./pages/Notification.vue')
 const Creator = () => import('./pages/Creator.vue')
+const Deck = () => import('./pages/Deck.vue')
 
 const UiUxProMax = () => import('./pages/UiUxProMax.vue')
 
@@ -50,6 +51,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/home', name: 'home', component: Home },
   { path: '/notification', name: 'notification', component: Notification },
   { path: '/creator', name: 'creator', component: Creator },
+  { path: '/deck', name: 'deck', component: Deck },
   { path: '/learningpool', name: 'learningpool', component: LearningPath },
   { path: '/learningpool/category/:category', name: 'learningpool-category', component: LearningPoolCategory },
   { path: '/my-paths', name: 'my-paths', component: LearningPathsList },

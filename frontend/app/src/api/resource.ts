@@ -31,6 +31,18 @@ export interface DbResource {
   updated_at: string
   category_name?: string
   is_system_public?: boolean
+
+  manual_weight?: number | null
+  behavior_weight?: number | null
+  effective_weight?: number | null
+  added_at?: string | null
+  last_opened?: string | null
+  open_count?: number | null
+  completion_status?: boolean | null
+
+  community_score?: number | null
+  save_count?: number | null
+  trending_score?: number | null
 }
 
 // 添加资源的请求参数
@@ -81,7 +93,7 @@ export function listResources() {
 
 export function createMyResourceFromUrl(
   url: string,
-  payload?: { category_id: number; is_public?: boolean },
+  payload?: { category_id: number; is_public?: boolean; manual_weight?: number },
 ) {
   return request.post<DbResource, DbResource>('/resources/me', { url, ...(payload || {}) })
 }
@@ -99,8 +111,16 @@ export function addPublicResourceToMyResourcesWithStatus(resourceId: number) {
   return request.post<AddToMyResourcesResult, AddToMyResourcesResult>(`/resources/me/${resourceId}/attach`, {})
 }
 
+export function addPublicResourceToMyResourcesWithStatusAndWeight(resourceId: number, payload?: { manual_weight?: number }) {
+  return request.post<AddToMyResourcesResult, AddToMyResourcesResult>(`/resources/me/${resourceId}/attach`, payload || {})
+}
+
 export function deleteMyResource(resourceId: number) {
   return request.delete(`/resources/me/${resourceId}`)
+}
+
+export function deleteResource(resourceId: number) {
+  return request.delete(`/resources/${resourceId}`)
 }
 
 export function updateMyResource(

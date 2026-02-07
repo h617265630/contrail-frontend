@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -5,6 +7,10 @@ from app.core.deps import get_current_user, get_db_dep
 from app.curd.resources.resource_curd import ResourceCURD
 from app.models.resource import Resource
 from app.models.user_resource import UserResource
+from app.models.resources.video import Video
+from app.models.resources.doc import Doc
+from app.models.resources.article import Article
+from app.models.path_item import PathItem
 from app.schemas.resources.extract import ChapterItem, UrlExtractRequest, UrlExtractResponse
 from app.schemas.resources.resource import (
     ArticleInfo,
@@ -47,16 +53,50 @@ def extract_from_url(payload: UrlExtractRequest):
     )
 
 
+@router.delete("/{resource_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_resource(resource_id: int, db: Session = Depends(get_db_dep), current_user=Depends(get_current_user)):
+    if not getattr(current_user, "is_superuser", False):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed")
+
+    obj = db.query(Resource).filter(Resource.id == resource_id).first()
+    if not obj:
+        raise HTTPException(status_code=404, detail="resource not found")
+
+    try:
+        db.query(Video).filter(Video.resource_id == resource_id).delete(synchronize_session=False)
+        db.query(Doc).filter(Doc.resource_id == resource_id).delete(synchronize_session=False)
+        db.query(Article).filter(Article.resource_id == resource_id).delete(synchronize_session=False)
+        db.query(UserResource).filter(UserResource.resource_id == resource_id).delete(synchronize_session=False)
+        db.query(PathItem).filter(PathItem.resource_id == resource_id).delete(synchronize_session=False)
+        db.delete(obj)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"删除失败: {e}")
+
+    return None
+
+
 @router.get("/me/{resource_id}", response_model=ResourceDetailResponse)
 def get_my_resource_detail(resource_id: int, db: Session = Depends(get_db_dep), current_user=Depends(get_current_user)):
-    obj = (
-        db.query(Resource)
+    hit = (
+        db.query(Resource, UserResource)
         .join(UserResource, UserResource.resource_id == Resource.id)
         .filter(UserResource.user_id == current_user.id, Resource.id == resource_id)
         .first()
     )
-    if not obj:
+    if not hit:
         raise HTTPException(status_code=404, detail="resource not found")
+
+    obj, assoc = hit
+
+    # Engagement tracking
+    try:
+        assoc.last_opened = datetime.now()
+        assoc.open_count = int(getattr(assoc, "open_count", 0) or 0) + 1
+        db.commit()
+    except Exception:
+        db.rollback()
 
     return ResourceDetailResponse(
         id=obj.id,
@@ -71,6 +111,16 @@ def get_my_resource_detail(resource_id: int, db: Session = Depends(get_db_dep), 
         difficulty=getattr(obj, "difficulty", None),
         tags=getattr(obj, "tags", None),
         raw_meta=getattr(obj, "raw_meta", None),
+        manual_weight=getattr(assoc, "manual_weight", None),
+        behavior_weight=getattr(assoc, "behavior_weight", None),
+        effective_weight=getattr(assoc, "effective_weight", None),
+        added_at=getattr(assoc, "added_at", None),
+        last_opened=getattr(assoc, "last_opened", None),
+        open_count=getattr(assoc, "open_count", None),
+        completion_status=getattr(assoc, "completion_status", None),
+        community_score=getattr(obj, "community_score", None),
+        save_count=getattr(obj, "save_count", None),
+        trending_score=getattr(obj, "trending_score", None),
         created_at=getattr(obj, "created_at", None),
         video=VideoInfo.model_validate(obj.video) if getattr(obj, "video", None) else None,
         doc=DocInfo.model_validate(obj.doc) if getattr(obj, "doc", None) else None,
@@ -80,7 +130,13 @@ def get_my_resource_detail(resource_id: int, db: Session = Depends(get_db_dep), 
 
 @router.get("/me", response_model=list[ResourceResponse])
 def list_my_resources(db: Session = Depends(get_db_dep), current_user=Depends(get_current_user)):
-    items = ResourceCURD.list_for_user(db, user_id=current_user.id)
+    items = (
+        db.query(Resource, UserResource)
+        .join(UserResource, UserResource.resource_id == Resource.id)
+        .filter(UserResource.user_id == current_user.id)
+        .order_by(Resource.id.desc())
+        .all()
+    )
     return [
         ResourceResponse(
             id=r.id,
@@ -95,9 +151,19 @@ def list_my_resources(db: Session = Depends(get_db_dep), current_user=Depends(ge
             difficulty=getattr(r, "difficulty", None),
             tags=getattr(r, "tags", None),
             raw_meta=getattr(r, "raw_meta", None),
+            manual_weight=getattr(ur, "manual_weight", None),
+            behavior_weight=getattr(ur, "behavior_weight", None),
+            effective_weight=getattr(ur, "effective_weight", None),
+            added_at=getattr(ur, "added_at", None),
+            last_opened=getattr(ur, "last_opened", None),
+            open_count=getattr(ur, "open_count", None),
+            completion_status=getattr(ur, "completion_status", None),
+            community_score=getattr(r, "community_score", None),
+            save_count=getattr(r, "save_count", None),
+            trending_score=getattr(r, "trending_score", None),
             created_at=getattr(r, "created_at", None),
         )
-        for r in items
+        for r, ur in items
     ]
 
 
@@ -118,6 +184,9 @@ def list_resources(db: Session = Depends(get_db_dep)):
             difficulty=getattr(r, "difficulty", None),
             tags=getattr(r, "tags", None),
             raw_meta=getattr(r, "raw_meta", None),
+            community_score=getattr(r, "community_score", None),
+            save_count=getattr(r, "save_count", None),
+            trending_score=getattr(r, "trending_score", None),
             created_at=getattr(r, "created_at", None),
         )
         for r in items
@@ -160,6 +229,7 @@ def create_my_resource(payload: ResourceCreateFromUrl, db: Session = Depends(get
             category_id=payload.category_id,
             is_system_public=False,
             is_public=payload.is_public,
+            manual_weight=payload.manual_weight,
         )
         db.commit()
         db.refresh(obj)
@@ -169,6 +239,12 @@ def create_my_resource(payload: ResourceCreateFromUrl, db: Session = Depends(get
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=f"创建失败: {e}")
+
+    assoc = (
+        db.query(UserResource)
+        .filter(UserResource.user_id == current_user.id, UserResource.resource_id == obj.id)
+        .first()
+    )
 
     return ResourceResponse(
         id=obj.id,
@@ -183,6 +259,16 @@ def create_my_resource(payload: ResourceCreateFromUrl, db: Session = Depends(get
         difficulty=getattr(obj, "difficulty", None),
         tags=getattr(obj, "tags", None),
         raw_meta=getattr(obj, "raw_meta", None),
+        manual_weight=getattr(assoc, "manual_weight", None) if assoc else None,
+        behavior_weight=getattr(assoc, "behavior_weight", None) if assoc else None,
+        effective_weight=getattr(assoc, "effective_weight", None) if assoc else None,
+        added_at=getattr(assoc, "added_at", None) if assoc else None,
+        last_opened=getattr(assoc, "last_opened", None) if assoc else None,
+        open_count=getattr(assoc, "open_count", None) if assoc else None,
+        completion_status=getattr(assoc, "completion_status", None) if assoc else None,
+        community_score=getattr(obj, "community_score", None),
+        save_count=getattr(obj, "save_count", None),
+        trending_score=getattr(obj, "trending_score", None),
         created_at=getattr(obj, "created_at", None),
     )
 
@@ -204,6 +290,12 @@ def add_public_resource_to_my_resources(
         db.rollback()
         raise HTTPException(status_code=400, detail=f"添加失败: {e}")
 
+    assoc = (
+        db.query(UserResource)
+        .filter(UserResource.user_id == current_user.id, UserResource.resource_id == obj.id)
+        .first()
+    )
+
     return ResourceResponse(
         id=obj.id,
         resource_type=_resource_type_value(obj),
@@ -217,6 +309,16 @@ def add_public_resource_to_my_resources(
         difficulty=getattr(obj, "difficulty", None),
         tags=getattr(obj, "tags", None),
         raw_meta=getattr(obj, "raw_meta", None),
+        manual_weight=getattr(assoc, "manual_weight", None) if assoc else None,
+        behavior_weight=getattr(assoc, "behavior_weight", None) if assoc else None,
+        effective_weight=getattr(assoc, "effective_weight", None) if assoc else None,
+        added_at=getattr(assoc, "added_at", None) if assoc else None,
+        last_opened=getattr(assoc, "last_opened", None) if assoc else None,
+        open_count=getattr(assoc, "open_count", None) if assoc else None,
+        completion_status=getattr(assoc, "completion_status", None) if assoc else None,
+        community_score=getattr(obj, "community_score", None),
+        save_count=getattr(obj, "save_count", None),
+        trending_score=getattr(obj, "trending_score", None),
         created_at=getattr(obj, "created_at", None),
     )
 

@@ -11,12 +11,12 @@ def init_default_categories(db: Session):
     """初始化默认热门分类（用于 CreatePath 下拉选择）"""
     default_categories = [
         {"name": "AI", "code": "ai"},
-        {"name": "设计", "code": "design"},
+        {"name": "Design", "code": "design"},
         {"name": "UI", "code": "ui"},
-        {"name": "前端", "code": "frontend"},
-        {"name": "后端", "code": "backend"},
-        {"name": "手工", "code": "handmade"},
-        {"name": "其他", "code": "other"},
+        {"name": "Frontend", "code": "frontend"},
+        {"name": "Backend", "code": "backend"},
+        {"name": "Handmade", "code": "handmade"},
+        {"name": "Other", "code": "other"},
     ]
 
     for cat in default_categories:

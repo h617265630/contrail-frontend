@@ -35,6 +35,11 @@ class Resource(Base):
     tags = Column(JSON, nullable=True)
     raw_meta = Column(JSON, nullable=True)
     is_system_public = Column(Boolean, default=False, nullable=False)
+
+    community_score = Column(Integer, default=0, nullable=False)
+    save_count = Column(Integer, default=0, nullable=False)
+    trending_score = Column(Integer, default=0, nullable=False)
+
     created_at = Column(DateTime, default=datetime.now)
     
     # 关系：Resource 可以关联多个 PathItem

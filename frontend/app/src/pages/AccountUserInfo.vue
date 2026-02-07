@@ -109,7 +109,7 @@ import { Input } from '../components/ui/input'
 import { updateCurrentUser, uploadMyAvatar } from '../api/user'
 
 const authStore = useAuthStore()
-const { user, isAuthed } = storeToRefs(authStore)
+const { user, isAuthed, avatarBuster } = storeToRefs(authStore)
 
 onMounted(() => {
   if (isAuthed.value) authStore.fetchProfile(true).catch(() => {})
@@ -121,7 +121,13 @@ const email = computed(() => user.value?.email || '')
 const initials = computed(() => displayName.value.slice(0, 2).toUpperCase())
 const avatarUrl = computed(() => {
   const explicit = String((user.value as any)?.avatar_url || '').trim()
-  if (explicit) return explicit
+  if (explicit) {
+    const abs = explicit.startsWith('http://') || explicit.startsWith('https://')
+      ? explicit
+      : `http://localhost:8000${explicit.startsWith('/') ? '' : '/'}${explicit}`
+    const sep = abs.includes('?') ? '&' : '?'
+    return `${abs}${sep}v=${avatarBuster.value}`
+  }
   const uid = Number((user.value as any)?.id || 0)
   return uid ? getOrCreateDefaultAvatarForUser(uid) : ''
 })
@@ -169,6 +175,7 @@ async function uploadAvatar() {
   try {
     await uploadMyAvatar(pickedFile.value)
     pickedFile.value = null
+    authStore.bumpAvatarBuster()
     await authStore.fetchProfile(true)
   } catch (e: any) {
     error.value = String(e?.response?.data?.detail || e?.message || 'Failed to upload avatar')
@@ -185,7 +192,13 @@ async function save() {
       display_name: form.value.display_name,
       bio: form.value.bio,
     })
-    authStore.setUser(next as any)
+    // updateCurrentUser may return partial payload; merge to avoid wiping avatar_url
+    authStore.setUser({
+      ...(user.value as any),
+      ...(next as any),
+    })
+    authStore.bumpAvatarBuster()
+    await authStore.fetchProfile(true)
   } catch (e: any) {
     error.value = String(e?.response?.data?.detail || e?.message || 'Failed to save')
   } finally {

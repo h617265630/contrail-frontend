@@ -1,15 +1,20 @@
 <template>
-  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
-    <section class="border-b border-border pb-8">
-      <div class="grid gap-6 md:grid-cols-12 md:items-end">
-        <div class="md:col-span-8">
-          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Resource Library</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Manage your resources</p>
+  <div class="min-h-screen bg-background">
+    <div class="container mx-auto px-4 py-8">
+      <header class="mb-8">
+        <div class="mx-auto w-full max-w-6xl space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-foreground">Resource Library</h2>
+              <p class="text-muted-foreground text-sm mt-1">Manage your resources</p>
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
+      </header>
 
-    <Card as="section" :hoverable="false" class="rounded-none">
+      <main class="flex flex-col gap-12">
+
+    <Card as="section" :hoverable="false" class="mx-auto w-full max-w-6xl rounded-none">
       <div class="p-4">
         <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
           <div class="flex flex-col sm:flex-row gap-3 flex-1 w-full lg:w-auto">
@@ -67,11 +72,11 @@
       </div>
     </Card>
 
-    <div v-if="loading" class="text-center py-16">
+    <div v-if="loading" class="mx-auto w-full max-w-6xl text-center py-16">
       <p class="text-sm text-muted-foreground">Loading…</p>
     </div>
 
-    <Card v-else-if="filteredResources.length === 0" as="section" :hoverable="false" class="rounded-none">
+    <Card v-else-if="filteredResources.length === 0" as="section" :hoverable="false" class="mx-auto w-full max-w-6xl rounded-none">
       <div class="py-16 text-center">
         <BookOpen class="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
         <h3 class="text-foreground mb-2">No resources found</h3>
@@ -81,142 +86,187 @@
       </div>
     </Card>
 
-      <div v-else>
-        <div v-if="viewMode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+      <div v-else class="mt-8 mx-auto w-full max-w-6xl">
+        <div v-if="viewMode === 'grid'" class="grid grid-cols-1 gap-4 justify-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           <Card
             v-for="resource in filteredResources"
             :key="resource.id"
-            :hoverable="true"
-            className="rounded-none cursor-pointer"
-            @click="viewResource(resource)"
+            class="shrink-0 w-56 min-h-72 rounded-md border border-border bg-card shadow-sm transition-all duration-300 ease-out cursor-pointer hover:shadow-xl hover:!z-[100] card-hover"
+            :hoverable="false"
+            @click="openCard(resource)"
           >
-            <div class="relative h-32 bg-muted">
-              <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="h-full w-full object-cover" />
-              <div class="absolute top-3 right-3">
-                <span class="px-2 py-1 border border-border bg-background text-foreground text-xs font-semibold">
-                  {{ displayResourceType(resource) }}
+            <div class="h-full flex flex-col overflow-hidden rounded-md">
+              <div class="px-3 py-2 border-b border-border flex items-center justify-between">
+                <span
+                  class="px-2 py-0.5 text-xs font-medium rounded"
+                  :style="{
+                    backgroundColor: getCategoryColor(resourceCategoryLabel(resource)) + '20',
+                    color: getCategoryColor(resourceCategoryLabel(resource)),
+                  }"
+                >
+                  {{ resourceCategoryLabel(resource) || '—' }}
                 </span>
-              </div>
-            </div>
-
-            <div class="p-4 flex min-h-0 flex-1 flex-col">
-              <h3 class="truncate text-sm font-semibold text-foreground">{{ resource.title }}</h3>
-              <p class="mt-2 line-clamp-3 text-sm text-muted-foreground">{{ resource.summary || '' }}</p>
-
-              <div class="mt-3 space-y-1 text-xs text-muted-foreground">
-                <div class="flex items-center justify-between gap-3">
-                  <span>Source</span>
-                  <span class="truncate text-foreground">{{ formatPlatform((resource as any).platform) || '—' }}</span>
-                </div>
-                <div class="flex items-center justify-between gap-3">
-                  <span>Category</span>
-                  <span class="truncate text-foreground">{{ resourceCategoryLabel(resource) }}</span>
-                </div>
-                <div class="flex items-center justify-between gap-3">
-                  <span>Published</span>
-                  <span class="text-foreground">{{ formatExtractDate(getCardMeta(resource.id)?.publish_date || null) || '—' }}</span>
-                </div>
+                <span class="text-xs text-muted-foreground">#{{ String(resource.id).padStart(3, '0') }}</span>
               </div>
 
-              <div class="mt-auto pt-4">
-                <div class="grid grid-cols-2 gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    class="rounded-none bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white"
-                    @click.stop="viewResource(resource)"
-                  >
-                    View
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    class="rounded-none"
-                    @click.stop="addToMyResources(resource)"
-                    :disabled="addingToMy[resource.id] || addedToMy[resource.id]"
-                  >
-                    {{ addedToMy[resource.id] ? 'Added' : (addingToMy[resource.id] ? 'Adding…' : 'Add') }}
-                  </Button>
-                </div>
+              <div class="relative h-28 bg-white overflow-hidden px-2">
+                <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="w-full h-full object-cover" />
+              </div>
+
+              <div class="px-3 py-2 border-b border-border bg-white">
+                <h3 class="text-sm font-bold text-foreground line-clamp-1" :title="resource.title">{{ resource.title }}</h3>
+              </div>
+
+              <div class="px-3 py-2 flex-1 bg-muted/30">
+                <p class="text-xs text-muted-foreground line-clamp-2">{{ resource.summary || '' }}</p>
+              </div>
+
+              <div class="px-3 py-2 border-t border-border flex items-center justify-between">
+                <span class="text-xs text-muted-foreground">{{ formatPlatform((resource as any).platform) }}</span>
+                <span class="text-xs font-medium text-foreground">{{ displayResourceType(resource) }}</span>
               </div>
             </div>
           </Card>
         </div>
 
-        <div v-else class="space-y-4">
-          <Card
-            v-for="resource in filteredResources"
-            :key="resource.id"
-            :hoverable="true"
-            className="rounded-none cursor-pointer"
-            @click="viewResource(resource)"
+        <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+          <div
+            v-for="deck in decks"
+            :key="deck.key"
+            class="flex flex-col"
+            @mouseenter="hoveredDeckKey = deck.key"
+            @mouseleave="hoveredDeckKey = null"
           >
-            <div class="p-4">
-              <div class="flex gap-4">
-                <div class="relative w-32 shrink-0">
-                  <img
-                    :src="resource.thumbnail || fallbackThumb"
-                    :alt="resource.title"
-                    class="h-28 w-32 rounded-none object-cover"
-                  />
-                  <div class="absolute top-2 left-2">
-                    <span class="px-2 py-1 border border-border bg-background text-foreground text-xs font-semibold">
-                      {{ displayResourceType(resource) }}
-                    </span>
-                  </div>
-                </div>
+            <div class="mb-3 flex items-center justify-between">
+              <span
+                class="inline-flex px-2 py-0.5 text-xs font-medium rounded"
+                :style="{ backgroundColor: deck.color + '20', color: deck.color }"
+              >
+                {{ deck.name }}
+              </span>
+              <span class="text-xs text-muted-foreground">{{ deck.cards.length }}</span>
+            </div>
 
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-start justify-between gap-4">
-                    <div class="min-w-0">
-                      <h3 class="truncate text-sm font-semibold text-foreground">{{ resource.title }}</h3>
-                      <p class="mt-2 line-clamp-2 text-sm text-muted-foreground">{{ resource.summary || '' }}</p>
+            <div class="relative h-72 overflow-visible">
+              <div class="inline-flex items-center h-full" :style="{ paddingLeft: '20px' }">
+                <div
+                  v-for="(resource, cardIndex) in deck.cards.slice(0, 8)"
+                  :key="resource.id"
+                  class="shrink-0 w-56 h-72 rounded-md border border-border bg-card shadow-sm transition-all duration-300 ease-out cursor-pointer hover:shadow-xl hover:!z-[100] card-hover"
+                  :style="getDeckCardStyle(deck.key, cardIndex)"
+                  @click="openCard(resource)"
+                >
+                  <div class="h-full flex flex-col overflow-hidden rounded-md">
+                    <div class="px-3 py-2 border-b border-border flex items-center justify-between">
+                      <span
+                        class="px-2 py-0.5 text-xs font-medium rounded"
+                        :style="{
+                          backgroundColor: getCategoryColor(resourceCategoryLabel(resource)) + '20',
+                          color: getCategoryColor(resourceCategoryLabel(resource)),
+                        }"
+                      >
+                        {{ resourceCategoryLabel(resource) || '—' }}
+                      </span>
+                      <span class="text-xs text-muted-foreground">#{{ String(resource.id).padStart(3, '0') }}</span>
+                    </div>
+
+                    <div class="relative h-28 bg-white overflow-hidden px-2">
+                      <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="w-full h-full object-cover" />
+                    </div>
+
+                    <div class="px-3 py-2 border-b border-border bg-white">
+                      <h3 class="text-sm font-bold text-foreground line-clamp-1" :title="resource.title">{{ resource.title }}</h3>
+                    </div>
+
+                    <div class="px-3 py-2 flex-1 bg-muted/30">
+                      <p class="text-xs text-muted-foreground line-clamp-2">{{ resource.summary || '' }}</p>
+                    </div>
+
+                    <div class="px-3 py-2 border-t border-border flex items-center justify-between">
+                      <span class="text-xs text-muted-foreground">{{ formatPlatform((resource as any).platform) }}</span>
+                      <span class="text-xs font-medium text-foreground">{{ displayResourceType(resource) }}</span>
                     </div>
                   </div>
-
-                  <div class="mt-3 grid grid-cols-1 gap-2 text-xs text-muted-foreground sm:grid-cols-2">
-                    <div class="flex items-center justify-between gap-3">
-                      <span>Source</span>
-                      <span class="truncate text-foreground">{{ formatPlatform((resource as any).platform) || '—' }}</span>
-                    </div>
-                    <div class="flex items-center justify-between gap-3">
-                      <span>Category</span>
-                      <span class="truncate text-foreground">{{ resourceCategoryLabel(resource) }}</span>
-                    </div>
-                    <div class="flex items-center justify-between gap-3">
-                      <span>Published</span>
-                      <span class="text-foreground">{{ formatExtractDate(getCardMeta(resource.id)?.publish_date || null) || '—' }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="flex shrink-0 flex-col gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    class="rounded-none bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white"
-                    @click.stop="viewResource(resource)"
-                  >
-                    View
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    class="rounded-none"
-                    @click.stop="addToMyResources(resource)"
-                    :disabled="addingToMy[resource.id] || addedToMy[resource.id]"
-                  >
-                    {{ addedToMy[resource.id] ? 'Added' : (addingToMy[resource.id] ? 'Adding…' : 'Add') }}
-                  </Button>
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
+      </main>
     </div>
+
+    <Teleport to="body">
+      <Transition name="modal">
+        <div
+          v-if="activeResource"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4"
+          @click.self="closeActiveResource"
+        >
+          <div class="absolute inset-0 bg-black/50"></div>
+          <div class="relative w-full max-w-md rounded-md overflow-hidden bg-card border border-border shadow-xl">
+            <div class="relative h-48 bg-muted overflow-hidden">
+              <img
+                :src="activeResource.thumbnail || fallbackThumb"
+                :alt="activeResource.title"
+                class="w-full h-full object-cover"
+              />
+              <button
+                class="absolute top-3 right-3 w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white hover:bg-red-600 transition"
+                @click="closeActiveResource"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div class="p-4 border-b border-border">
+              <div class="flex items-center gap-2 mb-2">
+                <span
+                  class="px-2 py-0.5 text-xs font-medium rounded"
+                  :style="{
+                    backgroundColor: getCategoryColor(resourceCategoryLabel(activeResource)) + '20',
+                    color: getCategoryColor(resourceCategoryLabel(activeResource)),
+                  }"
+                >
+                  {{ resourceCategoryLabel(activeResource) || '—' }}
+                </span>
+                <span class="text-xs text-muted-foreground">#{{ String(activeResource.id).padStart(3, '0') }}</span>
+              </div>
+              <h2 class="text-xl font-bold text-foreground">{{ activeResource.title }}</h2>
+            </div>
+
+            <div class="p-4">
+              <p class="text-sm text-muted-foreground mb-4">{{ activeResource.summary || '' }}</p>
+              <div class="flex items-center gap-4 text-sm text-muted-foreground">
+                <span>{{ formatPlatform((activeResource as any).platform) }}</span>
+                <span>•</span>
+                <span>{{ displayResourceType(activeResource) }}</span>
+              </div>
+            </div>
+
+            <div class="p-4 border-t border-border flex flex-col gap-3">
+              <Button
+                type="button"
+                class="w-full rounded-none bg-foreground text-background font-medium hover:bg-foreground/90"
+                @click="seeDetail(activeResource)"
+              >
+                View
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                class="w-full rounded-none"
+                :disabled="addingToMy[activeResource.id] || addedToMy[activeResource.id]"
+                @click="addToMyResources(activeResource)"
+              >
+                {{ addedToMy[activeResource.id] ? 'Added' : (addingToMy[activeResource.id] ? 'Adding…' : 'Add') }}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
 
   <div v-if="showAddResultModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -278,6 +328,8 @@
       </div>
     </Card>
   </div>
+
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -290,6 +342,7 @@ import Card from '../components/ui/Card.vue'
 import { formatPlatform } from '../utils/platform'
 import {
   addPublicResourceToMyResourcesWithStatus,
+  addPublicResourceToMyResourcesWithStatusAndWeight,
   createMyResourceFromUrl,
   extractVideoMetadata,
   listMyResources,
@@ -317,6 +370,12 @@ const router = useRouter()
 const cardMetaById = ref<Record<number, UrlExtractResponse>>({})
 const addingToMy = ref<Record<number, boolean>>({})
 const addedToMy = ref<Record<number, boolean>>({})
+
+const activeResourceId = ref<number | null>(null)
+const activeResource = computed(() => {
+  if (activeResourceId.value === null) return null
+  return resources.value.find(r => r.id === activeResourceId.value) || null
+})
 
 const showAddResultModal = ref(false)
 const addResultTitle = ref('')
@@ -400,6 +459,16 @@ function formatExtractDate(iso?: string | null) {
   return d.toLocaleDateString()
 }
 
+function getCategoryColor(category?: string) {
+  const key = String(category || '').trim().toLowerCase() || 'other'
+  const palette = ['#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316', '#84cc16']
+  let hash = 0
+  for (let i = 0; i < key.length; i += 1) {
+    hash = (hash * 31 + key.charCodeAt(i)) >>> 0
+  }
+  return palette[hash % palette.length]
+}
+
 async function prefetchCardMetas(list: DbResource[]) {
   const targets = (list || []).filter(r => {
     if (!r?.id) return false
@@ -447,6 +516,58 @@ const filteredResources = computed(() => {
     return matchesCategory && (title.includes(q) || desc.includes(q))
   })
 })
+
+type Deck = {
+  key: string
+  name: string
+  color: string
+  cards: DbResource[]
+}
+
+const hoveredDeckKey = ref<string | null>(null)
+
+const decks = computed<Deck[]>(() => {
+  const map = new Map<string, DbResource[]>()
+  for (const r of filteredResources.value) {
+    const name = resourceCategoryLabel(r)
+    const key = name
+    const list = map.get(key)
+    if (list) list.push(r)
+    else map.set(key, [r])
+  }
+
+  return Array.from(map.entries())
+    .map(([key, cards]) => {
+      const name = key
+      return {
+        key,
+        name,
+        color: getCategoryColor(name),
+        cards,
+      }
+    })
+    .sort((a, b) => a.name.localeCompare(b.name))
+})
+
+function getDeckCardStyle(deckKey: string, cardIndex: number) {
+  const isHovered = hoveredDeckKey.value === deckKey
+  const isExpanded = isHovered
+  const total = decks.value.find(d => d.key === deckKey)?.cards.length || 0
+
+  if (isExpanded) {
+    return {
+      marginLeft: cardIndex === 0 ? '0' : '16px',
+      zIndex: cardIndex,
+    }
+  }
+
+  const reverseIndex = total - 1 - cardIndex
+  return {
+    marginLeft: cardIndex === 0 ? '0' : '-210px',
+    zIndex: cardIndex,
+    transform: `rotate(${reverseIndex * 0.3}deg)`,
+  }
+}
 
 function setView(mode: 'grid' | 'list') {
   viewMode.value = mode
@@ -541,13 +662,26 @@ function viewResource(resource: DbResource) {
   router.push({ name, params: { id: resource.id } })
 }
 
+function openCard(resource: DbResource) {
+  activeResourceId.value = resource.id
+}
+
+function closeActiveResource() {
+  activeResourceId.value = null
+}
+
+function seeDetail(resource: DbResource) {
+  closeActiveResource()
+  viewResource(resource)
+}
+
 async function addToMyResources(resource: DbResource) {
   if (!resource?.id) return
   if (addingToMy.value[resource.id] || addedToMy.value[resource.id]) return
 
   addingToMy.value = { ...addingToMy.value, [resource.id]: true }
   try {
-    const res = await addPublicResourceToMyResourcesWithStatus(resource.id)
+    const res = await addPublicResourceToMyResourcesWithStatusAndWeight(resource.id, { manual_weight: 1 })
     addedToMy.value = { ...addedToMy.value, [resource.id]: true }
 
     if (res?.already_exists) {
@@ -563,8 +697,26 @@ async function addToMyResources(resource: DbResource) {
   }
 }
 
-onMounted(async () => {
-  await loadCategories()
-  await loadResources()
+onMounted(() => {
+  loadCategories()
+  loadResources()
 })
 </script>
+
+<style scoped>
+.card-hover:hover {
+  animation: card-tilt-up 0.4s ease forwards;
+}
+
+@keyframes card-tilt-up {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  30% {
+    transform: rotate(-6deg) scale(1.08);
+  }
+  100% {
+    transform: rotate(0deg) scale(1.25);
+  }
+}
+</style>

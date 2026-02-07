@@ -100,6 +100,7 @@
                       <th class="py-2 pr-3">Category</th>
                       <th class="py-2 pr-3">Summary</th>
                       <th class="py-2 pr-3">Source URL</th>
+                      <th class="py-2 pr-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody class="text-slate-900">
@@ -113,6 +114,18 @@
                       <td class="py-2 pr-3">
                         <a v-if="r.source_url" :href="r.source_url" target="_blank" class="text-blue-600 hover:underline break-all">{{ r.source_url }}</a>
                         <span v-else>—</span>
+                      </td>
+                      <td class="py-2 pr-3 text-right">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          class="rounded-none text-red-500 hover:bg-red-50 hover:text-red-600"
+                          :disabled="deleting[r.id]"
+                          @click="openDeleteConfirm(r)"
+                        >
+                          <Trash2 class="h-4 w-4" />
+                        </Button>
                       </td>
                     </tr>
                   </tbody>
@@ -169,6 +182,48 @@
         </main>
       </div>
     </section>
+
+    <div v-if="showDeleteConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
+      <Card class="w-full max-w-md rounded-none" :hoverable="false">
+        <div class="flex items-center justify-between border-b border-border p-6">
+          <h2 class="text-lg font-semibold text-foreground">Confirm delete</h2>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            class="rounded-none"
+            @click="closeDeleteConfirm"
+            :disabled="deletingId !== null"
+          >
+            <X class="h-5 w-5" />
+          </Button>
+        </div>
+
+        <div class="space-y-3 p-6">
+          <div class="text-sm text-foreground">Are you sure you want to delete this resource?</div>
+          <div v-if="activeTab !== 'myresource'" class="text-xs text-muted-foreground">Tip: Deleting is intended for MyResource tab (detaches from current user).</div>
+          <div v-if="deleteTarget" class="border border-border bg-muted/30 p-3">
+            <div class="line-clamp-1 font-semibold text-foreground">{{ deleteTarget.title }}</div>
+            <div class="mt-1 line-clamp-1 text-xs text-muted-foreground">ID: {{ deleteTarget.id }}</div>
+          </div>
+          <p v-if="deleteError" class="text-sm text-destructive">{{ deleteError }}</p>
+        </div>
+
+        <div class="flex justify-end gap-2 border-t border-border bg-muted/30 p-6">
+          <Button type="button" variant="outline" class="rounded-none" @click="closeDeleteConfirm" :disabled="deletingId !== null">
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            class="rounded-none bg-red-50 text-red-600 hover:bg-red-100"
+            @click="confirmDelete"
+            :disabled="deletingId !== null"
+          >
+            {{ deletingId !== null ? 'Deleting…' : 'Confirm' }}
+          </Button>
+        </div>
+      </Card>
+    </div>
   </div>
 </template>
 
@@ -176,10 +231,11 @@
 import { computed, onMounted, ref } from 'vue'
 import { listCategories, type Category } from '../api/category'
 import { listMyLearningPaths, listPublicLearningPaths, type PublicLearningPath } from '../api/learningPath'
-import { listMyResources, listResources, type DbResource } from '../api/resource'
+import { deleteMyResource, deleteResource, listMyResources, listResources, type DbResource } from '../api/resource'
 import Card from '../components/ui/Card.vue'
 import { Button } from '../components/ui/button'
 import { formatPlatform } from '../utils/platform'
+import { Trash2, X } from 'lucide-vue-next'
 
 type Tab = 'resource' | 'myresource' | 'category' | 'learningpath' | 'mylearningpath'
 
@@ -190,6 +246,12 @@ const error = ref('')
 const resources = ref<DbResource[]>([])
 const categories = ref<Category[]>([])
 const learningPaths = ref<PublicLearningPath[]>([])
+const deleting = ref<Record<number, boolean>>({})
+
+const showDeleteConfirm = ref(false)
+const deleteTarget = ref<DbResource | null>(null)
+const deleteError = ref('')
+const deletingId = ref<number | null>(null)
 
 const title = computed(() => {
   if (activeTab.value === 'resource') return 'Resources'
@@ -247,6 +309,47 @@ function selectTab(tab: Tab) {
 
 function reload() {
   loadTab(activeTab.value)
+}
+
+function openDeleteConfirm(resource: DbResource) {
+  if (deletingId.value !== null) return
+  deleteError.value = ''
+  deleteTarget.value = resource
+  showDeleteConfirm.value = true
+}
+
+function closeDeleteConfirm() {
+  if (deletingId.value !== null) return
+  showDeleteConfirm.value = false
+  deleteTarget.value = null
+  deleteError.value = ''
+}
+
+async function confirmDelete() {
+  if (!deleteTarget.value) return
+  if (deletingId.value !== null) return
+
+  deleteError.value = ''
+  const resourceId = deleteTarget.value.id
+  deletingId.value = resourceId
+  deleting.value = { ...deleting.value, [resourceId]: true }
+  try {
+    if (activeTab.value === 'myresource') {
+      await deleteMyResource(resourceId)
+    } else if (activeTab.value === 'resource') {
+      await deleteResource(resourceId)
+    } else {
+      throw new Error('Delete is only supported for Resource / MyResource tabs')
+    }
+    resources.value = resources.value.filter((r) => r.id !== resourceId)
+    showDeleteConfirm.value = false
+    deleteTarget.value = null
+  } catch (e: any) {
+    deleteError.value = String(e?.response?.data?.detail || e?.message || '删除失败')
+  } finally {
+    deletingId.value = null
+    deleting.value = { ...deleting.value, [resourceId]: false }
+  }
 }
 
 onMounted(() => {
