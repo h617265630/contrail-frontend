@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -1395,7 +1397,6 @@ class _LearningPathDetailPageState extends State<LearningPathDetailPage> {
   }
 
   void _openItem(PathItem item) {
-    final base = '/resources/${item.resourceType}/${item.resourceId}';
     if (item.resourceType == 'video') {
       context.go('/resources/video/${item.resourceId}?path_item_id=${item.id}');
     } else if (item.resourceType == 'document') {
@@ -1530,7 +1531,7 @@ class _LearningPathLinearPageState extends State<LearningPathLinearPage> {
                   ? const Center(child: Text('Not found'))
                   : ListView.separated(
                       itemCount: _detail!.pathItems.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      separatorBuilder: (a, b) => const Divider(height: 1),
                       itemBuilder: (context, idx) {
                         final item = _detail!.pathItems.toList()..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
                         final it = item[idx];
@@ -2335,9 +2336,9 @@ class PlanPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: AppBar(title: Text('Plan')),
-      body: Padding(
+    return Scaffold(
+      appBar: AppBar(title: const Text('Plan')),
+      body: const Padding(
         padding: EdgeInsets.all(16),
         child: Text('Plan page (same as web Plan.vue).'),
       ),
@@ -2446,9 +2447,9 @@ class StackPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: AppBar(title: Text('Stack')),
-      body: Padding(
+    return Scaffold(
+      appBar: AppBar(title: const Text('Stack')),
+      body: const Padding(
         padding: EdgeInsets.all(16),
         child: Text('Stack UI page (same as web stackUI/Stack.vue).'),
       ),
@@ -2480,9 +2481,9 @@ class AboutResourcesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: AppBar(title: Text('About Resources')),
-      body: Padding(
+    return Scaffold(
+      appBar: AppBar(title: const Text('About Resources')),
+      body: const Padding(
         padding: EdgeInsets.all(16),
         child: Text('About resources page.'),
       ),
@@ -2495,9 +2496,9 @@ class AboutLearningPathsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: AppBar(title: Text('About Learning Paths')),
-      body: Padding(
+    return Scaffold(
+      appBar: AppBar(title: const Text('About Learning Paths')),
+      body: const Padding(
         padding: EdgeInsets.all(16),
         child: Text('About learning paths page.'),
       ),
@@ -2510,9 +2511,9 @@ class AboutProgressPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: AppBar(title: Text('About Progress')),
-      body: Padding(
+    return Scaffold(
+      appBar: AppBar(title: const Text('About Progress')),
+      body: const Padding(
         padding: EdgeInsets.all(16),
         child: Text('About progress page.'),
       ),
@@ -2525,9 +2526,9 @@ class DeckPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: AppBar(title: Text('Deck')),
-      body: Padding(
+    return Scaffold(
+      appBar: AppBar(title: const Text('Deck')),
+      body: const Padding(
         padding: EdgeInsets.all(16),
         child: Text('Deck page.'),
       ),
@@ -2540,9 +2541,9 @@ class UiUxProMaxPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: AppBar(title: Text('UiUxProMax')),
-      body: Padding(
+    return Scaffold(
+      appBar: AppBar(title: const Text('UiUxProMax')),
+      body: const Padding(
         padding: EdgeInsets.all(16),
         child: Text('UiUxProMax page.'),
       ),

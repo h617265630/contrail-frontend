@@ -42,7 +42,7 @@ GoRouter createAppRouter(AuthState auth) {
     routes: [
       GoRoute(
         path: '/',
-        redirect: (_, __) => '/home',
+        redirect: (context, state) => '/home',
       ),
       GoRoute(
         path: '/home',

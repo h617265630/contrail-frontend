@@ -24,24 +24,88 @@
           <!-- Deck Title -->
           <h2 class="text-lg font-semibold text-foreground mb-4">{{ deck.name }}</h2>
 
-          <!-- Cards Stack (Horizontal) -->
-          <div class="relative h-72 overflow-visible">
-            <div
-              class="inline-flex items-center h-full"
-              :style="{ paddingLeft: '20px' }"
-              @mouseenter="hoveredDeck = deckIndex"
-              @mouseleave="hoveredDeck = null"
+          <div @mouseenter="hoveredDeck = deckIndex" @mouseleave="hoveredDeck = null">
+            <!-- Collapsed: stacked preview -->
+            <div v-if="!isDeckExpanded(deckIndex)" class="relative h-72 overflow-visible">
+              <div class="inline-flex items-center h-full" :style="{ paddingLeft: '20px' }">
+                <div
+                  v-for="(card, cardIndex) in deck.cards.slice(0, collapsedPreviewCount)"
+                  :key="card.id"
+                  class="shrink-0 w-56 h-72 rounded-md border border-border bg-card shadow-sm transition-all duration-300 ease-out cursor-pointer hover:shadow-xl hover:z-100! card-hover"
+                  :style="getCollapsedPreviewCardStyle(cardIndex, Math.min(deck.cards.length, collapsedPreviewCount))"
+                  @click="openCard(card)"
+                >
+                  <!-- Pokemon-style Card Layout -->
+                  <div class="h-full flex flex-col overflow-hidden rounded-md">
+                    <!-- Card Header with Category -->
+                    <div class="px-3 py-2 border-b border-border flex items-center justify-between">
+                      <span
+                        class="px-2 py-0.5 text-xs font-medium rounded"
+                        :style="{ backgroundColor: card.color + '20', color: card.color }"
+                      >
+                        {{ card.category }}
+                      </span>
+                      <span class="text-xs text-muted-foreground">#{{ String(card.id).padStart(3, '0') }}</span>
+                    </div>
+
+                    <!-- Card Image -->
+                    <div class="relative h-28 bg-white overflow-hidden px-2">
+                      <img
+                        v-if="card.image"
+                        :src="card.image"
+                        :alt="card.title"
+                        class="w-full h-full object-cover"
+                      />
+                      <div v-else class="w-full h-full flex items-center justify-center">
+                        <div
+                          class="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white"
+                          :style="{ backgroundColor: card.color }"
+                        >
+                          {{ card.title.charAt(0) }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Card Title -->
+                    <div class="px-3 py-2 border-b border-border bg-white">
+                      <h3 class="text-sm font-bold text-foreground line-clamp-1">
+                        {{ card.title }}
+                      </h3>
+                    </div>
+
+                    <!-- Card Description -->
+                    <div class="px-3 py-2 flex-1 bg-muted/30">
+                      <p class="text-xs text-muted-foreground line-clamp-2">
+                        {{ card.description }}
+                      </p>
+                    </div>
+
+                    <!-- Card Footer -->
+                    <div class="px-3 py-2 border-t border-border flex items-center justify-between">
+                      <span class="text-xs text-muted-foreground">{{ card.source }}</span>
+                      <span class="text-xs font-medium text-foreground">{{ card.duration }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expanded: 5-col wrapping grid with stagger -->
+            <TransitionGroup
+              v-else
+              name="grid-stagger"
+              tag="div"
+              class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"
+              appear
             >
               <div
-                v-for="(card, cardIndex) in deck.cards"
+                v-for="(card, i) in deck.cards"
                 :key="card.id"
-                class="shrink-0 w-56 h-72 rounded-md border border-border bg-card shadow-sm transition-all duration-300 ease-out cursor-pointer hover:shadow-xl hover:!z-[100] card-hover"
-                :style="getDeckCardStyle(deckIndex, cardIndex)"
+                class="w-full h-72 rounded-md border border-border bg-card shadow-sm transition-all duration-300 ease-out cursor-pointer hover:shadow-xl hover:z-100! card-hover"
+                :style="{ transitionDelay: `${getGridDelayMs(i)}ms` }"
                 @click="openCard(card)"
               >
-                <!-- Pokemon-style Card Layout -->
                 <div class="h-full flex flex-col overflow-hidden rounded-md">
-                  <!-- Card Header with Category -->
                   <div class="px-3 py-2 border-b border-border flex items-center justify-between">
                     <span
                       class="px-2 py-0.5 text-xs font-medium rounded"
@@ -52,14 +116,8 @@
                     <span class="text-xs text-muted-foreground">#{{ String(card.id).padStart(3, '0') }}</span>
                   </div>
 
-                  <!-- Card Image -->
                   <div class="relative h-28 bg-white overflow-hidden px-2">
-                    <img
-                      v-if="card.image"
-                      :src="card.image"
-                      :alt="card.title"
-                      class="w-full h-full object-cover"
-                    />
+                    <img v-if="card.image" :src="card.image" :alt="card.title" class="w-full h-full object-cover" />
                     <div v-else class="w-full h-full flex items-center justify-center">
                       <div
                         class="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white"
@@ -70,28 +128,25 @@
                     </div>
                   </div>
 
-                  <!-- Card Title -->
                   <div class="px-3 py-2 border-b border-border bg-white">
                     <h3 class="text-sm font-bold text-foreground line-clamp-1">
                       {{ card.title }}
                     </h3>
                   </div>
 
-                  <!-- Card Description -->
                   <div class="px-3 py-2 flex-1 bg-muted/30">
                     <p class="text-xs text-muted-foreground line-clamp-2">
                       {{ card.description }}
                     </p>
                   </div>
 
-                  <!-- Card Footer -->
                   <div class="px-3 py-2 border-t border-border flex items-center justify-between">
                     <span class="text-xs text-muted-foreground">{{ card.source }}</span>
                     <span class="text-xs font-medium text-foreground">{{ card.duration }}</span>
                   </div>
                 </div>
               </div>
-            </div>
+            </TransitionGroup>
           </div>
 
           <!-- Deck Count -->
@@ -101,7 +156,7 @@
 
       <!-- Hint -->
       <p class="text-center text-muted-foreground text-sm mt-12">
-        Hover deck to fan out • Click card to view details
+        Hover deck to expand • Click card to view details
       </p>
     </section>
 
@@ -201,6 +256,8 @@ interface Deck {
 const hoveredDeck = ref<number | null>(null)
 const activeCard = ref<Card | null>(null)
 const expandAll = ref(false)
+
+const collapsedPreviewCount = 5
 
 const decks = ref<Deck[]>([
   {
@@ -374,24 +431,24 @@ const totalCards = computed(() => {
   return decks.value.reduce((sum, deck) => sum + deck.cards.length, 0)
 })
 
-function getDeckCardStyle(deckIndex: number, cardIndex: number) {
-  const isHovered = hoveredDeck.value === deckIndex
-  const isExpanded = expandAll.value || isHovered
-  const totalCards = decks.value[deckIndex].cards.length
+function isDeckExpanded(deckIndex: number) {
+  return expandAll.value || hoveredDeck.value === deckIndex
+}
 
-  if (isExpanded) {
-    return {
-      marginLeft: cardIndex === 0 ? '0' : '16px',
-      zIndex: cardIndex,
-    }
-  } else {
-    const reverseIndex = totalCards - 1 - cardIndex
-    return {
-      marginLeft: cardIndex === 0 ? '0' : '-210px',
-      zIndex: cardIndex,
-      transform: `rotate(${reverseIndex * 0.3}deg)`,
-    }
+function getCollapsedPreviewCardStyle(cardIndex: number, total: number) {
+  const reverseIndex = total - 1 - cardIndex
+  return {
+    marginLeft: cardIndex === 0 ? '0' : '-210px',
+    zIndex: cardIndex,
+    transform: `rotate(${reverseIndex * 0.3}deg)`,
   }
+}
+
+function getGridDelayMs(i: number) {
+  const columns = 5
+  const row = Math.floor(i / columns)
+  const col = i % columns
+  return row * 360 + col * 90
 }
 
 function openCard(card: Card) {
@@ -401,6 +458,23 @@ function openCard(card: Card) {
 </script>
 
 <style scoped>
+.grid-stagger-enter-active,
+.grid-stagger-leave-active {
+  transition: opacity 520ms ease, transform 520ms ease;
+}
+
+.grid-stagger-enter-from,
+.grid-stagger-leave-to {
+  opacity: 0;
+  transform: translateX(-18px);
+}
+
+.grid-stagger-enter-to,
+.grid-stagger-leave-from {
+  opacity: 1;
+  transform: translateX(0);
+}
+
 .stack-move,
 .stack-enter-active,
 .stack-leave-active {

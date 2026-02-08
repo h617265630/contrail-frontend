@@ -366,6 +366,7 @@ import { createMyResourceFromUrl, listMyResources, type DbResource } from '../ap
 import { addResourceToMyLearningPath, createLearningPathWithCategory } from '../api/learningPath'
 import { listCategories, type Category } from '../api/category'
 import { formatPlatform } from '../utils/platform'
+import request from '../utils/request'
 
 type PathMeta = {
   title: string
@@ -436,38 +437,26 @@ function applyTemplate(id: TemplateId) {
 const coverFileInput = ref<HTMLInputElement | null>(null)
 const uploadedCoverUrl = ref<string>('')
 
-function makeCoverSvg(seed: number) {
-  // Small deterministic SVG: keep palette aligned to existing blue/indigo background.
-  const w = 640
-  const h = 360
-  const a = (seed * 37) % 100
-  const b = (seed * 61) % 100
-  const c = (seed * 83) % 100
-  const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#eff6ff"/>
-      <stop offset="1" stop-color="#e0e7ff"/>
-    </linearGradient>
-    <linearGradient id="fg" x1="1" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#60a5fa" stop-opacity="0.45"/>
-      <stop offset="1" stop-color="#818cf8" stop-opacity="0.35"/>
-    </linearGradient>
-  </defs>
-  <rect width="${w}" height="${h}" fill="url(#bg)"/>
-  <circle cx="${(a / 100) * w}" cy="${(b / 100) * h}" r="${70 + (c % 40)}" fill="url(#fg)"/>
-  <circle cx="${w - (b / 100) * w}" cy="${(c / 100) * h}" r="${40 + (a % 30)}" fill="url(#fg)" opacity="0.8"/>
-  <path d="M -40 ${h * 0.75} C ${w * 0.2} ${h * (0.55 + (a % 15) / 100)} , ${w * 0.55} ${h * (0.95 - (b % 20) / 100)} , ${w + 40} ${h * 0.7}" fill="none" stroke="#1f2937" stroke-opacity="0.08" stroke-width="14" stroke-linecap="round"/>
-  <path d="M -40 ${h * 0.2} C ${w * 0.3} ${h * (0.3 + (b % 15) / 100)} , ${w * 0.6} ${h * (0.05 + (c % 25) / 100)} , ${w + 40} ${h * 0.25}" fill="none" stroke="#1f2937" stroke-opacity="0.06" stroke-width="10" stroke-linecap="round"/>
-</svg>`
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
+function toAbsoluteImageUrl(raw: unknown) {
+  const url = String(raw || '').trim()
+  if (!url) return ''
+  if (url.startsWith('data:')) return url
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+
+  const base = String((request as any)?.defaults?.baseURL || '').replace(/\/$/, '')
+  if (!base) return url
+  if (url.startsWith('/')) return `${base}${url}`
+  return `${base}/${url}`
 }
 
-const defaultCoverUrls = Array.from({ length: 20 }, (_, i) => makeCoverSvg(i + 1))
+function isDefaultCover(url: string) {
+  return String(url || '').startsWith('data:image/svg+xml')
+}
+
+const defaultCoverUrls = ref<string[]>([])
 
 function selectCover(url: string) {
-  pathMeta.coverImageUrl = String(url || '').trim()
+  pathMeta.coverImageUrl = toAbsoluteImageUrl(url)
 }
 
 function openCoverFilePicker() {
@@ -514,7 +503,6 @@ async function loadCategories() {
 onMounted(() => {
   loadCategories()
   void loadResources()
-  if (!pathMeta.coverImageUrl) selectCover(defaultCoverUrls[0] || '')
 })
 
 function typeBadge(type: UiResource['type']) {
@@ -550,7 +538,7 @@ function toUiResource(r: DbResource): UiResource {
     source_url: ((r as any).source_url ?? null) as any,
     type: normalizePresentedType((r as any).resource_type),
     platform: String((r as any).platform || '').trim(),
-    thumbnail: String((r as any).thumbnail || '').trim(),
+    thumbnail: toAbsoluteImageUrl((r as any).thumbnail),
   }
 }
 
@@ -558,8 +546,23 @@ async function loadResources() {
   try {
     const rows = await listMyResources()
     allResources.value = Array.isArray(rows) ? rows.map(toUiResource) : []
+
+    const thumbs = allResources.value
+      .map(r => String(r.thumbnail || '').trim())
+      .filter(Boolean)
+    const unique: string[] = []
+    for (const t of thumbs) {
+      if (!unique.includes(t)) unique.push(t)
+      if (unique.length >= 20) break
+    }
+    defaultCoverUrls.value = unique
+
+    if (!pathMeta.coverImageUrl && defaultCoverUrls.value[0]) {
+      selectCover(defaultCoverUrls.value[0])
+    }
   } catch {
     allResources.value = []
+    defaultCoverUrls.value = []
   }
 }
 
@@ -608,7 +611,7 @@ function addResource(resource: UiResource) {
 
   // Rule: cover uses the first resource thumbnail.
   const firstThumb = String(selected.value[0]?.thumbnail || '').trim()
-  if (firstThumb) selectCover(firstThumb)
+  if ((!pathMeta.coverImageUrl || isDefaultCover(pathMeta.coverImageUrl)) && firstThumb) selectCover(firstThumb)
 }
 
 function removeResource(id: number) {
@@ -616,7 +619,7 @@ function removeResource(id: number) {
 
   // Rule: cover uses the first resource thumbnail.
   const firstThumb = String(selected.value[0]?.thumbnail || '').trim()
-  if (firstThumb) selectCover(firstThumb)
+  if ((!pathMeta.coverImageUrl || isDefaultCover(pathMeta.coverImageUrl)) && firstThumb) selectCover(firstThumb)
 }
 
 function clearSelected() {
@@ -697,9 +700,7 @@ async function createLearningPath() {
     return
   }
 
-  // Rule: cover_image_url always uses the first resource thumbnail.
-  const coverUrl = String(selected.value[0]?.thumbnail || '').trim() || null
-  if (coverUrl) selectCover(coverUrl)
+  const coverUrl = String(pathMeta.coverImageUrl || '').trim() || null
 
   try {
     const createdDb = await createLearningPathWithCategory({
@@ -734,7 +735,7 @@ async function createLearningPath() {
   pathMeta.type = 'linear path'
   pathMeta.isPublic = true
   pathMeta.categoryId = null
-  pathMeta.coverImageUrl = defaultCoverUrls[0] || ''
+  pathMeta.coverImageUrl = defaultCoverUrls.value[0] || ''
   uploadedCoverUrl.value = ''
   selected.value = []
   searchQuery.value = ''

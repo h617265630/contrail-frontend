@@ -45,5 +45,35 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>127.0.0.1</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+			<key>localhost</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Used to take photos for avatar or image upload</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Used to pick photos for avatar or image upload</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Used to save photos to your library</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Used for video recording</string>
 </dict>
 </plist>

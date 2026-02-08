@@ -276,6 +276,7 @@ import { ChevronDown, Plus, Search, X } from 'lucide-vue-next'
 import Card from '../components/ui/Card.vue'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
+import request from '../utils/request'
 import {
   addResourceToMyLearningPath,
   getMyLearningPathDetail,
@@ -331,6 +332,22 @@ const meta = reactive<PathMeta>({ title: '', description: '', isPublic: true, ca
 const coverFileInput = ref<HTMLInputElement | null>(null)
 const uploadedCoverUrl = ref<string>('')
 
+function toAbsoluteImageUrl(raw: unknown) {
+  const url = String(raw || '').trim()
+  if (!url) return ''
+  if (url.startsWith('data:')) return url
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+
+  const base = String((request as any)?.defaults?.baseURL || '').replace(/\/$/, '')
+  if (!base) return url
+  if (url.startsWith('/')) return `${base}${url}`
+  return `${base}/${url}`
+}
+
+function isDefaultCover(url: string) {
+  return String(url || '').startsWith('data:image/svg+xml')
+}
+
 function makeCoverSvg(seed: number) {
   const w = 640
   const h = 360
@@ -361,7 +378,7 @@ function makeCoverSvg(seed: number) {
 const defaultCoverUrls = Array.from({ length: 20 }, (_, i) => makeCoverSvg(i + 1))
 
 function selectCover(url: string) {
-  meta.coverImageUrl = String(url || '').trim()
+  meta.coverImageUrl = toAbsoluteImageUrl(url)
 }
 
 function openCoverFilePicker() {
@@ -440,7 +457,7 @@ function mapDbResourceToUi(r: any): UiResource {
     summary: String(r.summary || '').trim(),
     type: normalizePresentedType((r as any)?.resource_type),
     category: String((r as any)?.category_name || r.category || 'Uncategorized'),
-    thumbnail: String((r as any)?.thumbnail || '').trim(),
+    thumbnail: toAbsoluteImageUrl((r as any)?.thumbnail),
   }
 }
 
@@ -459,14 +476,14 @@ function addResource(resource: UiResource) {
 
   // Rule: cover uses the first resource thumbnail.
   const firstThumb = String(selected.value[0]?.thumbnail || '').trim()
-  if (firstThumb) selectCover(firstThumb)
+  if ((!meta.coverImageUrl || isDefaultCover(meta.coverImageUrl)) && firstThumb) selectCover(firstThumb)
 }
 
 function removeResource(id: number) {
   selected.value = selected.value.filter(r => r.id !== id)
 
   const firstThumb = String(selected.value[0]?.thumbnail || '').trim()
-  if (firstThumb) selectCover(firstThumb)
+  if ((!meta.coverImageUrl || isDefaultCover(meta.coverImageUrl)) && firstThumb) selectCover(firstThumb)
 }
 
 function clearSelected() {
@@ -544,9 +561,7 @@ async function save() {
   const lpId = Number(idNum.value)
   if (!Number.isFinite(lpId) || lpId <= 0) return
 
-  // Rule: cover uses first item thumbnail.
-  const coverUrl = String(selected.value[0]?.thumbnail || '').trim() || null
-  if (coverUrl) selectCover(coverUrl)
+  const coverUrl = String(meta.coverImageUrl || '').trim() || null
 
   // 1) Persist meta to backend so LearningPool can see public paths.
   try {
@@ -612,8 +627,8 @@ async function load() {
     meta.isPublic = Boolean((db as any)?.is_public)
     meta.categoryId = ((db as any)?.category_id ?? null) as any
 
-    const cover = String((db as any)?.cover_image_url || '').trim()
-    if (cover) selectCover(cover)
+    const cover = toAbsoluteImageUrl((db as any)?.cover_image_url)
+    if (cover) meta.coverImageUrl = cover
 
     const byId = new Map(allResources.value.map(r => [r.id, r]))
     const items = Array.isArray((db as any)?.path_items) ? (db as any).path_items : []
@@ -628,7 +643,7 @@ async function load() {
           summary: String((rdata as any)?.summary || ''),
           type: normalizePresentedType((rdata as any)?.resource_type),
           category: String((rdata as any)?.category_name || (rdata as any)?.category || 'Uncategorized'),
-          thumbnail: String((rdata as any)?.thumbnail || '').trim(),
+          thumbnail: toAbsoluteImageUrl((rdata as any)?.thumbnail),
         })
       } else {
         const hit = byId.get(rid)
@@ -638,7 +653,7 @@ async function load() {
     selected.value = next
 
     const firstThumb = String(selected.value[0]?.thumbnail || '').trim()
-    if (firstThumb) selectCover(firstThumb)
+    if ((!meta.coverImageUrl || isDefaultCover(meta.coverImageUrl)) && firstThumb) selectCover(firstThumb)
   } catch {
     exists.value = false
   } finally {

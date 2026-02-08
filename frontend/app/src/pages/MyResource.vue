@@ -1,52 +1,39 @@
 <template>
   <div class="min-h-screen bg-background">
     <section class="container mx-auto px-4 py-8">
-      <header class="mb-8 flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-foreground">My Resources</h1>
-          <p class="text-muted-foreground mt-1">Manage the learning resources you saved.</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            class="rounded-none"
-            @click="expandAll = !expandAll"
-          >
-            {{ expandAll ? '收起全部' : '展开全部' }}
-          </Button>
-
-          <Button
-            type="button"
-            size="sm"
-            class="rounded-none hover:bg-[#8ecbff] hover:text-white"
-            @click="router.push({ name: 'add-resource' })"
-          >
-            Add Resource
-          </Button>
-        </div>
-      </header>
-
-      <div class="mb-8 grid gap-4 md:grid-cols-12 md:items-center">
-        <div class="md:col-span-8">
-          <div class="relative">
-            <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input v-model="searchKeyword" placeholder="Search resources..." class="pl-9 rounded-none" />
+      <header class="mb-8 space-y-4">
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-bold text-foreground">My Collection</h1>
+            <p class="text-muted-foreground mt-1">{{ totalCards }} learning resources in {{ decks.length }} decks</p>
           </div>
         </div>
-        <div class="md:col-span-4 md:flex md:justify-end">
-          <select
-            v-model="filterType"
-            class="h-10 w-full md:w-auto border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-none"
-          >
-            <option value="">All types</option>
-            <option value="video">Video</option>
-            <option value="article">Article</option>
-            <option value="document">Document</option>
-          </select>
+
+        <div class="flex w-full flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div class="relative w-full md:max-w-md">
+            <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input v-model="searchKeyword" placeholder="Search resources..." class="h-10 pl-9 rounded-none" />
+          </div>
+
+          <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
+            <Button
+              type="button"
+              size="sm"
+              class="rounded-none hover:bg-[#8ecbff] hover:text-white"
+              @click="router.push({ name: 'add-resource' })"
+            >
+              Add Resource
+            </Button>
+
+            <button
+              class="h-10 px-4 text-sm font-medium rounded-none border border-border bg-card hover:bg-muted transition"
+              @click="expandAll = !expandAll"
+            >
+              {{ expandAll ? '收起全部' : '展开全部' }}
+            </button>
+          </div>
         </div>
-      </div>
+      </header>
 
       <main class="flex flex-col gap-12">
         <div v-if="loading" class="py-12 text-center">
@@ -59,38 +46,96 @@
         </div>
 
         <template v-else>
-          <div
-            v-for="deck in decks"
-            :key="deck.key"
-            class="flex flex-col"
-          >
+          <div v-for="(deck, deckIndex) in decks" :key="deck.key" class="flex flex-col">
             <h2 class="text-lg font-semibold text-foreground mb-4">{{ deck.name }}</h2>
 
-            <div class="relative h-72 overflow-visible">
+            <div>
               <div
-                class="inline-flex items-center h-full"
-                :style="{ paddingLeft: '20px' }"
-                @mouseenter="hoveredDeckKey = deck.key"
-                @mouseleave="hoveredDeckKey = null"
+                v-if="!isDeckExpanded(deckIndex)"
+                class="relative h-72 overflow-visible"
+                @mouseenter="hoveredDeck = deckIndex"
+                @mouseleave="hoveredDeck = null"
+              >
+                <div class="inline-flex items-center h-full" :style="{ paddingLeft: '20px' }">
+                  <div
+                    v-for="(resource, cardIndex) in deck.cards.slice(0, collapsedPreviewCount)"
+                    :key="resource.id"
+                    :class="[
+                      'shrink-0 w-56 h-72 rounded-md border border-border bg-card shadow-sm transition-all duration-300 ease-out cursor-pointer hover:shadow-xl hover:z-100! card-hover',
+                      getWeightCardClass(resource),
+                    ]"
+                    :style="getCollapsedPreviewCardStyle(cardIndex, Math.min(deck.cards.length, collapsedPreviewCount))"
+                    @click="openCard(resource)"
+                  >
+                    <div class="h-full flex flex-col overflow-hidden rounded-md">
+                      <div class="px-3 py-2 border-b border-border flex items-center justify-between">
+                        <span
+                          class="px-2 py-0.5 text-xs font-medium rounded"
+                          :style="{ backgroundColor: getCategoryColor(resource.category) + '20', color: getCategoryColor(resource.category) }"
+                        >
+                          {{ resource.category || '—' }}
+                        </span>
+                        <span class="text-xs text-muted-foreground">#{{ String(resource.id).padStart(3, '0') }}</span>
+                      </div>
+
+                      <div class="relative h-28 bg-white overflow-hidden px-2">
+                        <img
+                          v-if="resource.thumbnail"
+                          :src="resource.thumbnail || fallbackThumb"
+                          :alt="resource.title"
+                          class="w-full h-full object-cover"
+                        />
+                        <div v-else class="w-full h-full flex items-center justify-center">
+                          <div
+                            class="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white"
+                            :style="{ backgroundColor: getCategoryColor(resource.category) }"
+                          >
+                            {{ resource.title.charAt(0) }}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="px-3 py-2 border-b border-border bg-white">
+                        <h3 class="text-sm font-bold text-foreground line-clamp-1" :title="resource.title">{{ resource.title }}</h3>
+                      </div>
+
+                      <div class="px-3 py-2 flex-1 bg-muted/30">
+                        <p class="text-xs text-muted-foreground line-clamp-2">{{ resource.summary }}</p>
+                      </div>
+
+                      <div class="px-3 py-2 border-t border-border flex items-center justify-between">
+                        <span class="text-xs text-muted-foreground">{{ formatPlatform(resource.platform) }}</span>
+                        <span class="text-xs font-medium text-foreground">{{ resource.type }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <TransitionGroup
+                v-else
+                name="grid-stagger"
+                tag="div"
+                class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"
+                appear
+                @mouseenter="hoveredDeck = deckIndex"
+                @mouseleave="hoveredDeck = null"
               >
                 <div
-                  v-for="(resource, cardIndex) in deck.cards"
+                  v-for="(resource, i) in deck.cards"
                   :key="resource.id"
                   :class="[
-                    'shrink-0 w-56 h-72 rounded-md border border-border bg-card shadow-sm transition-all duration-300 ease-out cursor-pointer hover:shadow-xl hover:!z-[100] card-hover',
+                    'w-full h-72 rounded-md border border-border bg-card shadow-sm transition-all duration-300 ease-out cursor-pointer hover:shadow-xl hover:z-100! card-hover',
                     getWeightCardClass(resource),
                   ]"
-                  :style="getDeckCardStyle(deck.key, cardIndex)"
+                  :style="{ transitionDelay: `${getGridDelayMs(i)}ms` }"
                   @click="openCard(resource)"
                 >
                   <div class="h-full flex flex-col overflow-hidden rounded-md">
                     <div class="px-3 py-2 border-b border-border flex items-center justify-between">
                       <span
                         class="px-2 py-0.5 text-xs font-medium rounded"
-                        :style="{
-                          backgroundColor: getCategoryColor(resource.category) + '20',
-                          color: getCategoryColor(resource.category),
-                        }"
+                        :style="{ backgroundColor: getCategoryColor(resource.category) + '20', color: getCategoryColor(resource.category) }"
                       >
                         {{ resource.category || '—' }}
                       </span>
@@ -115,7 +160,7 @@
                     </div>
                   </div>
                 </div>
-              </div>
+              </TransitionGroup>
             </div>
 
             <p class="text-sm text-muted-foreground mt-4">{{ deck.cards.length }} cards</p>
@@ -291,10 +336,14 @@ type UiResource = {
 
 const resources = ref<UiResource[]>([])
 const searchKeyword = ref('')
-const filterType = ref('')
 const loading = ref(false)
 const deletingId = ref<number | null>(null)
 const publicUpdatingId = ref<number | null>(null)
+
+const hoveredDeck = ref<number | null>(null)
+const expandAll = ref(true)
+
+const collapsedPreviewCount = 5
 
 const activeResourceId = ref<number | null>(null)
 const activeResource = computed(() => {
@@ -366,6 +415,8 @@ async function load() {
 }
 
 onMounted(() => {
+  expandAll.value = true
+  hoveredDeck.value = null
   load()
 
   window.addEventListener('focus', load)
@@ -386,20 +437,19 @@ onUnmounted(() => {
 watch(
   () => route.fullPath,
   () => {
+    expandAll.value = true
+    hoveredDeck.value = null
     load()
   },
 )
 
 const filteredResources = computed(() => {
   const q = searchKeyword.value.trim().toLowerCase()
-  const type = filterType.value
 
   return resources.value.filter(r => {
     const platform = String(r.platform || '').trim().toLowerCase()
     if (platform === 'xiaohongshu' || platform === 'xhs' || platform.includes('xiaohongshu')) return false
     if (platform === 'reddit') return false
-    const matchType = !type || type === '' || r.type === type
-    if (!matchType) return false
     if (!q) return true
     return (
       r.title.toLowerCase().includes(q) ||
@@ -416,9 +466,6 @@ type Deck = {
   cards: UiResource[]
 }
 
-const hoveredDeckKey = ref<string | null>(null)
-const expandAll = ref(false)
-
 const decks = computed<Deck[]>(() => {
   const map = new Map<string, UiResource[]>()
   for (const r of filteredResources.value) {
@@ -433,18 +480,15 @@ const decks = computed<Deck[]>(() => {
     .map(([name, cards]) => ({ key: name, name, cards }))
 })
 
-function getDeckCardStyle(deckKey: string, cardIndex: number) {
-  const isHovered = hoveredDeckKey.value === deckKey
-  const isExpanded = expandAll.value || isHovered
-  const total = decks.value.find(d => d.key === deckKey)?.cards.length || 0
+const totalCards = computed(() => {
+  return decks.value.reduce((sum, d) => sum + d.cards.length, 0)
+})
 
-  if (isExpanded) {
-    return {
-      marginLeft: cardIndex === 0 ? '0' : '16px',
-      zIndex: cardIndex,
-    }
-  }
+function isDeckExpanded(deckIndex: number) {
+  return expandAll.value || hoveredDeck.value === deckIndex
+}
 
+function getCollapsedPreviewCardStyle(cardIndex: number, total: number) {
   const reverseIndex = total - 1 - cardIndex
   return {
     marginLeft: cardIndex === 0 ? '0' : '-210px',
@@ -453,17 +497,11 @@ function getDeckCardStyle(deckKey: string, cardIndex: number) {
   }
 }
 
-function getResourceTypeClass(type: string) {
-  switch (type) {
-    case 'video':
-      return 'bg-blue-100 text-blue-600'
-    case 'article':
-      return 'bg-green-100 text-green-600'
-    case 'document':
-      return 'bg-yellow-100 text-yellow-600'
-    default:
-      return 'bg-gray-100 text-gray-600'
-  }
+function getGridDelayMs(i: number) {
+  const columns = 5
+  const row = Math.floor(i / columns)
+  const col = i % columns
+  return row * 360 + col * 90
 }
 
 function getCategoryColor(category?: string) {
@@ -546,6 +584,23 @@ async function confirmDelete() {
 </script>
 
 <style scoped>
+.grid-stagger-enter-active,
+.grid-stagger-leave-active {
+  transition: opacity 520ms ease, transform 520ms ease;
+}
+
+.grid-stagger-enter-from,
+.grid-stagger-leave-to {
+  opacity: 0;
+  transform: translateX(-18px);
+}
+
+.grid-stagger-enter-to,
+.grid-stagger-leave-from {
+  opacity: 1;
+  transform: translateX(0);
+}
+
 .card-hover:hover {
   animation: card-tilt-up 0.4s ease forwards;
 }
