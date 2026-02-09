@@ -424,6 +424,10 @@ class _MyResourcesPageState extends State<MyResourcesPage> {
   String _error = '';
   List<DbResource> _resources = const [];
 
+  final _search = TextEditingController();
+  bool _expandAll = true;
+  final Set<String> _collapsedDeckKeys = <String>{};
+
   Future<void> _load() async {
     setState(() {
       _loading = true;
@@ -457,53 +461,367 @@ class _MyResourcesPageState extends State<MyResourcesPage> {
     }
   }
 
+  void _openResource(DbResource r) {
+    if (r.resourceType == 'video') {
+      context.go('/my-resources/video/${r.id}');
+    } else if (r.resourceType == 'document') {
+      context.go('/my-resources/document/${r.id}');
+    } else {
+      context.go('/my-resources/article/${r.id}');
+    }
+  }
+
+  String _deckKey(DbResource r) {
+    final raw = (r.categoryName ?? '').trim();
+    return raw.isEmpty ? 'Other' : raw;
+  }
+
+  Map<String, List<DbResource>> _groupDecks(List<DbResource> list) {
+    final map = <String, List<DbResource>>{};
+    for (final r in list) {
+      final k = _deckKey(r);
+      (map[k] ??= <DbResource>[]).add(r);
+    }
+    final keys = map.keys.toList()..sort();
+    return {for (final k in keys) k: map[k]!};
+  }
+
+  bool _isDeckExpanded(String deckKey) {
+    if (_expandAll) return true;
+    return !_collapsedDeckKeys.contains(deckKey);
+  }
+
+  void _toggleDeck(String deckKey) {
+    if (_expandAll) return;
+    setState(() {
+      if (_collapsedDeckKeys.contains(deckKey)) {
+        _collapsedDeckKeys.remove(deckKey);
+      } else {
+        _collapsedDeckKeys.add(deckKey);
+      }
+    });
+  }
+
+  void _toggleExpandAll() {
+    setState(() {
+      _expandAll = !_expandAll;
+      if (_expandAll) {
+        _collapsedDeckKeys.clear();
+      }
+    });
+  }
+
+  int _gridColumnsForWidth(double width) {
+    const cardMin = 170.0;
+    final cols = (width / cardMin).floor().clamp(1, 5);
+    return cols;
+  }
+
+  Widget _buildResourceCard(BuildContext context, DbResource r, {required int delayMs}) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final category = (r.categoryName ?? '').trim();
+    final chipText = category.isEmpty ? '—' : category;
+
+    return _StaggeredIn(
+      delayMs: delayMs,
+      child: InkWell(
+        onTap: () => _openResource(r),
+        child: Card(
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AspectRatio(
+                aspectRatio: 16 / 9,
+                child: r.thumbnail == null || r.thumbnail!.isEmpty
+                    ? Container(color: scheme.surfaceContainerHighest)
+                    : Image.network(
+                        r.thumbnail!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(color: scheme.surfaceContainerHighest),
+                      ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: scheme.outline, width: 1),
+                        color: scheme.surface,
+                      ),
+                      child: Text(
+                        chipText,
+                        style: theme.textTheme.labelSmall,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '#${r.id.toString().padLeft(3, '0')}',
+                      style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+                child: Text(
+                  r.title,
+                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: Text(
+                  (r.summary ?? '').trim().isEmpty ? '—' : r.summary!.trim(),
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        r.platform,
+                        style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(
+                      r.resourceType,
+                      style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(width: 6),
+                    PopupMenuButton<String>(
+                      padding: EdgeInsets.zero,
+                      onSelected: (v) {
+                        if (v == 'edit') {
+                          context.go('/my-resources/${r.id}/edit');
+                        } else if (v == 'delete') {
+                          _delete(r.id);
+                        }
+                      },
+                      itemBuilder: (_) => const [
+                        PopupMenuItem(value: 'edit', child: Text('Edit')),
+                        PopupMenuItem(value: 'delete', child: Text('Delete')),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final q = _search.text.trim().toLowerCase();
+    final filtered = q.isEmpty
+        ? _resources
+        : _resources.where((r) {
+            final title = r.title.toLowerCase();
+            final summary = (r.summary ?? '').toLowerCase();
+            final category = (r.categoryName ?? '').toLowerCase();
+            final platform = r.platform.toLowerCase();
+            return title.contains(q) || summary.contains(q) || category.contains(q) || platform.contains(q);
+          }).toList();
+
+    final decks = _groupDecks(filtered);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Resources'),
+        title: const Text('My Collection'),
         actions: [
           IconButton(onPressed: _load, icon: const Icon(Icons.refresh)),
-          IconButton(onPressed: () => context.go('/my-resources/add'), icon: const Icon(Icons.add)),
         ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error.isNotEmpty
-              ? Center(child: Text(_error))
-              : ListView.separated(
-                  itemCount: _resources.length,
-                  separatorBuilder: (a, b) => const Divider(height: 1),
-                  itemBuilder: (context, idx) {
-                    final r = _resources[idx];
-                    return ListTile(
-                      title: Text(r.title),
-                      subtitle: Text('${r.resourceType} · ${r.createdAtText}'),
-                      onTap: () {
-                        if (r.resourceType == 'video') {
-                          context.go('/my-resources/video/${r.id}');
-                        } else if (r.resourceType == 'document') {
-                          context.go('/my-resources/document/${r.id}');
-                        } else {
-                          context.go('/my-resources/article/${r.id}');
-                        }
-                      },
-                      trailing: PopupMenuButton<String>(
-                        onSelected: (v) {
-                          if (v == 'edit') {
-                            context.go('/my-resources/${r.id}/edit');
-                          } else if (v == 'delete') {
-                            _delete(r.id);
-                          }
-                        },
-                        itemBuilder: (_) => const [
-                          PopupMenuItem(value: 'edit', child: Text('Edit')),
-                          PopupMenuItem(value: 'delete', child: Text('Delete')),
-                        ],
+              ? Center(child: Padding(padding: const EdgeInsets.all(16), child: Text(_error)))
+              : ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                  children: [
+                    Text(
+                      '${filtered.length} resources in ${decks.length} decks',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).hintColor),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _search,
+                            decoration: const InputDecoration(
+                              hintText: 'Search resources...',
+                              prefixIcon: Icon(Icons.search, size: 18),
+                            ),
+                            onChanged: (_) => setState(() {}),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        SizedBox(
+                          height: 40,
+                          child: FilledButton(
+                            onPressed: () => context.go('/my-resources/add'),
+                            child: const Text('Add'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: _toggleExpandAll,
+                            child: Text(_expandAll ? '收起全部' : '展开全部'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    for (final entry in decks.entries) ...[
+                      _DeckSection(
+                        title: entry.key,
+                        count: entry.value.length,
+                        expanded: _isDeckExpanded(entry.key),
+                        showChevron: !_expandAll,
+                        onToggle: () => _toggleDeck(entry.key),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final cols = _gridColumnsForWidth(constraints.maxWidth);
+                            final cards = entry.value;
+                            return GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: cols,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 0.78,
+                              ),
+                              itemCount: cards.length,
+                              itemBuilder: (context, i) {
+                                final row = i ~/ cols;
+                                final col = i % cols;
+                                final delay = row * 260 + col * 70;
+                                return _buildResourceCard(context, cards[i], delayMs: delay);
+                              },
+                            );
+                          },
+                        ),
                       ),
-                    );
-                  },
+                      const SizedBox(height: 18),
+                    ],
+                  ],
                 ),
+    );
+  }
+}
+
+class _DeckSection extends StatelessWidget {
+  const _DeckSection({
+    required this.title,
+    required this.count,
+    required this.expanded,
+    required this.child,
+    required this.onToggle,
+    required this.showChevron,
+  });
+
+  final String title;
+  final int count;
+  final bool expanded;
+  final Widget child;
+  final VoidCallback onToggle;
+  final bool showChevron;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: showChevron ? onToggle : null,
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              Text(
+                '$count cards',
+                style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+              ),
+              if (showChevron) ...[
+                const SizedBox(width: 6),
+                Icon(expanded ? Icons.expand_less : Icons.expand_more, color: theme.hintColor),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        AnimatedCrossFade(
+          crossFadeState: expanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+          duration: const Duration(milliseconds: 220),
+          firstChild: child,
+          secondChild: const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+}
+
+class _StaggeredIn extends StatefulWidget {
+  const _StaggeredIn({required this.child, required this.delayMs});
+  final Widget child;
+  final int delayMs;
+
+  @override
+  State<_StaggeredIn> createState() => _StaggeredInState();
+}
+
+class _StaggeredInState extends State<_StaggeredIn> {
+  bool _show = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(milliseconds: widget.delayMs), () {
+      if (!mounted) return;
+      setState(() => _show = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedOpacity(
+      opacity: _show ? 1 : 0,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOut,
+      child: AnimatedSlide(
+        offset: _show ? Offset.zero : const Offset(-0.05, 0),
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeOut,
+        child: widget.child,
+      ),
     );
   }
 }
