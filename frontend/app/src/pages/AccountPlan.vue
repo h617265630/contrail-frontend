@@ -10,10 +10,12 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs font-semibold text-muted-foreground uppercase tracking-[0.14em]">Current plan</p>
-            <p class="mt-2 text-xl font-semibold text-foreground">{{ planInfo.name }}</p>
+            <p class="mt-2 text-xl font-semibold text-foreground">{{ effectivePlan }}</p>
           </div>
-          <span class="rounded-md border border-border bg-muted/30 px-3 py-1 text-sm font-semibold text-foreground">{{ planInfo.name }}</span>
+          <span class="rounded-md border border-border bg-muted/30 px-3 py-1 text-sm font-semibold text-foreground">{{ effectivePlan }}</span>
         </div>
+
+        <p v-if="loadError" class="text-sm text-destructive">{{ loadError }}</p>
 
         <div class="grid gap-3 sm:grid-cols-2">
           <div class="rounded-md border border-border bg-muted/30 p-4">
@@ -37,7 +39,7 @@
         <div>
           <p class="text-xs font-semibold text-muted-foreground uppercase tracking-[0.14em]">Permissions</p>
           <ul class="mt-2 space-y-1 text-sm text-muted-foreground list-disc list-inside">
-            <li v-for="p in planInfo.permissions" :key="p">{{ p }}</li>
+            <li v-for="p in permissions" :key="p">{{ p }}</li>
           </ul>
         </div>
       </div>
@@ -46,32 +48,66 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { addDaysIso, daysBetween, formatIsoDate, getPlanInfo } from '../utils/plan'
+import { computed, onMounted, ref } from 'vue'
+import { getMySubscription, type SubscriptionMeResponse } from '../api/subscription'
 import Card from '../components/ui/Card.vue'
 
-const planInfo = computed(() => getPlanInfo())
+const subscription = ref<SubscriptionMeResponse | null>(null)
+const loadError = ref('')
 
-const purchasedText = computed(() => {
-  const days = planInfo.value.duration_days
-  if (!days || days <= 0) return '—'
-  return `${days} days`
+function hasToken() {
+  try {
+    const storage = (globalThis as any).localStorage
+    return Boolean(String(storage?.getItem?.('learnsmart_token') || '').trim())
+  } catch {
+    return false
+  }
+}
+
+onMounted(async () => {
+  if (!hasToken()) return
+  loadError.value = ''
+  try {
+    subscription.value = await getMySubscription()
+  } catch {
+    loadError.value = 'Failed to load your current plan.'
+  }
 })
 
-const startedText = computed(() => formatIsoDate(planInfo.value.purchased_at))
+const effectivePlan = computed(() => (subscription.value?.effective_plan || 'Free'))
+
+const planCode = computed(() => {
+  const code = subscription.value?.plan_code
+  return code ? String(code) : ''
+})
+
+const purchasedText = computed(() => {
+  if (!planCode.value) return '—'
+  return planCode.value
+})
+
+const startedText = computed(() => '')
 
 const activeForText = computed(() => {
-  if (!planInfo.value.purchased_at) return '—'
-  const nowIso = new Date().toISOString()
-  const n = daysBetween(planInfo.value.purchased_at, nowIso)
-  return `${n} days`
+  return '—'
 })
 
 const expiresText = computed(() => {
-  if (!planInfo.value.purchased_at) return ''
-  const days = planInfo.value.duration_days
-  if (!days || days <= 0) return ''
-  const expiresIso = addDaysIso(planInfo.value.purchased_at, days)
-  return formatIsoDate(expiresIso)
+  const iso = subscription.value?.current_period_end
+  if (!iso) return ''
+  const d = new Date(String(iso))
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleDateString()
+})
+
+const permissions = computed(() => {
+  const name = effectivePlan.value
+  if (name === 'Pro') {
+    return ['Team collaboration & sharing', 'Custom paths & templates', 'Advanced search & filters', 'Priority support']
+  }
+  if (name === 'Basic') {
+    return ['All learning paths', 'Manage resources', 'Cloud notes sync', 'Progress tracking & export']
+  }
+  return ['View public resources', 'Preview learning paths', 'Local notes']
 })
 </script>

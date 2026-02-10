@@ -43,6 +43,7 @@ export interface DbResource {
   community_score?: number | null
   save_count?: number | null
   trending_score?: number | null
+  user_seq?: number | null
 }
 
 // 添加资源的请求参数

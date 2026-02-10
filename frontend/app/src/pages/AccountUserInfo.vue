@@ -3,8 +3,8 @@
     <Card as="section" :hoverable="false" class="rounded-md">
       <div class="p-6">
         <div class="flex items-center gap-4">
-          <div class="h-14 w-14 overflow-hidden rounded-full border border-border bg-muted/30">
-            <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" class="h-full w-full object-cover" />
+          <div class="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-border bg-muted/30">
+            <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" referrerpolicy="no-referrer" class="h-full w-full rounded-full object-cover" />
             <div v-else class="flex h-full w-full items-center justify-center text-foreground font-semibold">
               {{ initials }}
             </div>

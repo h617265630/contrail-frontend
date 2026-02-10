@@ -25,6 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.db.database import SessionLocal
 from app.core.initial_data import init_default_data
 from app.routers.resources import product, resource
+from app.routers import subscription, webhooks
 
 # Ensure generic resource models are imported before create_all
 import app.models.user_resource
@@ -38,6 +39,8 @@ import app.models.category
 import app.models.progress
 import app.models.user_image
 import app.models.user_file
+import app.models.subscription
+import app.models.webhook_event
 Base.metadata.create_all(bind=engine)
 
 """
@@ -86,6 +89,8 @@ app.include_router(user_role.router)
 app.include_router(role_permission.router)
 app.include_router(user_image.router)
 app.include_router(user_file.router)
+app.include_router(subscription.router)
+app.include_router(webhooks.router)
 
 @app.on_event("startup")
 async def startup_event():

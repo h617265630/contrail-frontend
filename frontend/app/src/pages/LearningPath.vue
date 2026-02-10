@@ -271,25 +271,28 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { listPublicLearningPaths, mapPublicLearningPathToDisplayBase } from '../api/learningPath'
+import { listCategories, type Category } from '../api/category'
 import { RouterLink } from 'vue-router'
 import { Button } from '../components/ui/button'
 import Card from '../components/ui/Card.vue'
 
 const RouterLinkComp = RouterLink
 
-const categories = ['AI','Frontend','Backend','DevOps','Database','Design','Product','Career']
+const categories = ref<string[]>([])
 
 function inferCategoryFromText(text: string): string {
   const t = text.toLowerCase()
+  // Try matching against loaded category names
+  for (const cat of categories.value) {
+    if (t.includes(cat.toLowerCase())) return cat
+  }
+  // Keyword fallback
   if (t.includes('ai') || t.includes('llm') || t.includes('rag') || t.includes('agent')) return 'AI'
   if (t.includes('front') || t.includes('vue') || t.includes('react') || t.includes('css')) return 'Frontend'
   if (t.includes('back') || t.includes('api') || t.includes('fastapi') || t.includes('node')) return 'Backend'
   if (t.includes('devops') || t.includes('docker') || t.includes('k8s') || t.includes('kubernetes') || t.includes('ci')) return 'DevOps'
-  if (t.includes('db') || t.includes('sql') || t.includes('database') || t.includes('postgres')) return 'Database'
   if (t.includes('design') || t.includes('figma') || t.includes('ux')) return 'Design'
-  if (t.includes('product') || t.includes('pm') || t.includes('roadmap')) return 'Product'
-  if (t.includes('career') || t.includes('resume') || t.includes('interview')) return 'Career'
-  return 'Backend'
+  return categories.value[0] || 'Other'
 }
 
 type LearningPoolPath = {
@@ -326,7 +329,11 @@ function mapDbToPool(p: any): LearningPoolPath {
 
 onMounted(async () => {
   try {
-    const db = await listPublicLearningPaths()
+    const [db, cats] = await Promise.all([
+      listPublicLearningPaths(),
+      listCategories(),
+    ])
+    categories.value = (cats || []).map((c: Category) => c.name)
     const mapped = (db || []).map(mapDbToPool)
     allPaths.value = mapped
   } catch {

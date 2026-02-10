@@ -592,12 +592,186 @@
         </div>
       </section>
 
-      <!-- ─── Section 15: Live Data — Random Card Styles ─── -->
+      <!-- ─── Section 15: Paper Cut / Layered ─── -->
+      <section>
+        <div class="mb-6">
+          <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Paper Cut / Layered</h2>
+          <p class="text-sm text-muted-foreground mt-1">Multi-layer paper shadow effect with pastel tones</p>
+        </div>
+        <div class="rounded-xl bg-stone-100 p-8">
+          <div class="flex flex-wrap gap-6">
+            <div v-for="(card, i) in papercutCards" :key="card.id" :class="['shrink-0 w-56 h-72 cursor-pointer transition-all duration-300 papercut-card', `papercut-${papercutColors[i % papercutColors.length]}`]">
+              <div class="h-full flex flex-col overflow-hidden rounded-sm bg-white relative z-10">
+                <div class="px-3 py-2 flex items-center justify-between border-b" :style="{ borderColor: papercutColorMap[papercutColors[i % papercutColors.length]] + '40' }">
+                  <span class="text-xs font-bold uppercase tracking-wider" :style="{ color: papercutColorMap[papercutColors[i % papercutColors.length]] }">{{ card.category }}</span>
+                  <span class="text-xs text-gray-400">#{{ String(card.id).padStart(3, '0') }}</span>
+                </div>
+                <div class="relative h-28 overflow-hidden flex items-center justify-center bg-gray-50">
+                  <div class="w-14 h-14 rounded-full flex items-center justify-center text-2xl font-bold text-white" :style="{ background: papercutColorMap[papercutColors[i % papercutColors.length]] }">{{ card.title.charAt(0) }}</div>
+                </div>
+                <div class="px-3 py-2"><h3 class="text-sm font-bold text-gray-800 line-clamp-1">{{ card.title }}</h3></div>
+                <div class="px-3 py-1 flex-1"><p class="text-xs text-gray-500 line-clamp-2">{{ card.summary }}</p></div>
+                <div class="px-3 py-2 border-t border-gray-200 flex items-center justify-between">
+                  <span class="text-xs text-gray-400">{{ card.platform }}</span>
+                  <span class="text-xs font-medium" :style="{ color: papercutColorMap[papercutColors[i % papercutColors.length]] }">{{ card.type }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── Section 16: Vaporwave / Retrowave ─── -->
+      <section>
+        <div class="mb-6">
+          <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Vaporwave / Retrowave</h2>
+          <p class="text-sm text-muted-foreground mt-1">80s/90s aesthetic with pink-cyan gradients and grid lines</p>
+        </div>
+        <div class="rounded-xl p-8" style="background: linear-gradient(180deg, #1a0533 0%, #2d1b69 50%, #ff6ec7 100%)">
+          <div class="flex flex-wrap gap-6">
+            <div v-for="(card, i) in vaporwaveCards" :key="card.id" class="shrink-0 w-56 h-72 cursor-pointer transition-all duration-300 vaporwave-card" :style="{ background: vaporwaveBgs[i % vaporwaveBgs.length] }">
+              <div class="h-full flex flex-col overflow-hidden rounded-lg relative">
+                <div class="px-3 py-2 flex items-center justify-between border-b border-pink-300/30">
+                  <span class="text-xs font-bold uppercase tracking-widest text-cyan-300" style="text-shadow: 0 0 8px #00ffff80">{{ card.category }}</span>
+                  <span class="text-xs text-pink-300/60">#{{ String(card.id).padStart(3, '0') }}</span>
+                </div>
+                <div class="relative h-28 overflow-hidden flex items-center justify-center">
+                  <span class="text-5xl font-black text-transparent bg-clip-text" style="background-image: linear-gradient(180deg, #ff71ce, #01cdfe, #05ffa1); -webkit-background-clip: text">{{ card.title.charAt(0) }}</span>
+                </div>
+                <div class="px-3 py-2"><h3 class="text-sm font-bold text-pink-200 line-clamp-1">{{ card.title }}</h3></div>
+                <div class="px-3 py-1 flex-1"><p class="text-xs text-purple-300/70 line-clamp-2">{{ card.summary }}</p></div>
+                <div class="px-3 py-2 border-t border-pink-300/20 flex items-center justify-between">
+                  <span class="text-xs text-cyan-400/60">{{ card.platform }}</span>
+                  <span class="text-xs font-bold text-pink-300">{{ card.type }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── Section 17: Newspaper / Gazette ─── -->
+      <section>
+        <div class="mb-6">
+          <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Newspaper / Gazette</h2>
+          <p class="text-sm text-muted-foreground mt-1">Classic print media typographic style</p>
+        </div>
+        <div class="rounded-xl bg-[#f5f0e8] p-8">
+          <div class="flex flex-wrap gap-6">
+            <div v-for="(card, i) in newspaperCards" :key="card.id" class="shrink-0 w-56 h-72 cursor-pointer transition-all duration-300 newspaper-card">
+              <div class="h-full flex flex-col overflow-hidden" style="font-family: 'Times New Roman', Georgia, serif">
+                <div class="px-3 py-2 flex items-center justify-between border-b-2 border-black">
+                  <span class="text-xs font-bold uppercase tracking-[0.2em]">{{ card.category }}</span>
+                  <span class="text-xs text-gray-500 italic">No.{{ String(card.id).padStart(3, '0') }}</span>
+                </div>
+                <div class="relative h-28 overflow-hidden flex items-center justify-center border-b border-gray-300">
+                  <span class="text-6xl font-black text-gray-800" style="font-family: 'Playfair Display', Georgia, serif">{{ card.title.charAt(0) }}</span>
+                </div>
+                <div class="px-3 py-2 border-b border-gray-300"><h3 class="text-sm font-bold text-gray-900 line-clamp-1 leading-tight">{{ card.title }}</h3></div>
+                <div class="px-3 py-1 flex-1"><p class="text-xs text-gray-600 line-clamp-3 leading-relaxed" style="text-align: justify">{{ card.summary }}</p></div>
+                <div class="px-3 py-2 border-t-2 border-black flex items-center justify-between">
+                  <span class="text-xs text-gray-500 italic">{{ card.platform }}</span>
+                  <span class="text-xs font-bold uppercase tracking-widest">{{ card.type }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── Section 18: Frosted Dark ─── -->
+      <section>
+        <div class="mb-6">
+          <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Frosted Dark</h2>
+          <p class="text-sm text-muted-foreground mt-1">Dark frosted glass with colored accent borders</p>
+        </div>
+        <div class="rounded-xl p-8" style="background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)">
+          <div class="flex flex-wrap gap-6">
+            <div v-for="(card, i) in frostedCards" :key="card.id" class="shrink-0 w-56 h-72 cursor-pointer transition-all duration-300 frosted-card" :style="{ '--frost-accent': frostedAccents[i % frostedAccents.length] } as any">
+              <div class="h-full flex flex-col overflow-hidden rounded-xl">
+                <div class="px-3 py-2 flex items-center justify-between border-b border-white/5">
+                  <span class="text-xs font-bold uppercase tracking-wider" :style="{ color: frostedAccents[i % frostedAccents.length] }">{{ card.category }}</span>
+                  <span class="text-xs text-gray-500">#{{ String(card.id).padStart(3, '0') }}</span>
+                </div>
+                <div class="relative h-28 overflow-hidden flex items-center justify-center">
+                  <div class="w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-bold text-white/90" :style="{ background: frostedAccents[i % frostedAccents.length] + '30', border: `1px solid ${frostedAccents[i % frostedAccents.length]}40` }">{{ card.title.charAt(0) }}</div>
+                </div>
+                <div class="px-3 py-2"><h3 class="text-sm font-bold text-gray-200 line-clamp-1">{{ card.title }}</h3></div>
+                <div class="px-3 py-1 flex-1"><p class="text-xs text-gray-400 line-clamp-2">{{ card.summary }}</p></div>
+                <div class="px-3 py-2 border-t border-white/5 flex items-center justify-between">
+                  <span class="text-xs text-gray-500">{{ card.platform }}</span>
+                  <span class="text-xs font-medium" :style="{ color: frostedAccents[i % frostedAccents.length] }">{{ card.type }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── Section 19: Origami / Fold ─── -->
+      <section>
+        <div class="mb-6">
+          <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Origami / Fold</h2>
+          <p class="text-sm text-muted-foreground mt-1">Paper fold effect with diagonal shadow crease</p>
+        </div>
+        <div class="rounded-xl bg-gray-100 p-8">
+          <div class="flex flex-wrap gap-6">
+            <div v-for="(card, i) in origamiCards" :key="card.id" class="shrink-0 w-56 h-72 cursor-pointer transition-all duration-300 origami-card" :style="{ '--origami-color': origamiColors[i % origamiColors.length] } as any">
+              <div class="h-full flex flex-col overflow-hidden bg-white relative z-10">
+                <div class="px-3 py-2 flex items-center justify-between border-b border-gray-200">
+                  <span class="text-xs font-bold uppercase tracking-wider" :style="{ color: origamiColors[i % origamiColors.length] }">{{ card.category }}</span>
+                  <span class="text-xs text-gray-400">#{{ String(card.id).padStart(3, '0') }}</span>
+                </div>
+                <div class="relative h-28 overflow-hidden flex items-center justify-center bg-gray-50">
+                  <div class="w-12 h-12 flex items-center justify-center text-xl font-bold text-white" :style="{ background: origamiColors[i % origamiColors.length], clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }">{{ card.title.charAt(0) }}</div>
+                </div>
+                <div class="px-3 py-2 border-b border-gray-100"><h3 class="text-sm font-bold text-gray-800 line-clamp-1">{{ card.title }}</h3></div>
+                <div class="px-3 py-1 flex-1"><p class="text-xs text-gray-500 line-clamp-2">{{ card.summary }}</p></div>
+                <div class="px-3 py-2 border-t border-gray-200 flex items-center justify-between">
+                  <span class="text-xs text-gray-400">{{ card.platform }}</span>
+                  <span class="text-xs font-medium" :style="{ color: origamiColors[i % origamiColors.length] }">{{ card.type }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── Section 20: Glitch / Distorted ─── -->
+      <section>
+        <div class="mb-6">
+          <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Glitch / Distorted</h2>
+          <p class="text-sm text-muted-foreground mt-1">Digital glitch effect with RGB split and scan artifacts</p>
+        </div>
+        <div class="rounded-xl p-8" style="background: #0a0a0a">
+          <div class="flex flex-wrap gap-6">
+            <div v-for="(card, i) in glitchCards" :key="card.id" class="shrink-0 w-56 h-72 cursor-pointer transition-all duration-300 glitch-card" :style="{ '--glitch-color': glitchColors[i % glitchColors.length] } as any">
+              <div class="h-full flex flex-col overflow-hidden rounded-sm bg-[#111] relative">
+                <div class="px-3 py-2 flex items-center justify-between border-b border-gray-800">
+                  <span class="text-xs font-bold uppercase tracking-widest font-mono glitch-text" :style="{ color: glitchColors[i % glitchColors.length] }">{{ card.category }}</span>
+                  <span class="text-xs text-gray-600 font-mono">#{{ String(card.id).padStart(3, '0') }}</span>
+                </div>
+                <div class="relative h-28 overflow-hidden flex items-center justify-center bg-black">
+                  <span class="text-5xl font-black font-mono glitch-text" :style="{ color: glitchColors[i % glitchColors.length], textShadow: `2px 0 #ff0000, -2px 0 #00ffff` }">{{ card.title.charAt(0) }}</span>
+                </div>
+                <div class="px-3 py-2 bg-[#111]"><h3 class="text-sm font-bold text-gray-200 line-clamp-1 font-mono">{{ card.title }}</h3></div>
+                <div class="px-3 py-1 flex-1 bg-[#111]"><p class="text-xs text-gray-500 line-clamp-2 font-mono">{{ card.summary }}</p></div>
+                <div class="px-3 py-2 border-t border-gray-800 flex items-center justify-between bg-[#111]">
+                  <span class="text-xs text-gray-600 font-mono">{{ card.platform }}</span>
+                  <span class="text-xs font-bold font-mono" :style="{ color: glitchColors[i % glitchColors.length] }">{{ card.type }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── Section 21: Live Data — Random Card Styles ─── -->
       <section>
         <div class="mb-6 flex items-center justify-between">
           <div>
-            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">My Resources — Random Styles</h2>
-            <p class="text-sm text-muted-foreground mt-1">Each card gets a randomly assigned UI style from the showcase above</p>
+            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">My Resources — Random Styles (×2)</h2>
+            <p class="text-sm text-muted-foreground mt-1">Resources doubled, each card gets a unique UI style from all 20 styles</p>
           </div>
           <button
             class="px-4 py-2 text-xs font-semibold uppercase tracking-wider border border-border rounded-none bg-card hover:bg-muted transition"
@@ -948,6 +1122,148 @@
               </div>
             </div>
 
+            <!-- Style: papercut -->
+            <div
+              v-else-if="cardStyleMap[r.id]?.style === 'papercut'"
+              :class="['w-full h-72 cursor-pointer transition-all duration-300 papercut-card', `papercut-${cardStyleMap[r.id].variant}`]"
+            >
+              <div class="h-full flex flex-col overflow-hidden rounded-sm bg-white relative z-10">
+                <div class="px-3 py-2 flex items-center justify-between border-b" :style="{ borderColor: cardStyleMap[r.id].color + '40' }">
+                  <span class="text-xs font-bold uppercase tracking-wider" :style="{ color: cardStyleMap[r.id].color }">{{ r.category_name || r.platform }}</span>
+                  <span class="text-xs text-gray-400">#{{ String(r.id > 900000 ? r.id - 900000 : r.id).padStart(3, '0') }}</span>
+                </div>
+                <div class="relative h-28 overflow-hidden flex items-center justify-center bg-gray-50">
+                  <img v-if="r.thumbnail" :src="r.thumbnail" :alt="r.title" class="w-full h-full object-cover" />
+                  <div v-else class="w-14 h-14 rounded-full flex items-center justify-center text-2xl font-bold text-white" :style="{ background: cardStyleMap[r.id].color }">{{ (r.title||'R').charAt(0) }}</div>
+                </div>
+                <div class="px-3 py-2"><h3 class="text-sm font-bold text-gray-800 line-clamp-1">{{ r.title }}</h3></div>
+                <div class="px-3 py-1 flex-1"><p class="text-xs text-gray-500 line-clamp-2">{{ r.summary || 'No description' }}</p></div>
+                <div class="px-3 py-2 border-t border-gray-200 flex items-center justify-between">
+                  <span class="text-xs text-gray-400">{{ r.platform }}</span>
+                  <span class="text-xs font-medium" :style="{ color: cardStyleMap[r.id].color }">{{ r.resource_type }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Style: vaporwave -->
+            <div
+              v-else-if="cardStyleMap[r.id]?.style === 'vaporwave'"
+              class="w-full h-72 rounded-lg cursor-pointer transition-all duration-300 vaporwave-card overflow-hidden"
+              :style="{ background: `linear-gradient(135deg, #2d1b6980, ${cardStyleMap[r.id].color}40)` }"
+            >
+              <div class="h-full flex flex-col overflow-hidden rounded-lg relative">
+                <div class="px-3 py-2 flex items-center justify-between border-b border-pink-300/30">
+                  <span class="text-xs font-bold uppercase tracking-widest text-cyan-300" style="text-shadow: 0 0 8px #00ffff80">{{ r.category_name || r.platform }}</span>
+                  <span class="text-xs text-pink-300/60">#{{ String(r.id > 900000 ? r.id - 900000 : r.id).padStart(3, '0') }}</span>
+                </div>
+                <div class="relative h-28 overflow-hidden flex items-center justify-center">
+                  <img v-if="r.thumbnail" :src="r.thumbnail" :alt="r.title" class="w-full h-full object-cover opacity-60" style="filter: saturate(200%) hue-rotate(20deg)" />
+                  <span v-else class="text-5xl font-black text-transparent bg-clip-text" style="background-image: linear-gradient(180deg, #ff71ce, #01cdfe, #05ffa1); -webkit-background-clip: text">{{ (r.title||'R').charAt(0) }}</span>
+                </div>
+                <div class="px-3 py-2"><h3 class="text-sm font-bold text-pink-200 line-clamp-1">{{ r.title }}</h3></div>
+                <div class="px-3 py-1 flex-1"><p class="text-xs text-purple-300/70 line-clamp-2">{{ r.summary || 'No description' }}</p></div>
+                <div class="px-3 py-2 border-t border-pink-300/20 flex items-center justify-between">
+                  <span class="text-xs text-cyan-400/60">{{ r.platform }}</span>
+                  <span class="text-xs font-bold text-pink-300">{{ r.resource_type }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Style: newspaper -->
+            <div
+              v-else-if="cardStyleMap[r.id]?.style === 'newspaper'"
+              class="w-full h-72 cursor-pointer transition-all duration-300 newspaper-card overflow-hidden"
+            >
+              <div class="h-full flex flex-col overflow-hidden" style="font-family: 'Times New Roman', Georgia, serif">
+                <div class="px-3 py-2 flex items-center justify-between border-b-2 border-black">
+                  <span class="text-xs font-bold uppercase tracking-[0.2em]">{{ r.category_name || r.platform }}</span>
+                  <span class="text-xs text-gray-500 italic">No.{{ String(r.id > 900000 ? r.id - 900000 : r.id).padStart(3, '0') }}</span>
+                </div>
+                <div class="relative h-28 overflow-hidden flex items-center justify-center border-b border-gray-300">
+                  <img v-if="r.thumbnail" :src="r.thumbnail" :alt="r.title" class="w-full h-full object-cover" style="filter: grayscale(100%) contrast(110%)" />
+                  <span v-else class="text-6xl font-black text-gray-800" style="font-family: 'Playfair Display', Georgia, serif">{{ (r.title||'R').charAt(0) }}</span>
+                </div>
+                <div class="px-3 py-2 border-b border-gray-300"><h3 class="text-sm font-bold text-gray-900 line-clamp-1 leading-tight">{{ r.title }}</h3></div>
+                <div class="px-3 py-1 flex-1"><p class="text-xs text-gray-600 line-clamp-3 leading-relaxed" style="text-align: justify">{{ r.summary || 'No description' }}</p></div>
+                <div class="px-3 py-2 border-t-2 border-black flex items-center justify-between">
+                  <span class="text-xs text-gray-500 italic">{{ r.platform }}</span>
+                  <span class="text-xs font-bold uppercase tracking-widest">{{ r.resource_type }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Style: frosted -->
+            <div
+              v-else-if="cardStyleMap[r.id]?.style === 'frosted'"
+              class="w-full h-72 rounded-xl cursor-pointer transition-all duration-300 frosted-card overflow-hidden"
+              :style="{ '--frost-accent': cardStyleMap[r.id].color } as any"
+            >
+              <div class="h-full flex flex-col overflow-hidden rounded-xl">
+                <div class="px-3 py-2 flex items-center justify-between border-b border-white/5">
+                  <span class="text-xs font-bold uppercase tracking-wider" :style="{ color: cardStyleMap[r.id].color }">{{ r.category_name || r.platform }}</span>
+                  <span class="text-xs text-gray-500">#{{ String(r.id > 900000 ? r.id - 900000 : r.id).padStart(3, '0') }}</span>
+                </div>
+                <div class="relative h-28 overflow-hidden flex items-center justify-center">
+                  <img v-if="r.thumbnail" :src="r.thumbnail" :alt="r.title" class="w-full h-full object-cover rounded-lg opacity-70" />
+                  <div v-else class="w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-bold text-white/90" :style="{ background: cardStyleMap[r.id].color + '30', border: `1px solid ${cardStyleMap[r.id].color}40` }">{{ (r.title||'R').charAt(0) }}</div>
+                </div>
+                <div class="px-3 py-2"><h3 class="text-sm font-bold text-gray-200 line-clamp-1">{{ r.title }}</h3></div>
+                <div class="px-3 py-1 flex-1"><p class="text-xs text-gray-400 line-clamp-2">{{ r.summary || 'No description' }}</p></div>
+                <div class="px-3 py-2 border-t border-white/5 flex items-center justify-between">
+                  <span class="text-xs text-gray-500">{{ r.platform }}</span>
+                  <span class="text-xs font-medium" :style="{ color: cardStyleMap[r.id].color }">{{ r.resource_type }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Style: origami -->
+            <div
+              v-else-if="cardStyleMap[r.id]?.style === 'origami'"
+              class="w-full h-72 cursor-pointer transition-all duration-300 origami-card overflow-hidden"
+              :style="{ '--origami-color': cardStyleMap[r.id].color } as any"
+            >
+              <div class="h-full flex flex-col overflow-hidden bg-white relative z-10">
+                <div class="px-3 py-2 flex items-center justify-between border-b border-gray-200">
+                  <span class="text-xs font-bold uppercase tracking-wider" :style="{ color: cardStyleMap[r.id].color }">{{ r.category_name || r.platform }}</span>
+                  <span class="text-xs text-gray-400">#{{ String(r.id > 900000 ? r.id - 900000 : r.id).padStart(3, '0') }}</span>
+                </div>
+                <div class="relative h-28 overflow-hidden flex items-center justify-center bg-gray-50">
+                  <img v-if="r.thumbnail" :src="r.thumbnail" :alt="r.title" class="w-full h-full object-cover" />
+                  <div v-else class="w-12 h-12 flex items-center justify-center text-xl font-bold text-white" :style="{ background: cardStyleMap[r.id].color, clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }">{{ (r.title||'R').charAt(0) }}</div>
+                </div>
+                <div class="px-3 py-2 border-b border-gray-100"><h3 class="text-sm font-bold text-gray-800 line-clamp-1">{{ r.title }}</h3></div>
+                <div class="px-3 py-1 flex-1"><p class="text-xs text-gray-500 line-clamp-2">{{ r.summary || 'No description' }}</p></div>
+                <div class="px-3 py-2 border-t border-gray-200 flex items-center justify-between">
+                  <span class="text-xs text-gray-400">{{ r.platform }}</span>
+                  <span class="text-xs font-medium" :style="{ color: cardStyleMap[r.id].color }">{{ r.resource_type }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Style: glitch -->
+            <div
+              v-else-if="cardStyleMap[r.id]?.style === 'glitch'"
+              class="w-full h-72 cursor-pointer transition-all duration-300 glitch-card overflow-hidden"
+              :style="{ '--glitch-color': cardStyleMap[r.id].color } as any"
+            >
+              <div class="h-full flex flex-col overflow-hidden rounded-sm bg-[#111] relative">
+                <div class="px-3 py-2 flex items-center justify-between border-b border-gray-800">
+                  <span class="text-xs font-bold uppercase tracking-widest font-mono glitch-text" :style="{ color: cardStyleMap[r.id].color }">{{ r.category_name || r.platform }}</span>
+                  <span class="text-xs text-gray-600 font-mono">#{{ String(r.id > 900000 ? r.id - 900000 : r.id).padStart(3, '0') }}</span>
+                </div>
+                <div class="relative h-28 overflow-hidden flex items-center justify-center bg-black">
+                  <img v-if="r.thumbnail" :src="r.thumbnail" :alt="r.title" class="w-full h-full object-cover opacity-60" style="filter: contrast(150%)" />
+                  <span v-else class="text-5xl font-black font-mono glitch-text" :style="{ color: cardStyleMap[r.id].color, textShadow: `2px 0 #ff0000, -2px 0 #00ffff` }">{{ (r.title||'R').charAt(0) }}</span>
+                </div>
+                <div class="px-3 py-2 bg-[#111]"><h3 class="text-sm font-bold text-gray-200 line-clamp-1 font-mono">{{ r.title }}</h3></div>
+                <div class="px-3 py-1 flex-1 bg-[#111]"><p class="text-xs text-gray-500 line-clamp-2 font-mono">{{ r.summary || 'No description' }}</p></div>
+                <div class="px-3 py-2 border-t border-gray-800 flex items-center justify-between bg-[#111]">
+                  <span class="text-xs text-gray-600 font-mono">{{ r.platform }}</span>
+                  <span class="text-xs font-bold font-mono" :style="{ color: cardStyleMap[r.id].color }">{{ r.resource_type }}</span>
+                </div>
+              </div>
+            </div>
+
           </template>
         </div>
       </section>
@@ -1095,14 +1411,79 @@ const allStyles: { style: string; variants: { variant: string; color: string; bg
       { variant: 'green', color: '#34D399', bg: '' },
     ],
   },
+  {
+    style: 'papercut',
+    variants: [
+      { variant: 'coral', color: '#FF6B6B', bg: '' },
+      { variant: 'sky', color: '#4FC3F7', bg: '' },
+      { variant: 'mint', color: '#66BB6A', bg: '' },
+      { variant: 'lavender', color: '#AB47BC', bg: '' },
+      { variant: 'peach', color: '#FF8A65', bg: '' },
+    ],
+  },
+  {
+    style: 'vaporwave',
+    variants: [
+      { variant: 'pink', color: '#ff71ce', bg: '' },
+      { variant: 'cyan', color: '#01cdfe', bg: '' },
+      { variant: 'green', color: '#05ffa1', bg: '' },
+      { variant: 'purple', color: '#b967ff', bg: '' },
+      { variant: 'yellow', color: '#fffb96', bg: '' },
+    ],
+  },
+  {
+    style: 'newspaper',
+    variants: [{ variant: 'default', color: '#1a1a1a', bg: '' }],
+  },
+  {
+    style: 'frosted',
+    variants: [
+      { variant: 'indigo', color: '#6366f1', bg: '' },
+      { variant: 'pink', color: '#ec4899', bg: '' },
+      { variant: 'teal', color: '#14b8a6', bg: '' },
+      { variant: 'amber', color: '#f59e0b', bg: '' },
+      { variant: 'violet', color: '#8b5cf6', bg: '' },
+    ],
+  },
+  {
+    style: 'origami',
+    variants: [
+      { variant: 'red', color: '#e74c3c', bg: '' },
+      { variant: 'blue', color: '#3498db', bg: '' },
+      { variant: 'green', color: '#2ecc71', bg: '' },
+      { variant: 'orange', color: '#f39c12', bg: '' },
+      { variant: 'purple', color: '#9b59b6', bg: '' },
+    ],
+  },
+  {
+    style: 'glitch',
+    variants: [
+      { variant: 'matrix', color: '#00ff41', bg: '' },
+      { variant: 'danger', color: '#ff0040', bg: '' },
+      { variant: 'ice', color: '#00d4ff', bg: '' },
+      { variant: 'electric', color: '#fffc00', bg: '' },
+      { variant: 'neon', color: '#ff00ff', bg: '' },
+    ],
+  },
 ]
 
 function assignRandomStyles(resources: DbResource[]) {
   const map: Record<number, CardStyleEntry> = {}
-  for (const r of resources) {
-    const styleGroup = allStyles[Math.floor(Math.random() * allStyles.length)]
-    const variant = styleGroup.variants[Math.floor(Math.random() * styleGroup.variants.length)]
-    map[r.id] = { style: styleGroup.style, ...variant }
+  // Build a flat pool of all style+variant combos, then shuffle to guarantee uniqueness
+  const pool: CardStyleEntry[] = []
+  for (const sg of allStyles) {
+    for (const v of sg.variants) {
+      pool.push({ style: sg.style, ...v })
+    }
+  }
+  // Fisher-Yates shuffle
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[pool[i], pool[j]] = [pool[j], pool[i]]
+  }
+  for (let i = 0; i < resources.length; i++) {
+    // Cycle through shuffled pool so every card gets a different combo
+    map[resources[i].id] = pool[i % pool.length]
   }
   cardStyleMap.value = map
 }
@@ -1114,8 +1495,15 @@ function reshuffleStyles() {
 onMounted(async () => {
   loading.value = true
   try {
-    liveResources.value = await listMyResources()
-    assignRandomStyles(liveResources.value)
+    const raw = await listMyResources()
+    // Double the cards — each copy gets a unique virtual ID so styles differ
+    const doubled: DbResource[] = []
+    for (const r of raw) {
+      doubled.push(r)
+      doubled.push({ ...r, id: r.id + 900000 }) // virtual copy with offset id
+    }
+    liveResources.value = doubled
+    assignRandomStyles(doubled)
   } catch { /* silent */ } finally {
     loading.value = false
   }
@@ -1308,6 +1696,38 @@ function metallicIconStyle(type: string): Record<string, string> {
 // Section 14: Pixel Art
 const pixelCards = demoData.slice(0, 5)
 const pixelPalette = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A78BFA', '#34D399']
+
+// Section 15: Paper Cut
+const papercutCards = demoData.slice(0, 5)
+const papercutColors = ['coral', 'sky', 'mint', 'lavender', 'peach']
+const papercutColorMap: Record<string, string> = {
+  coral: '#FF6B6B', sky: '#4FC3F7', mint: '#66BB6A', lavender: '#AB47BC', peach: '#FF8A65',
+}
+
+// Section 16: Vaporwave
+const vaporwaveCards = demoData.slice(0, 5)
+const vaporwaveBgs = [
+  'linear-gradient(135deg, #2d1b6980, #ff6ec740)',
+  'linear-gradient(135deg, #1a053380, #01cdfe40)',
+  'linear-gradient(135deg, #2d1b6980, #05ffa140)',
+  'linear-gradient(135deg, #3d126580, #ff71ce40)',
+  'linear-gradient(135deg, #1a053380, #b967ff40)',
+]
+
+// Section 17: Newspaper
+const newspaperCards = demoData.slice(0, 5)
+
+// Section 18: Frosted Dark
+const frostedCards = demoData.slice(0, 5)
+const frostedAccents = ['#6366f1', '#ec4899', '#14b8a6', '#f59e0b', '#8b5cf6']
+
+// Section 19: Origami
+const origamiCards = demoData.slice(0, 5)
+const origamiColors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6']
+
+// Section 20: Glitch
+const glitchCards = demoData.slice(0, 5)
+const glitchColors = ['#00ff41', '#ff0040', '#00d4ff', '#fffc00', '#ff00ff']
 </script>
 
 <style scoped>
@@ -1759,5 +2179,230 @@ const pixelPalette = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A78BFA', '#34D399']
 @keyframes pixel-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
+}
+
+/* ═══ Paper Cut / Layered Card ═══ */
+.papercut-card {
+  position: relative;
+}
+.papercut-card::before,
+.papercut-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 2px;
+  background: white;
+}
+.papercut-card::before {
+  transform: rotate(2deg) translate(3px, 3px);
+  z-index: 1;
+  box-shadow: 1px 1px 4px rgba(0,0,0,0.08);
+}
+.papercut-card::after {
+  transform: rotate(-1.5deg) translate(-2px, 2px);
+  z-index: 2;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.06);
+}
+.papercut-card > div { z-index: 10; position: relative; }
+.papercut-coral::before { background: #FF6B6B15; }
+.papercut-coral::after { background: #FF6B6B08; }
+.papercut-sky::before { background: #4FC3F715; }
+.papercut-sky::after { background: #4FC3F708; }
+.papercut-mint::before { background: #66BB6A15; }
+.papercut-mint::after { background: #66BB6A08; }
+.papercut-lavender::before { background: #AB47BC15; }
+.papercut-lavender::after { background: #AB47BC08; }
+.papercut-peach::before { background: #FF8A6515; }
+.papercut-peach::after { background: #FF8A6508; }
+.papercut-card:hover {
+  transform: translateY(-4px);
+}
+.papercut-card:hover::before { transform: rotate(3deg) translate(5px, 5px); }
+.papercut-card:hover::after { transform: rotate(-2.5deg) translate(-4px, 4px); }
+
+/* ═══ Vaporwave Card ═══ */
+.vaporwave-card {
+  border: 1px solid rgba(255, 110, 199, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+.vaporwave-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(255, 110, 199, 0.03) 3px,
+      rgba(255, 110, 199, 0.03) 4px
+    );
+  pointer-events: none;
+  z-index: 1;
+}
+.vaporwave-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(1, 205, 254, 0.08) 0px,
+      transparent 1px,
+      transparent 20px,
+      rgba(1, 205, 254, 0.08) 20px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(1, 205, 254, 0.06) 0px,
+      transparent 1px,
+      transparent 20px,
+      rgba(1, 205, 254, 0.06) 20px
+    );
+  perspective: 200px;
+  transform: rotateX(45deg);
+  transform-origin: bottom;
+  pointer-events: none;
+  z-index: 0;
+}
+.vaporwave-card:hover {
+  border-color: rgba(255, 110, 199, 0.6);
+  box-shadow: 0 0 20px rgba(255, 110, 199, 0.15), 0 0 40px rgba(1, 205, 254, 0.1);
+  transform: scale(1.05);
+}
+
+/* ═══ Newspaper Card ═══ */
+.newspaper-card {
+  background: #f5f0e8;
+  border: 1px solid #d4c5a9;
+  position: relative;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+}
+.newspaper-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 1px,
+      rgba(0, 0, 0, 0.015) 1px,
+      rgba(0, 0, 0, 0.015) 2px
+    );
+  pointer-events: none;
+}
+.newspaper-card:hover {
+  transform: translateY(-3px) rotate(-0.5deg);
+  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ═══ Frosted Dark Card ═══ */
+.frosted-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-left: 3px solid var(--frost-accent, #6366f1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+.frosted-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-left-width: 4px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  transform: scale(1.04);
+}
+
+/* ═══ Origami / Fold Card ═══ */
+.origami-card {
+  position: relative;
+  background: white;
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+}
+.origami-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 32px 32px 0;
+  border-color: transparent var(--origami-color, #e74c3c) transparent transparent;
+  z-index: 20;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+.origami-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 32px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 0 32px 0;
+  border-color: transparent transparent rgba(0,0,0,0.08) transparent;
+  z-index: 19;
+}
+.origami-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 4px 4px 16px rgba(0,0,0,0.15);
+}
+.origami-card:hover::before {
+  border-width: 0 40px 40px 0;
+}
+
+/* ═══ Glitch / Distorted Card ═══ */
+.glitch-card {
+  background: #111;
+  border: 1px solid #333;
+  position: relative;
+  overflow: hidden;
+}
+.glitch-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 2px;
+  background: var(--glitch-color, #00ff41);
+  opacity: 0.6;
+  animation: glitch-scan 3s linear infinite;
+  z-index: 10;
+}
+@keyframes glitch-scan {
+  0% { top: 0; left: -100%; }
+  50% { left: 100%; }
+  50.1% { top: 100%; left: -100%; }
+  100% { left: 100%; }
+}
+.glitch-card:hover {
+  animation: glitch-shake 0.3s ease;
+  border-color: var(--glitch-color, #00ff41);
+  box-shadow: 0 0 10px var(--glitch-color, #00ff41), inset 0 0 10px rgba(0,0,0,0.5);
+}
+@keyframes glitch-shake {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 1px); }
+  40% { transform: translate(2px, -1px); }
+  60% { transform: translate(-1px, -2px); }
+  80% { transform: translate(1px, 2px); }
+}
+.glitch-text {
+  position: relative;
+}
+.glitch-card:hover .glitch-text {
+  animation: glitch-text-flicker 0.4s ease;
+}
+@keyframes glitch-text-flicker {
+  0%, 100% { opacity: 1; }
+  33% { opacity: 0.8; transform: translateX(1px); }
+  66% { opacity: 0.9; transform: translateX(-1px); }
 }
 </style>

@@ -139,6 +139,11 @@ def list_my_resources(db: Session = Depends(get_db_dep), current_user=Depends(ge
         .order_by(Resource.id.desc())
         .all()
     )
+    # Sort by added_at to assign user_seq (1 = first added)
+    sorted_items = sorted(items, key=lambda pair: (getattr(pair[1], "added_at", None) or getattr(pair[0], "created_at", None) or ""))
+    seq_map: dict[int, int] = {}
+    for seq, (r, _ur) in enumerate(sorted_items, start=1):
+        seq_map[r.id] = seq
     return [
         ResourceResponse(
             id=r.id,
@@ -164,6 +169,7 @@ def list_my_resources(db: Session = Depends(get_db_dep), current_user=Depends(ge
             save_count=getattr(r, "save_count", None),
             trending_score=getattr(r, "trending_score", None),
             created_at=getattr(r, "created_at", None),
+            user_seq=seq_map.get(r.id),
         )
         for r, ur in items
     ]

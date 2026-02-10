@@ -125,8 +125,10 @@ def google_login(payload: GoogleLoginRequest, db: Session = Depends(get_db_dep))
 
     try:
         info = google_id_token.verify_oauth2_token(token_str, google_requests.Request(), client_id)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid Google token")
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=400, detail=f"Invalid Google token: {e}")
 
     email_raw = str(info.get("email") or "").strip()
     if not email_raw:

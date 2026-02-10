@@ -171,7 +171,8 @@
     </Teleport>
 
 
-  <div v-if="showAddResultModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+  <Teleport to="body">
+  <div v-if="showAddResultModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
     <Card as="section" :hoverable="false" class="w-full max-w-md rounded-none">
       <div class="flex items-center justify-between border-b border-border p-6">
         <h2 class="text-lg font-semibold text-foreground">{{ addResultTitle }}</h2>
@@ -185,10 +186,11 @@
       </div>
 
       <div class="flex justify-end gap-2 border-t border-border bg-muted/30 p-6">
-        <Button type="button" class="rounded-none" @click="closeAddResultModal">确定</Button>
+        <Button type="button" class="rounded-none" @click="closeAddResultModal">OK</Button>
       </div>
     </Card>
   </div>
+  </Teleport>
 
   <div v-if="showCreateModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <Card as="section" :hoverable="false" class="w-full max-w-md rounded-none">
@@ -529,13 +531,13 @@ async function addToMyResources(resource: DbResource) {
     addedToMy.value = { ...addedToMy.value, [resource.id]: true }
 
     if (res?.already_exists) {
-      openAddResultModal('已存在', '该资源已经在 My Resources 中。')
+      openAddResultModal('Already Exists', 'This resource is already in your My Resources.')
     } else {
-      openAddResultModal('保存成功', '已添加到 My Resources。')
+      openAddResultModal('Added Successfully', 'The resource has been added to My Resources.')
     }
   } catch (e: any) {
     const msg = e?.response?.data?.detail || e?.message || 'Failed to add to my resources'
-    openAddResultModal('保存失败', String(msg))
+    openAddResultModal('Failed', String(msg))
   } finally {
     addingToMy.value = { ...addingToMy.value, [resource.id]: false }
   }

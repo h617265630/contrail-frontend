@@ -112,8 +112,8 @@
             class="h-9 rounded-none border-0 bg-transparent px-1 py-1 text-left font-semibold hover:bg-transparent"
             :aria-label="t('User menu')"
           >
-            <div class="h-8 w-8 overflow-hidden rounded-full">
-              <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" class="h-full w-full object-cover" />
+            <div class="h-8 w-8 shrink-0 overflow-hidden rounded-full">
+              <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" referrerpolicy="no-referrer" class="h-full w-full rounded-full object-cover" />
               <div v-else class="flex h-full w-full items-center justify-center bg-linear-to-r from-blue-500 to-indigo-500 text-white text-xs">
                 {{ userInitials }}
               </div>
@@ -128,8 +128,8 @@
             @mouseleave="scheduleDesktopMenuClose"
           >
             <div class="flex items-center gap-3 rounded-xl border border-border bg-background p-3">
-              <div class="h-12 w-12 overflow-hidden rounded-full shadow">
-                <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" class="h-full w-full object-cover" />
+              <div class="h-12 w-12 shrink-0 overflow-hidden rounded-full shadow">
+                <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" referrerpolicy="no-referrer" class="h-full w-full rounded-full object-cover" />
                 <div
                   v-else
                   class="flex h-full w-full items-center justify-center bg-linear-to-r from-blue-500 to-indigo-500 text-white text-lg"

@@ -13,6 +13,28 @@
           </div>
         </div>
       </div>
+
+      <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div v-if="loadError" class="text-sm text-destructive">{{ loadError }}</div>
+        <div class="inline-flex items-center gap-2 border border-border bg-background p-1">
+          <button
+            type="button"
+            class="px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] transition"
+            :class="billingCycle === 'monthly' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'"
+            @click="billingCycle = 'monthly'"
+          >
+            Monthly
+          </button>
+          <button
+            type="button"
+            class="px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] transition"
+            :class="billingCycle === 'yearly' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'"
+            @click="billingCycle = 'yearly'"
+          >
+            Yearly
+          </button>
+        </div>
+      </div>
     </section>
 
     <section class="grid gap-4 md:grid-cols-3">
@@ -34,6 +56,11 @@
           </div>
 
           <div class="space-y-2 flex-1">
+            <div class="text-3xl font-semibold text-foreground">
+              <span v-if="plan.priceText" class="align-baseline">{{ plan.priceText }}</span>
+              <span v-if="plan.priceSuffix" class="ml-1 text-sm font-semibold text-muted-foreground">{{ plan.priceSuffix }}</span>
+            </div>
+
             <p class="text-sm font-semibold text-foreground">Best for:</p>
             <p class="text-sm text-muted-foreground">{{ plan.suitable }}</p>
 
@@ -51,7 +78,7 @@
             size="sm"
             class="rounded-none"
             :class="isCurrent(plan) ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : ''"
-            @click="onSelectPlan(plan)"
+            @click="onAction(plan)"
           >
             {{ isCurrent(plan) ? 'Current plan' : plan.cta }}
           </Button>
@@ -73,20 +100,71 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { getPlanInfo, selectPlan as persistSelectPlan, type PlanName } from '../utils/plan'
+import { computed, onMounted, ref } from 'vue'
+import { getMySubscription, type SubscriptionMeResponse } from '../api/subscription'
 import { Button } from '../components/ui/button'
 import Card from '../components/ui/Card.vue'
 
+type BillingCycle = 'monthly' | 'yearly'
+
 type Plan = {
   id: string
-  name: PlanName
+  name: 'Free' | 'Basic' | 'Pro'
   description: string
   suitable: string
   features: string[]
   tagline?: string
   cta: string
   highlight?: boolean
+  priceText?: string
+  priceSuffix?: string
+}
+
+const billingCycle = ref<BillingCycle>('monthly')
+
+const subscription = ref<SubscriptionMeResponse | null>(null)
+const loading = ref(false)
+const loadError = ref('')
+
+function hasToken() {
+  try {
+    const storage = (globalThis as any).localStorage
+    return Boolean(String(storage?.getItem?.('learnsmart_token') || '').trim())
+  } catch {
+    return false
+  }
+}
+
+onMounted(async () => {
+  if (!hasToken()) return
+  loading.value = true
+  loadError.value = ''
+  try {
+    subscription.value = await getMySubscription()
+  } catch (e: any) {
+    loadError.value = 'Failed to load your current plan.'
+  } finally {
+    loading.value = false
+  }
+})
+
+const currentPlan = computed(() => (subscription.value?.effective_plan || 'Free') as Plan['name'])
+
+function planCta(name: Plan['name']) {
+  if (name === 'Free') return 'Continue with Free'
+  if (name === 'Basic') return currentPlan.value === 'Pro' ? 'Downgrade to Basic (coming soon)' : 'Subscribe to Basic (coming soon)'
+  return currentPlan.value === 'Basic' ? 'Upgrade to Pro (coming soon)' : 'Subscribe to Pro (coming soon)'
+}
+
+function planPriceText(name: Plan['name']) {
+  if (name === 'Free') return '$0'
+  if (name === 'Basic') return billingCycle.value === 'monthly' ? '$6' : '$60'
+  return billingCycle.value === 'monthly' ? '$12' : '$120'
+}
+
+function planPriceSuffix(name: Plan['name']) {
+  if (name === 'Free') return ''
+  return billingCycle.value === 'monthly' ? '/mo' : '/yr'
 }
 
 const plans = computed<Plan[]>(() => [
@@ -97,7 +175,9 @@ const plans = computed<Plan[]>(() => [
     suitable: 'New users building their first learning paths',
     features: ['Browse all public resources', 'Browse all public learning paths', 'Create up to 5 learning paths', 'Track your progress anytime'],
     tagline: 'Start learning with structure using linktopath’s core features.',
-    cta: 'Get started',
+    cta: planCta('Free'),
+    priceText: planPriceText('Free'),
+    priceSuffix: planPriceSuffix('Free'),
   },
   {
     id: 'basic',
@@ -106,7 +186,9 @@ const plans = computed<Plan[]>(() => [
     suitable: 'Learners with clear goals who need more room to organize',
     features: ['Create up to 10 learning paths', 'See full progress anytime', 'Create up to 5 private learning paths', 'Manage your structure more flexibly'],
     tagline: 'Balance public and private while staying focused on your plan.',
-    cta: 'Upgrade for more paths',
+    cta: planCta('Basic'),
+    priceText: planPriceText('Basic'),
+    priceSuffix: planPriceSuffix('Basic'),
   },
   {
     id: 'pro',
@@ -115,20 +197,24 @@ const plans = computed<Plan[]>(() => [
     suitable: 'Long-term learners, heavy users, and creators',
     features: ['Unlimited learning paths', 'AI-generated learning notes and summaries', 'AI analysis of chapters and structure', 'AI-based recommendations to optimize resources and paths'],
     tagline: 'Make AI your learning copilot to continuously improve outcomes.',
-    cta: 'Use AI to optimize',
+    cta: planCta('Pro'),
     highlight: true,
+    priceText: planPriceText('Pro'),
+    priceSuffix: planPriceSuffix('Pro'),
   },
 ])
-
-const currentPlan = ref<PlanName>(getPlanInfo().name as PlanName)
 
 function isCurrent(plan: Plan) {
   return currentPlan.value === plan.name
 }
 
-function onSelectPlan(plan: Plan) {
-  const name = plan.name as PlanName
-  currentPlan.value = name
-  persistSelectPlan(name)
+function onAction(plan: Plan) {
+  if (isCurrent(plan)) return
+  if (loading.value) return
+  try {
+    alert('Checkout is coming soon.')
+  } catch {
+    // ignore
+  }
 }
 </script>

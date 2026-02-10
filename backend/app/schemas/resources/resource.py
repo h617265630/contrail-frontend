@@ -72,6 +72,7 @@ class ResourceResponse(BaseModel):
     trending_score: Optional[int] = None
 
     created_at: Optional[datetime] = None
+    user_seq: Optional[int] = None
     model_config = ConfigDict(from_attributes=True)
 
 

@@ -14,8 +14,8 @@
         <aside class="lg:col-span-3">
           <Card className="rounded-none" :hoverable="false" padded>
             <div class="flex items-center gap-3">
-              <div class="h-12 w-12 overflow-hidden rounded-full border border-border bg-muted/30">
-                <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" class="h-full w-full object-cover" />
+              <div class="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-border bg-muted/30">
+                <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" referrerpolicy="no-referrer" class="h-full w-full rounded-full object-cover" />
                 <div v-else class="h-full w-full flex items-center justify-center text-foreground font-semibold">
                   {{ initials }}
                 </div>
@@ -98,7 +98,12 @@ const email = computed(() => user.value?.email || '')
 const initials = computed(() => displayName.value.slice(0, 2).toUpperCase())
 const avatarUrl = computed(() => {
   const explicit = String((user.value as any)?.avatar_url || '').trim()
-  if (explicit) return explicit
+  if (explicit) {
+    const abs = explicit.startsWith('http://') || explicit.startsWith('https://')
+      ? explicit
+      : `http://localhost:8000${explicit.startsWith('/') ? '' : '/'}${explicit}`
+    return abs
+  }
   const uid = Number((user.value as any)?.id || 0)
   return uid ? getOrCreateDefaultAvatarForUser(uid) : ''
 })

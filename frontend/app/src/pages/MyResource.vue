@@ -75,7 +75,7 @@
                         >
                           {{ resource.category || '—' }}
                         </span>
-                        <span class="text-xs text-muted-foreground">#{{ String(resource.id).padStart(3, '0') }}</span>
+                      <span class="text-xs text-muted-foreground">#{{ resource.user_seq ?? resource.id }}</span>
                       </div>
 
                       <div class="relative h-28 bg-white overflow-hidden px-2">
@@ -139,7 +139,7 @@
                       >
                         {{ resource.category || '—' }}
                       </span>
-                      <span class="text-xs text-muted-foreground">#{{ String(resource.id).padStart(3, '0') }}</span>
+                      <span class="text-xs text-muted-foreground">#{{ resource.user_seq ?? resource.id }}</span>
                     </div>
 
                     <div class="relative h-28 bg-white overflow-hidden px-2">
@@ -332,6 +332,7 @@ type UiResource = {
   addedDate?: string
   is_system_public?: boolean
   manual_weight?: number | null
+  user_seq?: number | null
 }
 
 const resources = ref<UiResource[]>([])
@@ -379,6 +380,7 @@ function mapDbToUi(r: DbResource): UiResource {
     addedDate: formatDate(r.created_at),
     is_system_public: Boolean((r as any).is_system_public),
     manual_weight: (r as any).manual_weight ?? null,
+    user_seq: (r as any).user_seq ?? null,
   }
 }
 
