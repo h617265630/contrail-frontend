@@ -11,12 +11,43 @@ from app.core.validators import normalize_email, validate_password, validate_use
 from pathlib import Path
 from datetime import datetime
 import os
+import re
+import secrets
+
+from pydantic import BaseModel
+from app.core.config import settings
 
 from app.models.rbac.user import User
 from app.schemas.rbac import UserWithRoles
 from app.core.deps import get_db, PermissionChecker
 
 router = APIRouter(prefix="/users", tags=["Users"])
+
+
+class GoogleLoginRequest(BaseModel):
+    id_token: str
+
+
+def _generate_unique_username(db: Session, email: str) -> str:
+    raw = (email or "").split("@", 1)[0].strip().lower()
+    base = re.sub(r"[^a-z0-9_]", "", raw)
+    if len(base) < 3:
+        base = "user" + base
+    base = base[:32]
+
+    candidate = base
+    suffix = 1
+    while UserCURD.get_user_by_username(db, candidate):
+        extra = f"{suffix}"
+        candidate = (base[: max(0, 32 - len(extra))] + extra)[:32]
+        suffix += 1
+        if suffix > 9999:
+            candidate = f"user{secrets.randbelow(10**9)}"[:32]
+            break
+
+    if len(candidate) < 3:
+        candidate = (candidate + "user")[:3]
+    return candidate
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -68,6 +99,63 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         raise HTTPException(status_code=400, detail="Incorrect username or password")
     if not auth.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
+
+    token = auth.create_access_token(subject=str(user.id))
+    return {"access_token": token, "token_type": "bearer"}
+
+
+@router.post("/google-login", response_model=Token)
+def google_login(payload: GoogleLoginRequest, db: Session = Depends(get_db_dep)):
+    try:
+        from google.oauth2 import id_token as google_id_token
+        from google.auth.transport import requests as google_requests
+    except ImportError:
+        raise HTTPException(
+            status_code=500,
+            detail="Google login dependencies are not installed. Please install 'google-auth'.",
+        )
+
+    client_id = str(getattr(settings, "GOOGLE_CLIENT_ID", "") or "").strip()
+    if not client_id:
+        raise HTTPException(status_code=500, detail="Google login is not configured")
+
+    token_str = str(payload.id_token or "").strip()
+    if not token_str:
+        raise HTTPException(status_code=400, detail="Missing Google token")
+
+    try:
+        info = google_id_token.verify_oauth2_token(token_str, google_requests.Request(), client_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid Google token")
+
+    email_raw = str(info.get("email") or "").strip()
+    if not email_raw:
+        raise HTTPException(status_code=400, detail="Google account does not provide an email")
+
+    try:
+        email_norm = normalize_email(email_raw)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid email from Google")
+
+    if info.get("email_verified") is False:
+        raise HTTPException(status_code=400, detail="Google email is not verified")
+
+    user = UserCURD.get_user_by_email(db, email_norm)
+    if not user:
+        username = _generate_unique_username(db, email_norm)
+        random_password = secrets.token_urlsafe(32)
+        hashed = auth.hash_password(random_password)
+        user = UserCURD.create_user(db, username=username, email=email_norm, hashed_password=hashed)
+
+        display_name = str(info.get("name") or "").strip()
+        picture = str(info.get("picture") or "").strip()
+        if display_name:
+            user.display_name = display_name
+        if picture:
+            user.avatar_url = picture
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
     token = auth.create_access_token(subject=str(user.id))
     return {"access_token": token, "token_type": "bearer"}

@@ -27,3 +27,11 @@ export function login(data: LoginParams){
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     })
 }
+
+export interface GoogleLoginParams {
+    id_token: string
+}
+
+export function googleLogin(data: GoogleLoginParams){
+    return request.post('/users/google-login', data)
+}

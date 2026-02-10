@@ -1,19 +1,5 @@
 <template>
   <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
-    <section class="border-b border-border pb-8">
-      <div class="grid gap-6 md:grid-cols-12 md:items-end">
-        <div class="md:col-span-8">
-          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Add resource</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Choose a platform and paste the URL. We'll extract metadata automatically.</p>
-        </div>
-        <div class="md:col-span-4 md:flex md:justify-end md:items-end">
-          <Button type="button" variant="outline" size="sm" class="rounded-none" @click="$router.back()">
-            Back
-          </Button>
-        </div>
-      </div>
-    </section>
-
     <Card as="section" :hoverable="false" class="rounded-none">
       <div class="border-b border-border bg-background px-6 py-4">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -34,7 +20,7 @@
               :class="mode === 'md' ? 'gen-btn--active' : ''"
               @click="setMode('md')"
             >
-              generate resources from .md
+              add resources from file
             </Button>
           </div>
         </div>
@@ -247,10 +233,24 @@
       <div v-else class="p-6 space-y-6">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div class="text-sm font-semibold text-foreground">Your Markdown/TXT files</div>
-          <Button type="button" size="sm" class="gen-btn" @click="goToCreator">
-            Go to Markdown editor
-          </Button>
+          <div class="flex items-center gap-2">
+            <input
+              ref="uploadInputEl"
+              type="file"
+              class="hidden"
+              accept=".md,.txt,text/markdown,text/plain"
+              @change="onUploadSelected"
+            />
+            <Button type="button" size="sm" class="gen-btn" :disabled="uploading" @click="triggerUpload">
+              {{ uploading ? 'Uploading…' : 'Upload' }}
+            </Button>
+            <Button type="button" size="sm" class="gen-btn" @click="goToCreator">
+              Go to editor
+            </Button>
+          </div>
         </div>
+
+        <div v-if="uploadError" class="text-sm text-destructive">{{ uploadError }}</div>
 
         <div v-if="mdFilesError" class="text-sm text-destructive">{{ mdFilesError }}</div>
 
@@ -277,35 +277,65 @@
             <div class="lg:col-span-6">
               <div class="text-xs font-semibold text-muted-foreground">Content</div>
               <div class="mt-2 rounded-none border border-border bg-background p-4">
-                <pre class="max-h-[520px] overflow-auto whitespace-pre-wrap text-sm text-foreground">{{ mdSelectedContent || 'Select a file to preview.' }}</pre>
+                <pre class="max-h-[520px] overflow-auto whitespace-pre-wrap text-sm text-foreground">{{ mdContentPreview }}</pre>
               </div>
             </div>
             <div class="lg:col-span-6">
               <div class="flex items-center justify-between">
                 <div class="text-xs font-semibold text-muted-foreground">URLs ({{ mdExtractedUrls.length }})</div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  class="rounded-none"
-                  :disabled="mdExtractedUrls.length === 0"
-                  @click="useFirstMdUrl"
-                >
-                  Use first URL
-                </Button>
               </div>
-              <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div
-                  v-for="u in mdExtractedUrls"
-                  :key="u"
-                  class="rounded-none border border-border bg-background p-3"
-                >
-                  <div class="text-xs font-semibold text-muted-foreground">{{ guessUrlKind(u) }}</div>
-                  <div class="mt-1 text-sm text-foreground break-all">{{ u }}</div>
-                  <div class="mt-3 flex justify-end">
-                    <Button type="button" size="sm" class="gen-btn" @click="useMdUrl(u)">
-                      Use this URL
-                    </Button>
+              <div v-if="mdBulkAddError" class="mt-2 text-sm text-destructive">{{ mdBulkAddError }}</div>
+              <div v-if="mdBulkAddSummary" class="mt-2 text-sm text-foreground">
+                Added {{ mdBulkAddSummary.success }} / {{ mdBulkAddSummary.total }} URLs.
+                <span v-if="mdBulkAddSummary.failed" class="text-destructive">({{ mdBulkAddSummary.failed }} failed)</span>
+              </div>
+              <div class="mt-4 max-h-[36rem] overflow-y-auto overflow-x-hidden pr-2">
+                <div class="grid grid-cols-1 gap-4 justify-items-center sm:grid-cols-2">
+                  <div
+                    v-for="u in mdExtractedUrls"
+                    :key="u"
+                    class="shrink-0 w-48 min-h-64 rounded-md border border-border bg-card shadow-sm transition-all duration-300 ease-out cursor-pointer hover:shadow-xl md-card-hover"
+                    @mouseenter="ensureMdUrlMeta(u)"
+                    @click="useMdUrl(u)"
+                  >
+                    <div class="h-full flex flex-col overflow-hidden rounded-md">
+                      <div class="px-3 py-2 border-b border-border flex items-center justify-between">
+                        <span class="px-2 py-0.5 text-xs font-medium rounded bg-muted/40 text-foreground">
+                          {{ platformLabelFromUrl(u) }}
+                        </span>
+                        <span class="text-xs font-medium text-foreground">{{ guessUrlKind(u) }}</span>
+                      </div>
+
+                      <div class="relative h-24 bg-white overflow-hidden px-2">
+                        <img
+                          v-if="mdUrlMetaState[u]?.meta?.thumbnail_url"
+                          :src="mdUrlMetaState[u]?.meta?.thumbnail_url"
+                          :alt="mdUrlMetaState[u]?.meta?.title || 'thumbnail'"
+                          class="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                        <div v-else class="w-full h-full flex items-center justify-center bg-muted/30">
+                          <span class="text-xs text-muted-foreground">{{ mdUrlMetaState[u]?.loading ? 'Loading…' : 'No preview' }}</span>
+                        </div>
+                      </div>
+
+                      <div class="px-3 py-2 border-b border-border bg-white">
+                        <h3 class="text-sm font-bold text-foreground line-clamp-1" :title="mdUrlMetaState[u]?.meta?.title || u">
+                          {{ mdUrlMetaState[u]?.meta?.title || u }}
+                        </h3>
+                      </div>
+
+                      <div class="px-3 py-2 flex-1 bg-muted/30">
+                        <p class="text-xs text-muted-foreground line-clamp-2">{{ mdUrlMetaState[u]?.meta?.description || u }}</p>
+                        <p v-if="mdUrlMetaState[u]?.error" class="mt-2 text-[11px] text-destructive">{{ mdUrlMetaState[u].error }}</p>
+                      </div>
+
+                      <div class="px-3 py-2 border-t border-border flex items-center justify-end">
+                        <Button type="button" size="sm" class="gen-btn" @click.stop="useMdUrl(u)">
+                          Use this URL
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -318,24 +348,34 @@
         <div class="space-y-4">
           <p v-if="submitError" class="text-sm text-destructive">{{ submitError }}</p>
 
-          <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Button type="button" variant="outline" size="sm" class="rounded-none" @click="$router.back()">
-              Cancel
-            </Button>
+          <div class="flex justify-end">
             <Button
               type="button"
               variant="outline"
               size="sm"
               class="rounded-none border-border bg-black px-3 text-xs font-semibold tracking-[0.14em] uppercase text-white transition-all hover:-translate-y-px hover:bg-[#8ecbff] hover:text-white hover:shadow-sm active:translate-y-0"
-              @click="confirmAdd"
-              :disabled="!urlInput || extracting || !extractedMeta?.title || submitting"
+              @click="mode === 'md' ? bulkAddMdUrls() : confirmAdd()"
+              :disabled="mode === 'md'
+                ? (mdExtractedUrls.length === 0 || mdBulkAdding)
+                : (!urlInput || extracting || !extractedMeta?.title || submitting)"
             >
-              {{ submitting ? 'Saving…' : 'Add resource' }}
+              {{
+                mode === 'md'
+                  ? (mdBulkAdding ? 'Adding…' : 'Add All')
+                  : (submitting ? 'Saving…' : 'Add resource')
+              }}
             </Button>
           </div>
         </div>
       </div>
     </Card>
+
+    <div
+      v-if="mdSuccessToastVisible"
+      class="fixed right-4 top-4 z-50 rounded-none border border-border bg-foreground px-4 py-3 text-sm font-semibold text-background shadow-lg"
+    >
+      {{ mdSuccessToastText }}
+    </div>
   </div>
 </template>
 
@@ -348,7 +388,7 @@ import { listCategories, type Category } from '../api/category'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import Card from '../components/ui/Card.vue'
-import { listMyUserFiles, type UserFile } from '../api/userFile'
+import { listMyUserFiles, uploadMyUserFile, type UserFile } from '../api/userFile'
 
 const route = useRoute()
 const router = useRouter()
@@ -365,6 +405,36 @@ const mdFilesError = ref('')
 const mdFiles = ref<UserFile[]>([])
 const selectedMdFile = ref<UserFile | null>(null)
 const mdSelectedContent = ref('')
+
+type MdUrlMetaState = {
+  loading: boolean
+  error: string
+  meta: UrlExtractResponse | null
+}
+
+const mdUrlMetaState = ref<Record<string, MdUrlMetaState>>({})
+
+const mdBulkAdding = ref(false)
+const mdBulkAddError = ref('')
+const mdBulkAddSummary = ref<{ total: number; success: number; failed: number } | null>(null)
+
+const mdSuccessToastVisible = ref(false)
+const mdSuccessToastText = ref('')
+let mdSuccessToastTimer: number | null = null
+
+function showMdSuccessToast(text: string) {
+  mdSuccessToastText.value = text
+  mdSuccessToastVisible.value = true
+  if (mdSuccessToastTimer) window.clearTimeout(mdSuccessToastTimer)
+  mdSuccessToastTimer = window.setTimeout(() => {
+    mdSuccessToastVisible.value = false
+    mdSuccessToastTimer = null
+  }, 2200)
+}
+
+const uploadInputEl = ref<HTMLInputElement | null>(null)
+const uploading = ref(false)
+const uploadError = ref('')
 
 function extractUrls(text: string) {
   const input = String(text || '')
@@ -384,14 +454,65 @@ function guessUrlKind(url: string) {
   return 'link'
 }
 
+function ensureMdUrlMeta(url: string) {
+  const key = String(url || '').trim()
+  if (!key) return
+
+  const current = mdUrlMetaState.value[key]
+  if (current?.loading || current?.meta) return
+
+  mdUrlMetaState.value = {
+    ...mdUrlMetaState.value,
+    [key]: { loading: true, error: '', meta: null },
+  }
+
+  extractVideoMetadata(key)
+    .then((res) => {
+      mdUrlMetaState.value = {
+        ...mdUrlMetaState.value,
+        [key]: { loading: false, error: '', meta: res },
+      }
+    })
+    .catch((err) => {
+      mdUrlMetaState.value = {
+        ...mdUrlMetaState.value,
+        [key]: { loading: false, error: getErrorMessage(err, '解析失败'), meta: null },
+      }
+    })
+}
+
 const mdExtractedUrls = computed(() => extractUrls(mdSelectedContent.value))
+
+const mdContentPreview = computed(() => {
+  if (!selectedMdFile.value) return 'Select a file to preview.'
+
+  const raw = String(mdSelectedContent.value || '')
+  if (mdExtractedUrls.value.length === 0) {
+    const hint = 'No valid URL found. Please follow the format: URL - platform - category.'
+    return raw ? `${hint}\n\n${raw}` : hint
+  }
+
+  return raw || 'Select a file to preview.'
+})
 
 async function loadMdFiles() {
   mdFilesError.value = ''
   mdFilesLoading.value = true
   try {
     const files = await listMyUserFiles()
-    mdFiles.value = files.filter((f) => f.file_type === 'md' || f.file_type === 'txt')
+    mdFiles.value = files.filter((f) => {
+      const ft = String((f as any)?.file_type || '').toLowerCase()
+      if (ft === 'md' || ft === 'txt') return true
+      if (ft === 'markdown' || ft === 'text') return true
+
+      const ct = String((f as any)?.content_type || '').toLowerCase()
+      if (ct === 'text/markdown' || ct === 'text/x-markdown') return true
+      if (ct === 'text/plain') return true
+
+      const name = String((f as any)?.original_filename || (f as any)?.title || '').toLowerCase()
+      if (name.endsWith('.md') || name.endsWith('.txt')) return true
+      return false
+    })
   } catch (e: any) {
     mdFilesError.value = e?.response?.data?.detail || e?.message || 'Failed to load markdown files'
     mdFiles.value = []
@@ -403,6 +524,39 @@ async function loadMdFiles() {
 function selectMdFile(file: UserFile) {
   selectedMdFile.value = file
   mdSelectedContent.value = String(file.content || '')
+}
+
+function triggerUpload() {
+  uploadError.value = ''
+  const el = uploadInputEl.value
+  if (!el) return
+  el.value = ''
+  el.click()
+}
+
+async function onUploadSelected(e: Event) {
+  uploadError.value = ''
+  const input = e.target as HTMLInputElement | null
+  const file = input?.files?.[0]
+  if (!file) return
+
+  const name = String(file.name || '').toLowerCase()
+  if (!(name.endsWith('.md') || name.endsWith('.txt'))) {
+    uploadError.value = 'Only .md and .txt uploads are supported'
+    return
+  }
+
+  uploading.value = true
+  try {
+    const created = await uploadMyUserFile({ file })
+    await loadMdFiles()
+    const found = mdFiles.value.find((f) => f.id === created.id)
+    if (found) selectMdFile(found)
+  } catch (err: any) {
+    uploadError.value = getErrorMessage(err, 'Upload failed')
+  } finally {
+    uploading.value = false
+  }
 }
 
 function goToCreator() {
@@ -421,9 +575,80 @@ function useFirstMdUrl() {
   useMdUrl(mdExtractedUrls.value[0])
 }
 
+function normalizeUrlForDedupe(url: string) {
+  const raw = String(url || '').trim()
+  if (!raw) return ''
+  try {
+    const u = new URL(raw)
+    u.hash = ''
+    if (u.pathname !== '/' && u.pathname.endsWith('/')) u.pathname = u.pathname.replace(/\/+$/, '')
+    u.hostname = u.hostname.toLowerCase()
+    return u.toString()
+  } catch {
+    return raw
+  }
+}
+
+function dedupeUrlsForBulk(urls: string[]) {
+  const out: string[] = []
+  const seen = new Set<string>()
+  for (const u of urls) {
+    const key = normalizeUrlForDedupe(u)
+    if (!key) continue
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(u)
+  }
+  return out
+}
+
+async function bulkAddMdUrls() {
+  mdBulkAddError.value = ''
+  mdBulkAddSummary.value = null
+  const urls = dedupeUrlsForBulk(mdExtractedUrls.value)
+  if (urls.length === 0) return
+
+  const catId = categoryId.value ? Number(categoryId.value) : NaN
+  if (!Number.isFinite(catId)) {
+    mdBulkAddError.value = '请选择分类'
+    return
+  }
+
+  mdBulkAdding.value = true
+  try {
+    const manualWeight = toManualWeight((selectedWeight.value || '') as Weight)
+    let success = 0
+    let failed = 0
+    for (const u of urls) {
+      try {
+        await createMyResourceFromUrl(u, {
+          category_id: catId,
+          is_public: isPublic.value,
+          manual_weight: manualWeight,
+        })
+        success += 1
+      } catch {
+        failed += 1
+      }
+    }
+    mdBulkAddSummary.value = { total: urls.length, success, failed }
+    if (success > 0) {
+      const toastText = failed === 0
+        ? 'Resources added successfully.'
+        : `Added ${success} of ${urls.length} resources.`
+      showMdSuccessToast(toastText)
+    }
+  } catch (e: any) {
+    mdBulkAddError.value = getErrorMessage(e, 'Failed to add resources')
+  } finally {
+    mdBulkAdding.value = false
+  }
+}
+
 const supportedPlatforms = [
   { key: 'youtube', label: 'YouTube', placeholder: 'https://www.youtube.com/watch?v=...' },
-  { key: 'bilibili', label: 'Bilibili', placeholder: 'https://www.bilibili.com/video/...' },
+  { key: 'x', label: 'X', placeholder: 'https://x.com/{user}/status/{id}' },
+  { key: 'instagram', label: 'Instagram', placeholder: 'https://www.instagram.com/p/... (or /reel/...)' },
   { key: 'github', label: 'GitHub', placeholder: 'https://github.com/... (repo / issue / doc)' },
   { key: 'medium', label: 'Medium', placeholder: 'https://medium.com/.../...' },
   { key: 'substack', label: 'Substack', placeholder: 'https://xxx.substack.com/p/...' },
@@ -431,7 +656,7 @@ const supportedPlatforms = [
   { key: 'other', label: 'Other', placeholder: 'Paste a URL (may not be supported yet)' },
 ]
 
-const selectedPlatform = ref('')
+const selectedPlatform = ref('youtube')
 const urlInput = ref('')
 const extracting = ref(false)
 const extractError = ref('')
@@ -478,7 +703,6 @@ const weightCardClass = computed(() => {
 })
 
 const selectedPlatformPlaceholder = computed(() => {
-  if (!selectedPlatform.value) return 'Select a platform first'
   const platform = supportedPlatforms.find(p => p.key === selectedPlatform.value)
   return platform?.placeholder || 'Paste a resource URL'
 })
@@ -487,12 +711,19 @@ function detectPlatformFromUrl(url: string) {
   const u = String(url || '').toLowerCase()
   if (!u) return ''
   if (u.includes('youtube.com') || u.includes('youtu.be')) return 'youtube'
-  if (u.includes('bilibili.com')) return 'bilibili'
+  if (u.includes('instagram.com') || u.includes('instagr.am')) return 'instagram'
+  if (u.includes('x.com') || u.includes('twitter.com')) return 'x'
   if (u.includes('github.com')) return 'github'
   if (u.includes('medium.com')) return 'medium'
   if (u.includes('substack.com')) return 'substack'
   if (u.includes('dev.to')) return 'devto'
   return ''
+}
+
+function platformLabelFromUrl(url: string) {
+  const key = detectPlatformFromUrl(url) || 'other'
+  const found = supportedPlatforms.find((p) => p.key === key)
+  return found ? found.label : key
 }
 
 function applyPrefillFromRoute() {
@@ -590,6 +821,15 @@ onMounted(() => {
 })
 
 watch(
+  () => mode.value,
+  (nextMode) => {
+    if (nextMode === 'md') {
+      void loadMdFiles()
+    }
+  },
+)
+
+watch(
   () => (route.query as any)?.url,
   () => {
     applyPrefillFromRoute()
@@ -602,6 +842,10 @@ watch(
   animation: card-tilt-up 0.4s ease forwards;
 }
 
+.md-card-hover:hover {
+  animation: md-card-tilt-up 0.3s ease forwards;
+}
+
 @keyframes card-tilt-up {
   0% {
     transform: rotate(0deg) scale(1);
@@ -611,6 +855,18 @@ watch(
   }
   100% {
     transform: rotate(0deg) scale(1.25);
+  }
+}
+
+@keyframes md-card-tilt-up {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  30% {
+    transform: rotate(-3deg) scale(1.04);
+  }
+  100% {
+    transform: rotate(0deg) scale(1.08);
   }
 }
 

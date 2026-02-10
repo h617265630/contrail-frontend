@@ -24,6 +24,14 @@ export function uploadMyUserFile(params: { file: File; title?: string; fileType?
   return request.post<UserFile, UserFile>('/user-files/me/upload', fd)
 }
 
+export function updateMyUserFile(fileId: number, payload: { title?: string | null; content?: string | null }) {
+  return request.put<UserFile, UserFile>(`/user-files/me/${fileId}`, payload)
+}
+
+export function deleteMyUserFile(fileId: number) {
+  return request.delete(`/user-files/me/${fileId}`)
+}
+
 export function fetchUserFileText(fileUrl: string) {
   return (request as any).get(fileUrl, { responseType: 'text' }) as Promise<string>
 }

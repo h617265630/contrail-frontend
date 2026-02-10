@@ -30,7 +30,10 @@ class Settings:
 	ALGORITHM: str = os.environ.get("ALGORITHM", "HS256")
 	ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
+	# OAuth (Google)
+	GOOGLE_CLIENT_ID: str = os.environ.get("GOOGLE_CLIENT_ID", "")
+	GOOGLE_CLIENT_SECRET: str = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+
 
 # Singleton settings instance
 settings = Settings()
-

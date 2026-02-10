@@ -17,3 +17,8 @@ class UserFileResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserFileUpdateRequest(BaseModel):
+    title: str | None = None
+    content: str | None = None

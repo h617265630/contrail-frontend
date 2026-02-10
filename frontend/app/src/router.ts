@@ -44,6 +44,7 @@ const AboutProgress = () => import('./pages/AboutProgress.vue')
 const Plan = () => import('./pages/Plan.vue')
 const Tool = () => import('./pages/Tool.vue')
 const Stack = () => import('./pages/stackUI/Stack.vue')
+const CardUI = () => import('./pages/CardUI.vue')
 
 const routes: RouteRecordRaw[] = [
   // Canonical routes
@@ -120,6 +121,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/plan', name: 'plan', component: Plan },
   { path: '/tools', name: 'tools', component: Tool },
   { path: '/stack', name: 'stack', component: Stack },
+  { path: '/card-ui', name: 'card-ui', component: CardUI },
   { path: '/about', name: 'about', component: About },
   { path: '/about/resources', name: 'about-resources', component: AboutResources },
   { path: '/about/learning-paths', name: 'about-learning-paths', component: AboutLearningPaths },

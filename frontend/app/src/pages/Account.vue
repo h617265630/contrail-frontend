@@ -1,6 +1,6 @@
 <template>
   <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
-    <section class="border-b border-border pb-8">
+    <section v-if="!isUserInfoPage" class="border-b border-border pb-8">
       <div class="grid gap-6 md:grid-cols-12 md:items-end">
         <div class="md:col-span-8">
           <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Account</h1>
@@ -102,6 +102,8 @@ const avatarUrl = computed(() => {
   const uid = Number((user.value as any)?.id || 0)
   return uid ? getOrCreateDefaultAvatarForUser(uid) : ''
 })
+
+const isUserInfoPage = computed(() => route.path.startsWith('/account/user-info'))
 
 function isActive(prefix: string) {
   return route.path.startsWith(prefix)

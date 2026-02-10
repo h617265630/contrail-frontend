@@ -1,20 +1,10 @@
 <template>
   <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
-    <section class="border-b border-border pb-8">
-      <div class="grid gap-6 md:grid-cols-12 md:items-end">
-        <div class="md:col-span-8">
-          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">LearningPool</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Browse all learning paths and quickly discover popular and AI-related content by category.</p>
-        </div>
-      </div>
-    </section>
-
       <!-- Section 1: Categories (8 labels) -->
       <section class="space-y-4">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Categories</h2>
-            <p class="text-sm text-muted-foreground">8 categories</p>
+            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">LearningPool</h2>
           </div>
         </div>
         <div class="flex flex-wrap gap-3">

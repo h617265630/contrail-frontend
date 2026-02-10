@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from email.utils import parsedate_to_datetime
 from typing import Optional
 from urllib.parse import urlparse
 from html import unescape
@@ -126,6 +127,14 @@ class ResourceCURD:
         if not raw_host and site_name:
             raw_host = site_name.strip().lower().replace(" ", "")
 
+        # X/Twitter
+        if raw_host.endswith("x.com") or raw_host.endswith("twitter.com"):
+            return "x"
+
+        # Instagram
+        if raw_host.endswith("instagram.com"):
+            return "instagram"
+
         # Normalize common platforms
         if raw_host.endswith("bilibili.com"):
             return "bilibili"
@@ -143,6 +152,281 @@ class ResourceCURD:
         return raw_host or None
 
     @staticmethod
+    def _is_x(url: str) -> bool:
+        host = (urlparse(url).hostname or "").lower().removeprefix("www.")
+        return host.endswith("x.com") or host.endswith("twitter.com")
+
+    @staticmethod
+    def _x_status_id(url: str) -> str | None:
+        """Extract numeric status id from X/Twitter URLs.
+
+        Supports:
+        - https://x.com/{user}/status/{id}
+        - https://twitter.com/{user}/status/{id}
+        - https://x.com/i/web/status/{id}
+        """
+        raw = (url or "").strip()
+        if not raw:
+            return None
+        path = (urlparse(raw).path or "").strip()
+        if not path:
+            return None
+
+        m = re.search(r"/status/(?P<id>\d+)", path)
+        if m:
+            return m.group("id")
+        m = re.search(r"/i/web/status/(?P<id>\d+)", path)
+        if m:
+            return m.group("id")
+        return None
+
+    @staticmethod
+    def _parse_publish_date_to_iso(value: object) -> str | None:
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            try:
+                return value.isoformat()
+            except Exception:
+                return None
+        s = str(value).strip()
+        if not s:
+            return None
+        # already iso-ish
+        try:
+            dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+            return dt.isoformat()
+        except Exception:
+            pass
+        # RFC822-ish (common for tweet timestamps)
+        try:
+            dt = parsedate_to_datetime(s)
+            return dt.isoformat()
+        except Exception:
+            return None
+
+    @staticmethod
+    def _is_instagram(url: str) -> bool:
+        host = (urlparse(url).hostname or "").lower().removeprefix("www.")
+        return host.endswith("instagram.com")
+
+    @staticmethod
+    def _ig_shortcode(url: str) -> str | None:
+        """Extract shortcode from Instagram URLs.
+
+        Supports:
+        - https://www.instagram.com/p/{code}/
+        - https://www.instagram.com/reel/{code}/
+        - https://www.instagram.com/tv/{code}/
+        """
+        path = (urlparse(url).path or "").strip()
+        m = re.search(r"/(?:p|reel|tv)/([A-Za-z0-9_-]+)", path)
+        return m.group(1) if m else None
+
+    @staticmethod
+    def _extract_instagram(url: str) -> dict:
+        """Best-effort extraction for Instagram posts/reels/tv.
+
+        Uses i.instagram.com/api/v1/oembed/ which returns JSON with
+        thumbnail_url, title (caption), author_name, etc. — no API key needed.
+        """
+        raw = (url or "").strip()
+        shortcode = ResourceCURD._ig_shortcode(raw)
+
+        # ---- 1) Instagram oEmbed (reliable, returns thumbnail) ----
+        try:
+            with httpx.Client(
+                timeout=10.0,
+                follow_redirects=True,
+                headers={"User-Agent": "Mozilla/5.0"},
+            ) as client:
+                resp = client.get(
+                    "https://i.instagram.com/api/v1/oembed/",
+                    params={"url": raw},
+                )
+                resp.raise_for_status()
+                data = resp.json() or {}
+
+            caption = (data.get("title") or "").strip() or None
+            author = (data.get("author_name") or "").strip() or None
+            thumbnail_url = (data.get("thumbnail_url") or "").strip() or None
+            media_id = (data.get("media_id") or "").strip() or shortcode
+
+            # Detect if it's a video (reel/tv) from URL path
+            path_lower = (urlparse(raw).path or "").lower()
+            has_video = "/reel/" in path_lower or "/tv/" in path_lower
+
+            # Build title
+            if caption:
+                short = re.sub(r"\s+", " ", caption)
+                short = (short[:120] + "…") if len(short) > 120 else short
+            else:
+                short = f"Instagram post {shortcode or ''}"
+            if author:
+                title = f"@{author}: {short}"
+            else:
+                title = short
+
+            return {
+                "title": title,
+                "description": caption,
+                "thumbnail_url": thumbnail_url,
+                "author": f"@{author}" if author else None,
+                "publish_date": None,
+                "video_id": shortcode or media_id,
+                "duration_seconds": None,
+                "platform": "instagram",
+                "og_type": "video.other" if has_video else "article",
+                "og_video": None,
+                "twitter_player": None,
+                "has_video": has_video,
+                "chapters": [],
+            }
+        except Exception:
+            pass
+
+        # ---- 2) Final fallback: generic HTML meta ----
+        meta = ResourceCURD._extract_generic_url(raw)
+        meta.setdefault("platform", "instagram")
+        meta.setdefault("video_id", shortcode)
+        return meta
+
+    @staticmethod
+    def _extract_x_tweet(url: str) -> dict:
+        """Best-effort extraction for X/Twitter status URLs.
+
+        Strategy (no API key required):
+        1) fxtwitter.com — a public embed-proxy that returns full OG meta (including
+           og:image / og:video) when requested with a bot-like User-Agent.
+        2) Twitter oEmbed — provides tweet text & author (but no image).
+        3) Merge: fxtwitter gives thumbnail; oEmbed gives richer text/date.
+        4) Final fallback: generic HTML meta.
+        """
+        raw = (url or "").strip()
+        status_id = ResourceCURD._x_status_id(raw)
+        if not status_id:
+            return ResourceCURD._extract_generic_url(raw)
+
+        # ---- helpers ----
+        def _find_meta(html: str, *, name: str | None = None, prop: str | None = None) -> str | None:
+            for attr, val in [("property", prop), ("name", name)]:
+                if not val:
+                    continue
+                # content after attr
+                m = re.search(
+                    rf"<meta[^>]+{attr}=['\"]?{re.escape(val)}['\"]?[^>]+content=['\"](?P<c>[^'\"]+)['\"]",
+                    html, flags=re.IGNORECASE,
+                )
+                if not m:
+                    # content before attr
+                    m = re.search(
+                        rf"<meta[^>]+content=['\"](?P<c>[^'\"]+)['\"][^>]+{attr}=['\"]?{re.escape(val)}['\"]?",
+                        html, flags=re.IGNORECASE,
+                    )
+                if m:
+                    return unescape((m.group("c") or "").strip()) or None
+            return None
+
+        def _strip_tags(s: str) -> str:
+            s = re.sub(r"<br\s*/?>", "\n", s, flags=re.IGNORECASE)
+            s = re.sub(r"</p\s*>", "\n", s, flags=re.IGNORECASE)
+            s = re.sub(r"<[^>]+>", "", s)
+            return unescape(re.sub(r"\s+", " ", s)).strip()
+
+        # ---- 1) fxtwitter.com  ----
+        fx_title = fx_desc = fx_image = fx_video = None
+        try:
+            # Reconstruct path from original URL so user/status structure is kept.
+            parsed = urlparse(raw)
+            fx_url = f"https://fxtwitter.com{parsed.path}"
+            # fxtwitter serves OG tags to bot-like User-Agents.
+            with httpx.Client(timeout=8.0, follow_redirects=True, headers={"User-Agent": "bot"}) as client:
+                resp = client.get(fx_url)
+                resp.raise_for_status()
+                fxhtml = resp.text or ""
+
+            fx_title = _find_meta(fxhtml, prop="og:title")
+            fx_desc = _find_meta(fxhtml, prop="og:description")
+            fx_image = _find_meta(fxhtml, prop="og:image")
+            fx_video = _find_meta(fxhtml, prop="og:video")
+        except Exception:
+            pass
+
+        # ---- 2) oEmbed (richer text body & date) ----
+        oembed_author = oembed_desc = oembed_date = None
+        try:
+            with httpx.Client(
+                timeout=8.0, follow_redirects=True,
+                headers={"User-Agent": "Mozilla/5.0"},
+            ) as client:
+                resp = client.get(
+                    "https://publish.twitter.com/oembed",
+                    params={"url": raw, "omit_script": "1"},
+                )
+                resp.raise_for_status()
+                data = resp.json() or {}
+
+            oembed_author = (data.get("author_name") or "").strip() or None
+            html_fragment = (data.get("html") or "").strip() or ""
+
+            m = re.search(r"<p\b[^>]*>(?P<p>.*?)</p>", html_fragment, flags=re.IGNORECASE | re.DOTALL)
+            if m:
+                oembed_desc = _strip_tags(m.group("p") or "") or None
+
+            m_date = re.search(
+                r"<a\b[^>]*href=['\"][^'\"]*/status/\d+[^'\"]*['\"][^>]*>(?P<t>[^<]+)</a>\s*</blockquote>",
+                html_fragment, flags=re.IGNORECASE | re.DOTALL,
+            )
+            if m_date:
+                dt_text = unescape((m_date.group("t") or "").strip())
+                try:
+                    oembed_date = datetime.strptime(dt_text, "%B %d, %Y").date().isoformat()
+                except Exception:
+                    oembed_date = None
+        except Exception:
+            pass
+
+        # ---- 3) Merge results ----
+        author = oembed_author or None
+        description = oembed_desc or fx_desc or None
+        thumbnail_url = (fx_image or "").strip() or None
+        publish_date = oembed_date
+        has_video = bool(fx_video)
+
+        # Build title
+        base_text = description or fx_title or f"X post {status_id}"
+        short = re.sub(r"\s+", " ", base_text)
+        short = (short[:120] + "…") if len(short) > 120 else short
+        if author:
+            title = f"{author}: {short}"
+        else:
+            title = short
+
+        # If we got at least a title or description, return merged result.
+        if description or fx_title or thumbnail_url:
+            return {
+                "title": title,
+                "description": description,
+                "thumbnail_url": thumbnail_url,
+                "author": author,
+                "publish_date": publish_date,
+                "video_id": status_id,
+                "duration_seconds": None,
+                "platform": "x",
+                "og_type": "video.other" if has_video else "article",
+                "og_video": fx_video,
+                "twitter_player": None,
+                "has_video": has_video,
+                "chapters": [],
+            }
+
+        # ---- 4) Final fallback: generic HTML meta ----
+        meta = ResourceCURD._extract_generic_url(raw)
+        meta.setdefault("platform", "x")
+        meta.setdefault("video_id", status_id)
+        return meta
+
+    @staticmethod
     def _infer_resource_type(url: str, meta: dict) -> str:
         raw = (url or "").strip()
         base = raw.lower().split("?", 1)[0]
@@ -156,6 +440,11 @@ class ResourceCURD:
             return "video"
         if host.endswith("bilibili.com"):
             return "video"
+        if host.endswith("instagram.com"):
+            path_lower = (urlparse(raw).path or "").lower()
+            if "/reel/" in path_lower or "/tv/" in path_lower:
+                return "video"
+            return "article"
         if host.endswith("xiaohongshu.com") or host.endswith("xhslink.com"):
             # xiaohongshu links can be video or图文; default video for better UX
             return "video"
@@ -201,7 +490,15 @@ class ResourceCURD:
 
         # Try a lightweight fetch to infer title/description/thumbnail.
         try:
-            with httpx.Client(timeout=8.0, follow_redirects=True, headers={"User-Agent": "Mozilla/5.0"}) as client:
+            with httpx.Client(
+                timeout=8.0,
+                follow_redirects=True,
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7",
+                },
+            ) as client:
                 resp = client.get(raw)
                 resp.raise_for_status()
                 content_type = (resp.headers.get("content-type") or "").lower()
@@ -248,14 +545,37 @@ class ResourceCURD:
                             return unescape((m.group("c") or "").strip()) or None
                     return None
 
-                title = _find_title(text) or _find_meta(text, prop="og:title") or ResourceCURD._guess_title_from_url(raw)
-                description = _find_meta(text, name="description") or _find_meta(text, prop="og:description")
-                thumbnail_url = _find_meta(text, prop="og:image")
+                title = (
+                    _find_title(text)
+                    or _find_meta(text, prop="og:title")
+                    or _find_meta(text, name="twitter:title")
+                    or ResourceCURD._guess_title_from_url(raw)
+                )
+                description = (
+                    _find_meta(text, name="description")
+                    or _find_meta(text, prop="og:description")
+                    or _find_meta(text, name="twitter:description")
+                )
+                thumbnail_url = (
+                    _find_meta(text, prop="og:image")
+                    or _find_meta(text, name="twitter:image")
+                    or _find_meta(text, name="twitter:image:src")
+                )
                 platform = _find_meta(text, prop="og:site_name")
 
                 og_type = _find_meta(text, prop="og:type")
                 og_video = _find_meta(text, prop="og:video") or _find_meta(text, prop="og:video:url")
                 twitter_player = _find_meta(text, name="twitter:player")
+
+                # Some pages (including X) store author in twitter meta tags.
+                twitter_creator = _find_meta(text, name="twitter:creator")
+                twitter_site = _find_meta(text, name="twitter:site")
+                author = (twitter_creator or twitter_site)
+                if author:
+                    author = author.strip()
+                    if author and not author.startswith("@"): 
+                        # many sites use @handle; don't force otherwise
+                        pass
 
                 # Some sites don't expose OG video tags; detect video elements/streams in HTML.
                 has_video = False
@@ -275,7 +595,7 @@ class ResourceCURD:
                     "title": title,
                     "description": description,
                     "thumbnail_url": thumbnail_url,
-                    "author": None,
+                    "author": author,
                     "publish_date": None,
                     "video_id": None,
                     "duration_seconds": None,
@@ -331,7 +651,12 @@ class ResourceCURD:
                     return meta
 
         if not ResourceCURD._is_youtube(url):
-            meta = ResourceCURD._extract_generic_url(url)
+            if ResourceCURD._is_x(url):
+                meta = ResourceCURD._extract_x_tweet(url)
+            elif ResourceCURD._is_instagram(url):
+                meta = ResourceCURD._extract_instagram(url)
+            else:
+                meta = ResourceCURD._extract_generic_url(url)
             if key:
                 ResourceCURD._extract_cache[key] = (time.time(), meta)
             return meta
@@ -340,9 +665,11 @@ class ResourceCURD:
         if not video_id:
             raise ValueError("Invalid YouTube URL")
 
+        canonical_url = f"https://www.youtube.com/watch?v={video_id}"
+
         # 1) Try pytube first (richer: description/publish_date/duration).
         try:
-            yt = YouTube(url)
+            yt = YouTube(canonical_url)
             title = (yt.title or "").strip()
             description = (yt.description or "").strip() or None
             thumbnail_url = (yt.thumbnail_url or "").strip() or None
@@ -355,6 +682,14 @@ class ResourceCURD:
                 duration_seconds = None
             if duration_seconds is not None and duration_seconds < 0:
                 duration_seconds = None
+
+            if not description:
+                try:
+                    generic = ResourceCURD._extract_generic_url(canonical_url)
+                    description = (generic.get("description") or "").strip() or None
+                except Exception:
+                    pass
+
             chapters = ResourceCURD._parse_chapters_from_description(description)
             if not title:
                 raise ValueError("Extraction failed: missing title")
@@ -381,13 +716,21 @@ class ResourceCURD:
 
         # 2) Fallback to oEmbed (usually more stable than pytube).
         try:
-            oembed = ResourceCURD._extract_youtube_oembed(url)
+            oembed = ResourceCURD._extract_youtube_oembed(canonical_url)
             thumbnail_url = (oembed.get("thumbnail_url") or "").strip() or None
             if not thumbnail_url:
                 thumbnail_url = ResourceCURD._youtube_thumbnail(video_id)
+
+            description = None
+            try:
+                generic = ResourceCURD._extract_generic_url(canonical_url)
+                description = (generic.get("description") or "").strip() or None
+            except Exception:
+                pass
+
             meta = {
                 "title": oembed["title"],
-                "description": None,
+                "description": description,
                 "thumbnail_url": thumbnail_url,
                 "author": oembed.get("author"),
                 "publish_date": None,

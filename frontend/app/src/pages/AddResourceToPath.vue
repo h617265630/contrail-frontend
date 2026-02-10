@@ -3,10 +3,10 @@
       <div class="flex items-center justify-between gap-4">
         <div class="min-w-0">
           <h1 class="text-xl md:text-2xl font-semibold text-foreground truncate">Add Resource to LearningPath</h1>
-          <p class="text-sm text-muted-foreground">选择一个 learningpath，并查看其内容</p>
+          <p class="text-sm text-muted-foreground">Select a learning path and preview its content</p>
         </div>
         <Button :as="RouterLinkComp" to="/my-paths" variant="outline" size="sm" class="rounded-md">
-          返回 MyPaths
+          Back to MyPaths
         </Button>
       </div>
 
@@ -15,7 +15,7 @@
         <div class="rounded-md border border-border bg-background overflow-hidden">
           <div class="p-4 border-b border-border bg-muted/30">
             <h2 class="text-foreground font-semibold">Resource</h2>
-            <p class="text-sm text-muted-foreground">根据 id 展示</p>
+            <p class="text-sm text-muted-foreground">Preview by ID</p>
           </div>
 
           <div v-if="resourceLoading" class="p-6 text-sm text-muted-foreground">Loading…</div>
@@ -41,7 +41,7 @@
             <div
               class="rounded-md border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground"
             >
-              拖拽此卡片到右侧 Selected Path 中添加
+              Drag the card below to Selected Path
             </div>
 
             <div
@@ -55,20 +55,20 @@
             </div>
           </div>
 
-          <div v-else class="p-6 text-sm text-muted-foreground">未找到该资源（id: {{ resourceId }}）</div>
+          <div v-else class="p-6 text-sm text-muted-foreground">Resource not found (id: {{ resourceId }})</div>
         </div>
 
         <!-- Column 2: All LearningPaths -->
         <div class="rounded-md border border-border bg-background overflow-hidden">
           <div class="p-4 border-b border-border bg-muted/30">
             <h2 class="text-foreground font-semibold">My LearningPaths</h2>
-            <p class="text-sm text-muted-foreground">选择一个路径</p>
+            <p class="text-sm text-muted-foreground">Select a path</p>
           </div>
 
           <div v-if="paths.length === 0" class="p-6 space-y-3">
-            <div class="text-sm text-foreground font-semibold">还没有创建任何 LearningPath</div>
+            <div class="text-sm text-foreground font-semibold">You haven't created any learning paths yet</div>
             <Button :as="RouterLinkComp" to="/createpath" size="sm" class="rounded-md bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white">
-              去创建
+              Create one
             </Button>
           </div>
 
@@ -84,7 +84,7 @@
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                   <div class="font-semibold text-foreground truncate">{{ p.title }}</div>
-                  <div class="text-xs text-muted-foreground line-clamp-2">{{ p.description || '（无介绍）' }}</div>
+                  <div class="text-xs text-muted-foreground line-clamp-2">{{ p.description || '(No description)' }}</div>
                 </div>
                 <div class="text-xs text-muted-foreground shrink-0">—</div>
               </div>
@@ -100,21 +100,21 @@
         >
           <div class="p-4 border-b border-border bg-muted/30">
             <h2 class="text-foreground font-semibold">Selected Path</h2>
-            <p class="text-sm text-muted-foreground">默认展示第一条</p>
+            <p class="text-sm text-muted-foreground">Shows the first one by default</p>
           </div>
 
-          <div v-if="!selectedPath" class="p-6 text-sm text-muted-foreground">暂无可展示的 LearningPath</div>
+          <div v-if="!selectedPath" class="p-6 text-sm text-muted-foreground">No learning path to display</div>
 
           <div v-else class="p-4 space-y-4">
             <div>
               <div class="text-lg font-semibold text-foreground">{{ selectedPath.title }}</div>
-              <div class="text-sm text-muted-foreground mt-1">{{ selectedPath.description || '（无介绍）' }}</div>
+              <div class="text-sm text-muted-foreground mt-1">{{ selectedPath.description || '(No description)' }}</div>
             </div>
 
             <div class="flex items-center justify-between gap-3">
               <div class="text-sm text-foreground">
-                <span class="font-semibold">操作：</span>
-                <span class="text-muted-foreground">将左侧 resource 拖到本卡片，然后点击确认</span>
+                <span class="font-semibold">Steps:</span>
+                <span class="text-muted-foreground">Drag the resource from the left panel here, then click confirm</span>
               </div>
               <Button
                 type="button"
@@ -123,7 +123,7 @@
                 :disabled="!selectedPath || !resource || !hasDraftChange || saving"
                 @click="confirmAddToPath"
               >
-                {{ saving ? 'Saving…' : '确认添加' }}
+                {{ saving ? 'Saving…' : 'Confirm add' }}
               </Button>
             </div>
 
@@ -133,12 +133,12 @@
               @dragenter.prevent="isOverDropZone = true"
               @dragleave.prevent="isOverDropZone = false"
             >
-              {{ isOverDropZone ? '松开以添加到该路径' : '将 Resource 拖到这里' }}
+              {{ isOverDropZone ? 'Release to add to this path' : 'Drag the resource here' }}
             </div>
 
             <div class="space-y-2">
-              <div class="text-sm font-semibold text-foreground">内容</div>
-              <div v-if="draftItems.length === 0" class="text-sm text-muted-foreground">（该路径暂无资源）</div>
+              <div class="text-sm font-semibold text-foreground">Content</div>
+              <div v-if="draftItems.length === 0" class="text-sm text-muted-foreground">(This path has no resources yet)</div>
               <div v-else class="space-y-2">
                 <div
                   v-for="(it, idx) in draftItems"

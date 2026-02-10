@@ -89,6 +89,18 @@
         <p v-if="formError" class="text-destructive text-sm text-center">{{ formError }}</p>
       </form>
 
+      <div v-if="googleEnabled" class="mt-6 space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="h-px flex-1 bg-border" />
+          <div class="text-xs text-muted-foreground">or</div>
+          <div class="h-px flex-1 bg-border" />
+        </div>
+        <div class="flex justify-center">
+          <div ref="googleButtonEl" class="w-full flex justify-center" />
+        </div>
+        <p v-if="googleLoading" class="text-xs text-muted-foreground text-center">Signing in with Google…</p>
+      </div>
+
       <div class="mt-6 text-center">
         <p class="text-sm text-muted-foreground">
           Don't have an account?
@@ -101,9 +113,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { Eye, EyeOff, Lock, Mail } from 'lucide-vue-next'
-import {login} from '../api/auth'  // Example import for login API
+import { googleLogin, login } from '../api/auth'
 import {useRouter, RouterLink} from 'vue-router'
 import {useAuthStore} from '../stores/auth'
 import Card from '../components/ui/Card.vue'
@@ -114,6 +126,11 @@ defineOptions({ name: 'LoginPage' })
 const router = useRouter()
 const loading = ref(false)
 const formError = ref('')
+
+const googleButtonEl = ref<HTMLDivElement | null>(null)
+const googleLoading = ref(false)
+const googleClientId = String(import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
+const googleEnabled = computed(() => !!googleClientId)
 
 const authStore = useAuthStore()
 
@@ -218,4 +235,61 @@ async function handleSubmit() {
     loading.value = false
   }
 }
+
+async function handleGoogleCredential(idToken: string) {
+  formError.value = ''
+  googleLoading.value = true
+  try {
+    const res = await googleLogin({ id_token: idToken })
+    const token = (res as any)?.access_token
+    if (!token) {
+      throw new Error('Google login response did not include access_token')
+    }
+
+    authStore.setToken(token)
+    try {
+      await authStore.fetchProfile(true)
+    } catch (profileError) {
+      console.warn('Failed to sync user profile:', profileError)
+    }
+
+    router.push({ name: 'my-paths' })
+  } catch (e: any) {
+    formError.value = 'Google sign-in failed. Please try again.'
+  } finally {
+    googleLoading.value = false
+  }
+}
+
+onMounted(() => {
+  if (!googleEnabled.value) return
+  const g = (globalThis as any).google
+  if (!g?.accounts?.id) return
+  if (!googleButtonEl.value) return
+
+  g.accounts.id.initialize({
+    client_id: googleClientId,
+    callback: (resp: any) => {
+      const credential = String(resp?.credential || '').trim()
+      if (!credential) return
+      void handleGoogleCredential(credential)
+    },
+  })
+
+  g.accounts.id.renderButton(googleButtonEl.value, {
+    theme: 'outline',
+    size: 'large',
+    shape: 'rectangular',
+    width: 360,
+  })
+})
+
+onBeforeUnmount(() => {
+  const g = (globalThis as any).google
+  try {
+    g?.accounts?.id?.cancel?.()
+  } catch {
+    // ignore
+  }
+})
 </script>

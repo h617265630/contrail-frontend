@@ -2,9 +2,9 @@
   <footer class="border-t border-border bg-background py-8">
     <div class="mx-auto max-w-7xl px-4 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
       <div class="flex items-center gap-2 font-semibold text-foreground">
-        <img src="/favicon.svg" alt="Contrail" class="h-8 w-8 rounded-sm" />
+        <img src="/favicon.svg" alt="linktopath" class="h-8 w-8 rounded-sm" />
         <span class="brand-wordmark tracking-tight">
-          <span class="font-semibold text-foreground">Contrail</span>
+          <span class="font-semibold text-foreground">linktopath</span>
         </span>
       </div>
       <div class="flex flex-wrap gap-4">
@@ -57,7 +57,7 @@
       <div class="text-xs text-muted-foreground">
         © {{ new Date().getFullYear() }}
         <span class="tracking-tight">
-          <span class="font-semibold text-foreground">Contrail</span>
+          <span class="font-semibold text-foreground">linktopath</span>
         </span>.
         All rights reserved.
       </div>

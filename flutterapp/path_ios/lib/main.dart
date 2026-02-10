@@ -8,6 +8,32 @@ import 'state/auth_state.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  FlutterError.onError = (details) {
+    final msg = details.exceptionAsString();
+    final isFlexOverflow = msg.contains('A RenderFlex overflowed by');
+    if (isFlexOverflow) return;
+    debugPrint(details.toString());
+    FlutterError.presentError(details);
+  };
+
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    final stack = details.stack?.toString();
+    return Material(
+      color: Colors.white,
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            stack == null || stack.isEmpty
+                ? details.exceptionAsString()
+                : '${details.exceptionAsString()}\n\n$stack',
+            style: const TextStyle(color: Colors.red, fontSize: 12),
+          ),
+        ),
+      ),
+    );
+  };
+
   final tokenHolder = TokenHolder();
   final unauthorizedHandler = UnauthorizedHandler();
 

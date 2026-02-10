@@ -1,10 +1,5 @@
 <template>
   <div class="space-y-6">
-    <div>
-      <h3 class="text-lg font-semibold text-foreground">User Info</h3>
-      <p class="mt-2 text-sm text-muted-foreground">Basic profile information</p>
-    </div>
-
     <Card as="section" :hoverable="false" class="rounded-md">
       <div class="p-6">
         <div class="flex items-center gap-4">

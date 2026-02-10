@@ -45,9 +45,9 @@
       </div>
     </section>
 
-    <Card as="section" :hoverable="false" class="rounded-none overflow-hidden" v-if="path">
+    <Card as="section" :hoverable="false" class="rounded-none overflow-hidden mt-10" v-if="path">
       <div class="relative h-44 bg-muted">
-        <img :src="path.thumbnail" :alt="path.title" class="w-full h-full object-cover" />
+        <img :src="path.thumbnail" :alt="path.title" class="w-full h-full object-cover object-center" />
         <span
           v-if="path.type"
           class="absolute right-3 top-3 px-2 py-1 rounded-full border border-border bg-background text-[10px] font-semibold tracking-[0.14em] uppercase text-foreground"

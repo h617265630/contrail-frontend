@@ -1,20 +1,58 @@
 <template>
   <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
-    <section class="border-b border-border pb-8">
-      <div class="grid gap-6 md:grid-cols-12 md:items-end">
-        <div class="md:col-span-8">
-          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Creator Center</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">创作工具集合。</p>
-        </div>
-      </div>
-    </section>
+    <div
+      v-if="savedToastVisible"
+      class="fixed left-1/2 top-6 z-50 -translate-x-1/2 rounded-none border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground shadow"
+    >
+      Saved
+    </div>
 
+    <div v-if="showDeleteConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm">
+      <Card class="w-full max-w-md rounded-none" :hoverable="false">
+        <div class="flex items-center justify-between border-b border-border p-6">
+          <h2 class="text-lg font-semibold text-foreground">Confirm delete</h2>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            class="rounded-none"
+            :disabled="deletingUserFileId !== null"
+            @click="closeDeleteConfirm"
+          >
+            ×
+          </Button>
+        </div>
+
+        <div class="space-y-3 p-6">
+          <div class="text-sm text-foreground">Are you sure you want to delete this document?</div>
+          <div v-if="deleteTargetFile" class="border border-border bg-muted/30 p-3">
+            <div class="line-clamp-1 font-semibold text-foreground">{{ deleteTargetFile.title || deleteTargetFile.original_filename || 'Untitled' }}</div>
+            <div class="mt-1 line-clamp-1 text-xs text-muted-foreground">ID: {{ deleteTargetFile.id }}</div>
+          </div>
+          <p v-if="userFilesError" class="text-sm text-destructive">{{ userFilesError }}</p>
+        </div>
+
+        <div class="flex justify-end gap-2 border-t border-border bg-muted/30 p-6">
+          <Button type="button" variant="outline" class="rounded-none" :disabled="deletingUserFileId !== null" @click="closeDeleteConfirm">
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            class="rounded-none bg-red-50 text-red-600 hover:bg-red-100"
+            :disabled="deletingUserFileId !== null"
+            @click="confirmDeleteUserTextFile"
+          >
+            {{ deletingUserFileId !== null ? 'Deleting…' : 'Delete' }}
+          </Button>
+        </div>
+      </Card>
+    </div>
     <section>
       <div class="grid gap-6 lg:grid-cols-12">
         <aside class="lg:col-span-3">
           <Card className="rounded-none" :hoverable="false" padded>
             <p class="text-sm font-semibold text-foreground">Creator Center</p>
-            <p class="text-xs text-muted-foreground mt-1">创作工具集合</p>
+            <p class="text-xs text-muted-foreground mt-1">A collection of creation tools</p>
 
             <div class="mt-4 space-y-2">
               <Button
@@ -24,7 +62,7 @@
                 :class="activeTab === 'image' ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
                 @click="selectTab('image')"
               >
-                上传图片
+                Upload image
               </Button>
               <Button
                 type="button"
@@ -33,16 +71,7 @@
                 :class="activeTab === 'hand' ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
                 @click="selectTab('hand')"
               >
-                手写笔记
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                class="w-full justify-start rounded-none"
-                :class="activeTab === 'url' ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
-                @click="selectTab('url')"
-              >
-                记录 URL
+                Hand notes
               </Button>
               <Button
                 type="button"
@@ -51,7 +80,7 @@
                 :class="activeTab === 'idea' ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
                 @click="selectTab('idea')"
               >
-                记录 Idea
+                Ideas
               </Button>
               <Button
                 type="button"
@@ -60,7 +89,7 @@
                 :class="activeTab === 'markdown' ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
                 @click="selectTab('markdown')"
               >
-                Markdown 编辑器
+                Editor
               </Button>
               <Button
                 type="button"
@@ -69,7 +98,7 @@
                 :class="activeTab === 'records' ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
                 @click="selectTab('records')"
               >
-                我的记录
+                My records
               </Button>
             </div>
           </Card>
@@ -82,20 +111,34 @@
                 <h2 class="text-xl font-semibold text-foreground">{{ tabTitle }}</h2>
                 <p class="text-sm text-muted-foreground mt-1">{{ tabSubtitle }}</p>
               </div>
+              <div v-if="activeTab === 'markdown'" class="shrink-0">
+                <Button type="button" variant="outline" class="rounded-none" @click="createNewMarkdown">
+                  New
+                </Button>
+              </div>
             </div>
           </Card>
 
           <Card className="rounded-none" :hoverable="false" padded>
             <div v-if="activeTab === 'image'" class="space-y-3">
             <input
+              ref="imageInputEl"
               type="file"
               accept="image/*"
-              class="block w-full text-sm text-foreground file:mr-4 file:rounded-none file:border file:border-border file:bg-background file:px-4 file:py-2 file:text-sm file:font-semibold file:text-foreground hover:file:bg-muted/30"
+              class="hidden"
               @change="onPickImage"
             />
             <div class="flex items-center gap-3">
-              <Input v-model="imageTitle" type="text" placeholder="标题（可选）" class="rounded-none" />
-              <Button type="button" class="shrink-0 rounded-none" :disabled="!pendingImageDataUrl" @click="saveImage">保存</Button>
+              <Button type="button" variant="outline" class="shrink-0 rounded-none" @click="triggerPickImage">
+                Choose file
+              </Button>
+              <div class="text-sm text-muted-foreground truncate">
+                {{ selectedImageName || 'No file selected' }}
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <Input v-model="imageTitle" type="text" placeholder="Title (optional)" class="rounded-none" />
+              <Button type="button" class="shrink-0 rounded-none" :disabled="!pendingImageDataUrl" @click="saveImage">Save</Button>
             </div>
             <p v-if="imageError" class="text-sm text-destructive">{{ imageError }}</p>
             <div v-if="pendingImageDataUrl" class="border border-border bg-muted/30 p-3">
@@ -105,12 +148,12 @@
             <div class="pt-2 border-t border-border">
               <div class="flex items-end justify-between gap-3">
                 <div>
-                  <p class="text-sm font-semibold text-foreground">我的图片</p>
-                  <p class="text-xs text-muted-foreground mt-1">共 {{ imageItems.length }} 张</p>
+                  <p class="text-sm font-semibold text-foreground">My images</p>
+                  <p class="text-xs text-muted-foreground mt-1">Total {{ imageItems.length }}</p>
                 </div>
               </div>
 
-              <div v-if="imageItems.length === 0" class="mt-3 text-sm text-muted-foreground">暂无图片</div>
+              <div v-if="imageItems.length === 0" class="mt-3 text-sm text-muted-foreground">No images yet</div>
 
               <div v-else class="mt-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 <div
@@ -122,8 +165,8 @@
                     <img :src="img.dataUrl" :alt="img.title || 'image'" class="h-full w-full object-cover" />
                   </div>
                   <div class="p-3">
-                    <p class="text-sm font-semibold text-foreground truncate" :title="img.title || '无标题'">
-                      {{ img.title || '无标题' }}
+                    <p class="text-sm font-semibold text-foreground truncate" :title="img.title || 'Untitled'">
+                      {{ img.title || 'Untitled' }}
                     </p>
                     <p class="mt-1 text-xs text-muted-foreground">{{ formatTime(img.createdAt) }}</p>
                   </div>
@@ -134,9 +177,9 @@
 
             <div v-else-if="activeTab === 'hand'" class="space-y-3">
             <div class="flex items-center gap-3">
-              <Input v-model="handTitle" type="text" placeholder="标题（可选）" class="rounded-none" />
-              <Button type="button" variant="outline" class="shrink-0 rounded-none" @click="clearCanvas">清空</Button>
-              <Button type="button" class="shrink-0 rounded-none" @click="saveHandNote">保存</Button>
+              <Input v-model="handTitle" type="text" placeholder="Title (optional)" class="rounded-none" />
+              <Button type="button" variant="outline" class="shrink-0 rounded-none" @click="clearCanvas">Clear</Button>
+              <Button type="button" class="shrink-0 rounded-none" @click="saveHandNote">Save</Button>
             </div>
 
             <div class="border border-border bg-background p-2">
@@ -153,24 +196,15 @@
             <p v-if="handError" class="text-sm text-destructive">{{ handError }}</p>
             </div>
 
-            <div v-else-if="activeTab === 'url'" class="space-y-3">
-            <Input v-model="urlTitle" type="text" placeholder="标题（可选）" class="rounded-none" />
-            <div class="flex items-center gap-3">
-              <Input v-model="urlValue" type="url" placeholder="https://..." class="rounded-none" />
-              <Button type="button" class="shrink-0 rounded-none" @click="saveUrl">保存</Button>
-            </div>
-            <p v-if="urlError" class="text-sm text-destructive">{{ urlError }}</p>
-            </div>
-
             <div v-else-if="activeTab === 'idea'" class="space-y-3">
-            <Input v-model="ideaTitle" type="text" placeholder="标题（可选）" class="rounded-none" />
+            <Input v-model="ideaTitle" type="text" placeholder="Title (optional)" class="rounded-none" />
             <textarea
               v-model="ideaContent"
               rows="4"
-              placeholder="写下你的想法..."
+              placeholder="Write down your idea..."
               class="w-full border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-none"
             ></textarea>
-            <Button type="button" class="rounded-none" @click="saveIdea">保存</Button>
+            <Button type="button" class="rounded-none" @click="saveIdea">Save</Button>
             <p v-if="ideaError" class="text-sm text-destructive">{{ ideaError }}</p>
             </div>
 
@@ -181,19 +215,19 @@
                 class="w-56 shrink-0 flex flex-col gap-3 border-r border-border pr-4"
               >
                 <div class="flex items-center justify-between">
-                  <h3 class="text-sm font-semibold text-foreground">文档 ({{ userTextFiles.length }})</h3>
+                  <h3 class="text-sm font-semibold text-foreground">Documents ({{ userTextFiles.length }})</h3>
                   <button
                     type="button"
                     class="text-xs text-muted-foreground hover:text-foreground"
                     @click="mdSidebarCollapsed = true"
                   >
-                    收起
+                    Collapse
                   </button>
                 </div>
 
                 <div v-if="userFilesLoading" class="text-sm text-muted-foreground">Loading…</div>
                 <div v-else-if="userFilesError" class="text-sm text-destructive">{{ userFilesError }}</div>
-                <div v-else-if="userTextFiles.length === 0" class="text-sm text-muted-foreground">暂无文档</div>
+                <div v-else-if="userTextFiles.length === 0" class="text-sm text-muted-foreground">No documents yet</div>
                 <div v-else class="flex flex-col gap-2 overflow-y-auto flex-1">
                   <button
                     v-for="file in userTextFiles"
@@ -203,10 +237,24 @@
                     :class="selectedMdFileId === file.id ? 'ring-2 ring-ring' : ''"
                     @click="loadUserTextFile(file)"
                   >
-                    <p class="text-sm font-semibold text-foreground truncate" :title="file.title || '无标题'">
-                      {{ file.title || '无标题' }}
-                    </p>
-                    <p class="text-xs text-muted-foreground">{{ formatUserFileTime(file.created_at) }}</p>
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="min-w-0">
+                        <p class="text-sm font-semibold text-foreground truncate" :title="file.title || 'Untitled'">
+                          {{ file.title || 'Untitled' }}
+                        </p>
+                        <p class="text-xs text-muted-foreground">{{ formatUserFileTime(file.created_at) }}</p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        class="shrink-0 rounded-none text-red-500 hover:bg-red-50 hover:text-red-600"
+                        :disabled="deletingUserFileId === file.id"
+                        @click.stop="openDeleteConfirm(file)"
+                      >
+                        <Trash2 class="h-4 w-4" />
+                      </Button>
+                    </div>
                   </button>
                 </div>
               </div>
@@ -220,15 +268,15 @@
                     class="text-xs text-muted-foreground hover:text-foreground border border-border px-2 py-1"
                     @click="mdSidebarCollapsed = false"
                   >
-                    展开文件列表
+                    Show file list
                   </button>
-                  <Input v-model="markdownTitle" type="text" placeholder="文档标题（可选）" class="rounded-none flex-1" />
+                  <Input v-model="markdownTitle" type="text" placeholder="Document title (optional)" class="rounded-none flex-1" />
                 </div>
                 <div class="border border-border overflow-hidden rounded-none flex-1 min-h-0">
                   <CodeMirrorEditor v-model="markdownContent" />
                 </div>
                 <div class="flex items-center gap-3">
-                  <Button type="button" class="rounded-none" :disabled="savingUserFile" @click="saveMarkdown">保存</Button>
+                  <Button type="button" class="rounded-none" :disabled="savingUserFile" @click="saveMarkdown">Save</Button>
                   <p v-if="markdownError" class="text-sm text-destructive">{{ markdownError }}</p>
                 </div>
               </div>
@@ -236,11 +284,11 @@
 
             <div v-else-if="activeTab === 'records'">
               <div class="flex items-center justify-between gap-4 mb-4">
-                <p class="text-sm text-muted-foreground">共 {{ items.length }} 条记录</p>
-                <Button type="button" variant="outline" class="rounded-none" :disabled="items.length === 0" @click="clearAll">清空全部</Button>
+                <p class="text-sm text-muted-foreground">Total {{ items.length }} records</p>
+                <Button type="button" variant="outline" class="rounded-none" :disabled="items.length === 0" @click="clearAll">Clear all</Button>
               </div>
 
-              <div v-if="items.length === 0" class="text-sm text-muted-foreground">暂无记录</div>
+              <div v-if="items.length === 0" class="text-sm text-muted-foreground">No records yet</div>
 
               <div v-else class="space-y-3">
           <div
@@ -252,11 +300,19 @@
               <div class="min-w-0">
                 <p class="text-sm font-semibold text-foreground truncate">
                   <span class="mr-2 border border-border bg-muted/30 px-2 py-0.5 text-xs font-semibold text-muted-foreground">{{ item.kind }}</span>
-                  {{ item.title || '无标题' }}
+                  {{ item.title || 'Untitled' }}
                 </p>
                 <p class="mt-1 text-xs text-muted-foreground">{{ formatTime(item.createdAt) }}</p>
               </div>
-              <Button type="button" variant="destructive" size="sm" class="shrink-0 rounded-none" @click="removeItem(item.id)">删除</Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                class="shrink-0 rounded-none text-red-500 hover:bg-red-50 hover:text-red-600"
+                @click="removeItem(item.id)"
+              >
+                <Trash2 class="h-4 w-4" />
+              </Button>
             </div>
 
             <div class="mt-3">
@@ -300,10 +356,11 @@ import CodeMirrorEditor from '../components/CodeMirrorEditor.vue'
 import Card from '../components/ui/Card.vue'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
-import { fetchUserFileText, listMyUserFiles, uploadMyUserFile, type UserFile } from '../api/userFile'
+import { deleteMyUserFile, fetchUserFileText, listMyUserFiles, updateMyUserFile, uploadMyUserFile, type UserFile } from '../api/userFile'
+import { Trash2 } from 'lucide-vue-next'
 
 
-type CreatorTab = 'image' | 'hand' | 'url' | 'idea' | 'markdown' | 'records'
+type CreatorTab = 'image' | 'hand' | 'idea' | 'markdown' | 'records'
 type CreatorItemKind = 'image' | 'hand' | 'url' | 'idea' | 'markdown'
 
 const activeTab = ref<CreatorTab>('image')
@@ -311,7 +368,7 @@ const activeTab = ref<CreatorTab>('image')
 function normalizeCreatorTab(value: unknown): CreatorTab | null {
   const t = String(value || '').trim()
   if (!t) return null
-  if (t === 'image' || t === 'hand' || t === 'url' || t === 'idea' || t === 'markdown' || t === 'records') return t
+  if (t === 'image' || t === 'hand' || t === 'idea' || t === 'markdown' || t === 'records') return t
   return null
 }
 
@@ -325,24 +382,22 @@ const router = useRouter()
 
 const tabTitle = computed(() => {
   switch (activeTab.value) {
-    case 'image': return '上传图片'
-    case 'hand': return '手写笔记'
-    case 'url': return '记录 URL'
-    case 'idea': return '记录 Idea'
-    case 'markdown': return 'Markdown 编辑器'
-    case 'records': return '我的记录'
+    case 'image': return 'Upload image'
+    case 'hand': return 'Hand notes'
+    case 'idea': return 'Ideas'
+    case 'markdown': return 'Editor'
+    case 'records': return 'My records'
     default: return 'Creator'
   }
 })
 
 const tabSubtitle = computed(() => {
   switch (activeTab.value) {
-    case 'image': return '上传并保存图片文件'
-    case 'hand': return '使用画布手写笔记'
-    case 'url': return '保存有用的链接'
-    case 'idea': return '记录灵感和想法'
-    case 'markdown': return '使用 Markdown 编写文档'
-    case 'records': return `共 ${items.value.length} 条记录`
+    case 'image': return 'Upload and save image files'
+    case 'hand': return 'Take notes on a canvas'
+    case 'idea': return 'Capture thoughts and ideas'
+    case 'markdown': return 'Write documents in Markdown'
+    case 'records': return `Total ${items.value.length} records`
     default: return ''
   }
 })
@@ -371,6 +426,40 @@ const userFiles = ref<UserFile[]>([])
 const savingUserFile = ref(false)
 const mdSidebarCollapsed = ref(false)
 const selectedMdFileId = ref<number | null>(null)
+const deletingUserFileId = ref<number | null>(null)
+
+const savedToastVisible = ref(false)
+let savedToastTimer: number | null = null
+
+function showSavedToast() {
+  savedToastVisible.value = true
+  if (savedToastTimer) {
+    clearTimeout(savedToastTimer)
+    savedToastTimer = null
+  }
+  savedToastTimer = window.setTimeout(() => {
+    savedToastVisible.value = false
+    savedToastTimer = null
+  }, 1200) as unknown as number
+}
+
+const showDeleteConfirm = ref(false)
+const deleteTargetFile = ref<UserFile | null>(null)
+
+function openDeleteConfirm(file: UserFile) {
+  if (deletingUserFileId.value !== null) return
+  markdownError.value = ''
+  userFilesError.value = ''
+  deleteTargetFile.value = file
+  showDeleteConfirm.value = true
+}
+
+function closeDeleteConfirm() {
+  if (deletingUserFileId.value !== null) return
+  showDeleteConfirm.value = false
+  deleteTargetFile.value = null
+  userFilesError.value = ''
+}
 
 const userTextFiles = computed(() => {
   return userFiles.value.filter((f) => f.file_type === 'md' || f.file_type === 'txt')
@@ -384,6 +473,36 @@ function loadItems(): CreatorItem[] {
     return Array.isArray(parsed) ? (parsed as CreatorItem[]) : []
   } catch {
     return []
+  }
+}
+
+function createNewMarkdown() {
+  markdownError.value = ''
+  selectedMdFileId.value = null
+  markdownTitle.value = ''
+  markdownContent.value = ''
+}
+
+async function confirmDeleteUserTextFile() {
+  markdownError.value = ''
+  userFilesError.value = ''
+  const file = deleteTargetFile.value
+  if (!file) return
+  if (deletingUserFileId.value !== null) return
+
+  deletingUserFileId.value = file.id
+  try {
+    await deleteMyUserFile(file.id)
+    if (selectedMdFileId.value === file.id) {
+      createNewMarkdown()
+    }
+    await loadUserFiles()
+    showDeleteConfirm.value = false
+    deleteTargetFile.value = null
+  } catch (e: any) {
+    userFilesError.value = e?.response?.data?.detail || e?.message || 'Failed to delete file'
+  } finally {
+    deletingUserFileId.value = null
   }
 }
 
@@ -420,17 +539,29 @@ function clearAll() {
 const pendingImageDataUrl = ref<string>('')
 const imageTitle = ref('')
 const imageError = ref('')
+const imageInputEl = ref<HTMLInputElement | null>(null)
+const selectedImageName = ref('')
+
+function triggerPickImage() {
+  const el = imageInputEl.value
+  if (!el) return
+  el.value = ''
+  el.click()
+}
 
 function onPickImage(e: Event) {
   imageError.value = ''
   pendingImageDataUrl.value = ''
+  selectedImageName.value = ''
 
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
 
+  selectedImageName.value = String(file.name || '')
+
   if (!file.type.startsWith('image/')) {
-    imageError.value = '请选择图片文件'
+    imageError.value = 'Please select an image file'
     return
   }
 
@@ -440,7 +571,7 @@ function onPickImage(e: Event) {
     if (typeof result === 'string') pendingImageDataUrl.value = result
   }
   reader.onerror = () => {
-    imageError.value = '读取图片失败'
+    imageError.value = 'Failed to read image'
   }
   reader.readAsDataURL(file)
 
@@ -450,7 +581,7 @@ function onPickImage(e: Event) {
 function saveImage() {
   imageError.value = ''
   if (!pendingImageDataUrl.value) {
-    imageError.value = '请先选择图片'
+    imageError.value = 'Please select an image first'
     return
   }
 
@@ -468,6 +599,8 @@ function saveImage() {
 
   pendingImageDataUrl.value = ''
   imageTitle.value = ''
+
+  showSavedToast()
 }
 
 // --- hand note (canvas) ---
@@ -566,7 +699,7 @@ function saveHandNote() {
   handError.value = ''
   const canvas = canvasRef.value
   if (!canvas) {
-    handError.value = '画布未就绪'
+    handError.value = 'Canvas is not ready'
     return
   }
 
@@ -575,7 +708,7 @@ function saveHandNote() {
   empty.width = canvas.width
   empty.height = canvas.height
   if (canvas.toDataURL() === empty.toDataURL()) {
-    handError.value = '请先写点内容再保存'
+    handError.value = 'Please draw something before saving'
     return
   }
 
@@ -593,43 +726,8 @@ function saveHandNote() {
 
   handTitle.value = ''
   clearCanvas()
-}
 
-// --- url ---
-const urlTitle = ref('')
-const urlValue = ref('')
-const urlError = ref('')
-
-function saveUrl() {
-  urlError.value = ''
-  const url = urlValue.value.trim()
-  if (!url) {
-    urlError.value = '请输入 URL'
-    return
-  }
-
-  try {
-    // eslint-disable-next-line no-new
-    new URL(url)
-  } catch {
-    urlError.value = 'URL 格式不正确'
-    return
-  }
-
-  const nextItem: CreatorItem = {
-    id: createId('url'),
-    kind: 'url',
-    title: urlTitle.value.trim() || undefined,
-    createdAt: Date.now(),
-    url,
-  }
-
-  const updated = [nextItem, ...items.value]
-  items.value = updated
-  persistItems(updated)
-
-  urlTitle.value = ''
-  urlValue.value = ''
+  showSavedToast()
 }
 
 // --- idea ---
@@ -641,7 +739,7 @@ function saveIdea() {
   ideaError.value = ''
   const content = ideaContent.value.trim()
   if (!content) {
-    ideaError.value = '请输入 idea 内容'
+    ideaError.value = 'Please enter idea content'
     return
   }
 
@@ -659,6 +757,8 @@ function saveIdea() {
 
   ideaTitle.value = ''
   ideaContent.value = ''
+
+  showSavedToast()
 }
 
 // --- markdown ---
@@ -701,20 +801,26 @@ async function saveMarkdown() {
   markdownError.value = ''
   const content = markdownContent.value.trim()
   if (!content) {
-    markdownError.value = '请输入 Markdown 内容'
+    markdownError.value = 'Please enter Markdown content'
     return
   }
 
   savingUserFile.value = true
   const title = markdownTitle.value.trim() || 'Untitled'
-  const blob = new Blob([content], { type: 'text/markdown' })
-  const file = new File([blob], `${title}.md`, { type: 'text/markdown' })
-
   try {
-    await uploadMyUserFile({ file, title })
-    markdownTitle.value = ''
-    markdownContent.value = ''
-    await loadUserFiles()
+    if (selectedMdFileId.value) {
+      await updateMyUserFile(selectedMdFileId.value, { title, content })
+      await loadUserFiles()
+    } else {
+      const blob = new Blob([content], { type: 'text/markdown' })
+      const file = new File([blob], `${title}.md`, { type: 'text/markdown' })
+      await uploadMyUserFile({ file, title })
+      markdownTitle.value = ''
+      markdownContent.value = ''
+      await loadUserFiles()
+    }
+
+    showSavedToast()
   } catch (e: any) {
     markdownError.value = e?.response?.data?.detail || e?.message || 'Failed to save file'
   } finally {

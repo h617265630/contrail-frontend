@@ -1,14 +1,5 @@
 <template>
   <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
-    <section class="border-b border-border pb-8">
-      <div class="grid gap-6 md:grid-cols-12 md:items-end">
-        <div class="md:col-span-8">
-          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Notifications</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Platform updates, important changes, and your activity</p>
-        </div>
-      </div>
-    </section>
-
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <Card as="section" :hoverable="false" class="rounded-none">
         <div class="p-6 space-y-4">
@@ -79,7 +70,7 @@
     <Card v-if="!isAuthed" as="section" :hoverable="false" class="rounded-none">
       <div class="p-6">
         <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Personal notifications</h2>
-        <p class="mt-2 text-sm text-muted-foreground">Sign in to see social, progress, and path update notifications.</p>
+        <p class="mt-2 text-sm text-muted-foreground">Sign in to see social & collaboration, progress, and path notifications.</p>
         <div class="mt-4">
           <Button :as="RouterLinkComp" to="/login" variant="outline" size="sm" class="rounded-none">Sign in</Button>
         </div>
@@ -91,7 +82,7 @@
         <Card as="section" :hoverable="false" class="rounded-none">
           <div class="p-6 space-y-4">
             <div>
-              <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Social & collaboration</h2>
+              <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Social & Collaboration - coming soon</h2>
               <p class="text-sm text-muted-foreground">Interactions around your content</p>
             </div>
             <div class="space-y-3">
@@ -112,7 +103,7 @@
         <Card as="section" :hoverable="false" class="rounded-none">
           <div class="p-6 space-y-4">
             <div>
-              <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Progress</h2>
+              <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Progress - coming soon</h2>
               <p class="text-sm text-muted-foreground">Learning signals & milestones</p>
             </div>
             <div class="space-y-3">
@@ -134,7 +125,7 @@
       <Card as="section" :hoverable="false" class="rounded-none">
         <div class="p-6 space-y-4">
           <div>
-            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Path updates</h2>
+            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Path - coming soon</h2>
             <p class="text-sm text-muted-foreground">Changes and activity around paths</p>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -210,22 +201,22 @@ const socialNotifications: TypedNotice[] = [
     id: 'sn1',
     date: '2026-01-31',
     kind: 'Comment',
-    title: '有人评论你的路径',
-    body: '有人在你的 learning path 下发表了评论。打开路径即可查看。',
+    title: 'Someone commented on your path',
+    body: 'A new comment was posted under one of your learning paths. Open the path to view it.',
   },
   {
     id: 'sn2',
     date: '2026-01-31',
     kind: 'Reference',
-    title: '有人引用了你的资源',
-    body: '某个公开 learning path 引用了你创建/分享的资源。',
+    title: 'Someone referenced your resource',
+    body: 'A public learning path referenced a resource you created or shared.',
   },
   {
     id: 'sn3',
     date: '2026-01-31',
     kind: 'Follow',
-    title: '有人关注了你',
-    body: '你获得了一个新的关注者。社交/协作能力后续会扩展。',
+    title: 'Someone followed you',
+    body: 'You have a new follower. Social and collaboration features will be expanded over time.',
   },
 ]
 
@@ -234,22 +225,22 @@ const progressNotifications: TypedNotice[] = [
     id: 'pn1',
     date: '2026-01-31',
     kind: 'Step completed',
-    title: '你完成了某一步',
-    body: '系统已更新该步骤的学习进度。',
+    title: 'You completed a step',
+    body: 'Your learning progress for that step has been updated.',
   },
   {
     id: 'pn2',
     date: '2026-01-31',
     kind: 'Milestone',
-    title: '里程碑：完成 30%',
-    body: '你在某条 learning path 上达成了 30% 完成度。',
+    title: 'Milestone: 30% complete',
+    body: 'You reached 30% completion on a learning path.',
   },
   {
     id: 'pn3',
     date: '2026-01-31',
     kind: 'Reminder',
-    title: '连续学习提醒（可选）',
-    body: '你可以设置每日/每周提醒，让学习保持连续。',
+    title: 'Keep-learning reminders (optional)',
+    body: 'You can set daily or weekly reminders to stay consistent.',
   },
 ]
 
@@ -258,15 +249,15 @@ const pathUpdateNotifications: TypedNotice[] = [
     id: 'un1',
     date: '2026-01-31',
     kind: 'Updated',
-    title: '你关注的 Path 被作者更新',
-    body: '作者更新了路径内容（新增 / 删除 / 顺序调整）。',
+    title: 'A path you follow was updated',
+    body: 'The author updated the path (added / removed / reordered steps).',
   },
   {
     id: 'un2',
     date: '2026-01-31',
     kind: 'Forked',
-    title: '你创建的 Path 被他人 fork / 收藏',
-    body: '你的路径获得了新的 fork 或收藏。',
+    title: 'Your path was forked or saved',
+    body: 'Your learning path received a new fork or save.',
   },
 ]
 

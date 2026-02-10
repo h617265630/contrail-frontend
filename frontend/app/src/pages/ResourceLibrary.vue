@@ -1,17 +1,6 @@
 <template>
   <div class="min-h-screen bg-background">
     <div class="container mx-auto px-4 py-8">
-      <header class="mb-8">
-        <div class="mx-auto w-full max-w-6xl space-y-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-2xl font-bold text-foreground">Resource Library</h2>
-              <p class="text-muted-foreground text-sm mt-1">Manage your resources</p>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <main class="flex flex-col gap-12">
 
     <Card as="section" :hoverable="false" class="mx-auto w-full max-w-6xl rounded-none">
@@ -44,29 +33,6 @@
           </div>
 
           <div class="flex gap-3 w-full lg:w-auto">
-            <div class="flex gap-1 border border-border bg-background rounded-none p-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                class="rounded-none"
-                :class="viewMode === 'grid' ? 'bg-accent text-accent-foreground' : ''"
-                @click="setView('grid')"
-              >
-                <Grid3x3 class="w-4 h-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                class="rounded-none"
-                :class="viewMode === 'list' ? 'bg-accent text-accent-foreground' : ''"
-                @click="setView('list')"
-              >
-                <List class="w-4 h-4" />
-              </Button>
-            </div>
-
           </div>
         </div>
       </div>
@@ -87,7 +53,7 @@
     </Card>
 
       <div v-else class="mt-4 mx-auto w-full max-w-6xl">
-        <div v-if="viewMode === 'grid'" class="grid grid-cols-1 gap-4 justify-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+        <div class="grid grid-cols-1 gap-4 justify-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           <Card
             v-for="resource in filteredResources"
             :key="resource.id"
@@ -127,70 +93,6 @@
               </div>
             </div>
           </Card>
-        </div>
-
-        <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-          <div
-            v-for="deck in decks"
-            :key="deck.key"
-            class="flex flex-col"
-            @mouseenter="hoveredDeckKey = deck.key"
-            @mouseleave="hoveredDeckKey = null"
-          >
-            <div class="mb-3 flex items-center justify-between">
-              <span
-                class="inline-flex px-2 py-0.5 text-xs font-medium rounded"
-                :style="{ backgroundColor: deck.color + '20', color: deck.color }"
-              >
-                {{ deck.name }}
-              </span>
-              <span class="text-xs text-muted-foreground">{{ deck.cards.length }}</span>
-            </div>
-
-            <div class="relative h-72 overflow-visible">
-              <div class="inline-flex items-center h-full" :style="{ paddingLeft: '20px' }">
-                <div
-                  v-for="(resource, cardIndex) in deck.cards.slice(0, 8)"
-                  :key="resource.id"
-                  class="shrink-0 w-56 h-72 rounded-md border border-border bg-card shadow-sm transition-all duration-300 ease-out cursor-pointer hover:shadow-xl hover:!z-[100] card-hover"
-                  :style="getDeckCardStyle(deck.key, cardIndex)"
-                  @click="openCard(resource)"
-                >
-                  <div class="h-full flex flex-col overflow-hidden rounded-md">
-                    <div class="px-3 py-2 border-b border-border flex items-center justify-between">
-                      <span
-                        class="px-2 py-0.5 text-xs font-medium rounded"
-                        :style="{
-                          backgroundColor: getCategoryColor(resourceCategoryLabel(resource)) + '20',
-                          color: getCategoryColor(resourceCategoryLabel(resource)),
-                        }"
-                      >
-                        {{ resourceCategoryLabel(resource) || '—' }}
-                      </span>
-                      <span class="text-xs text-muted-foreground">#{{ String(resource.id).padStart(3, '0') }}</span>
-                    </div>
-
-                    <div class="relative h-28 bg-white overflow-hidden px-2">
-                      <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="w-full h-full object-cover" />
-                    </div>
-
-                    <div class="px-3 py-2 border-b border-border bg-white">
-                      <h3 class="text-sm font-bold text-foreground line-clamp-1" :title="resource.title">{{ resource.title }}</h3>
-                    </div>
-
-                    <div class="px-3 py-2 flex-1 bg-muted/30">
-                      <p class="text-xs text-muted-foreground line-clamp-2">{{ resource.summary || '' }}</p>
-                    </div>
-
-                    <div class="px-3 py-2 border-t border-border flex items-center justify-between">
-                      <span class="text-xs text-muted-foreground">{{ formatPlatform((resource as any).platform) }}</span>
-                      <span class="text-xs font-medium text-foreground">{{ displayResourceType(resource) }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
       </main>
@@ -334,7 +236,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { BookOpen, ChevronDown, FileText, Filter, Grid3x3, Link as LinkIcon, List, Plus, Scissors, Search, Tag, Video, X } from 'lucide-vue-next'
+import { BookOpen, ChevronDown, FileText, Filter, Plus, Scissors, Search, Tag, Video, X, Link as LinkIcon } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -358,8 +260,6 @@ const fallbackThumb = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc1
 
 const resources = ref<DbResource[]>([])
 const loading = ref(false)
-
-const viewMode = ref<'grid' | 'list'>('grid')
 const selectedCategory = ref<string>('All')
 const searchQuery = ref('')
 
@@ -516,62 +416,6 @@ const filteredResources = computed(() => {
     return matchesCategory && (title.includes(q) || desc.includes(q))
   })
 })
-
-type Deck = {
-  key: string
-  name: string
-  color: string
-  cards: DbResource[]
-}
-
-const hoveredDeckKey = ref<string | null>(null)
-
-const decks = computed<Deck[]>(() => {
-  const map = new Map<string, DbResource[]>()
-  for (const r of filteredResources.value) {
-    const name = resourceCategoryLabel(r)
-    const key = name
-    const list = map.get(key)
-    if (list) list.push(r)
-    else map.set(key, [r])
-  }
-
-  return Array.from(map.entries())
-    .map(([key, cards]) => {
-      const name = key
-      return {
-        key,
-        name,
-        color: getCategoryColor(name),
-        cards,
-      }
-    })
-    .sort((a, b) => a.name.localeCompare(b.name))
-})
-
-function getDeckCardStyle(deckKey: string, cardIndex: number) {
-  const isHovered = hoveredDeckKey.value === deckKey
-  const isExpanded = isHovered
-  const total = decks.value.find(d => d.key === deckKey)?.cards.length || 0
-
-  if (isExpanded) {
-    return {
-      marginLeft: cardIndex === 0 ? '0' : '16px',
-      zIndex: cardIndex,
-    }
-  }
-
-  const reverseIndex = total - 1 - cardIndex
-  return {
-    marginLeft: cardIndex === 0 ? '0' : '-210px',
-    zIndex: cardIndex,
-    transform: `rotate(${reverseIndex * 0.3}deg)`,
-  }
-}
-
-function setView(mode: 'grid' | 'list') {
-  viewMode.value = mode
-}
 
 function openCreateModal() {
   showCreateModal.value = true

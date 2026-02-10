@@ -72,10 +72,10 @@
 
           <!-- Fallback: Thumbnail + Summary -->
           <template v-else>
-            <div v-if="resource.thumbnail" class="w-full h-64 bg-slate-100 overflow-hidden">
+            <div v-if="resource.thumbnail" class="w-full h-64 bg-slate-100 overflow-hidden mt-6">
               <img :src="resource.thumbnail" :alt="resource.title" class="w-full h-full object-cover" />
             </div>
-            <div v-else class="w-full h-64 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+            <div v-else class="w-full h-64 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mt-6">
               <FileText class="w-16 h-16 text-white/80" />
             </div>
           </template>

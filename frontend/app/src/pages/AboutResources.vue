@@ -6,7 +6,7 @@
           <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Resources</h1>
           <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
             Resources are the raw inputs of learning: videos, articles, documents, and links.
-            Contrail helps you collect them into a single library and keeps them organized with metadata.
+            linktopath helps you collect them into a single library and keeps them organized with metadata.
           </p>
         </div>
         <div class="md:col-span-4 md:flex md:justify-end md:items-end">

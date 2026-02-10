@@ -5,7 +5,7 @@
         <div class="md:col-span-8">
           <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Progress</h1>
           <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Progress helps you keep continuity. Contrail stores progress per path item so you can resume learning without losing context.
+            Progress helps you keep continuity. linktopath stores progress per path item so you can resume learning without losing context.
           </p>
         </div>
         <div class="md:col-span-4 md:flex md:justify-end md:items-end">

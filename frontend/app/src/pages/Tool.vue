@@ -1,14 +1,5 @@
 <template>
   <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
-    <section class="border-b border-border pb-8">
-      <div class="grid gap-6 md:grid-cols-12 md:items-end">
-        <div class="md:col-span-8">
-          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Tools</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">查看数据库数据</p>
-        </div>
-      </div>
-    </section>
-
     <section>
       <div class="grid gap-6 lg:grid-cols-12">
         <aside class="lg:col-span-3">

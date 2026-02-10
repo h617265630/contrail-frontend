@@ -4,7 +4,7 @@
       <div class="grid gap-6 md:grid-cols-12 md:items-end">
         <div class="md:col-span-8">
           <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Choose the plan that fits you</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Use Contrail’s core features to start learning with structure.</p>
+          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Use linktopath’s core features to start learning with structure.</p>
         </div>
         <div class="md:col-span-4 md:flex md:justify-end">
           <div class="inline-flex items-center gap-2 border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
@@ -96,7 +96,7 @@ const plans = computed<Plan[]>(() => [
     description: 'For getting started with learning paths',
     suitable: 'New users building their first learning paths',
     features: ['Browse all public resources', 'Browse all public learning paths', 'Create up to 5 learning paths', 'Track your progress anytime'],
-    tagline: 'Start learning with structure using Contrail’s core features.',
+    tagline: 'Start learning with structure using linktopath’s core features.',
     cta: 'Get started',
   },
   {

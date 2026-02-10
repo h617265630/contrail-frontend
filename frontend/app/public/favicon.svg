@@ -2,7 +2,7 @@
   <!-- Sky-blue background -->
   <rect x="0" y="0" width="64" height="64" rx="12" fill="#8ecbff" />
 
-  <!-- Contrail (smooth curved trails) -->
+  <!-- linktopath (smooth curved trails) -->
   <g fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 0) scale(1)">
     <path
       d="M10 52 C 22 44, 30 50, 40 40 S 56 28, 58 18"

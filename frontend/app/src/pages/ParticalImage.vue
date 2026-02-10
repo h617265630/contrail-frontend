@@ -1,10 +1,5 @@
 <template>
   <div class="space-y-6">
-    <div>
-      <h3 class="text-lg font-semibold text-foreground">Image</h3>
-      <p class="mt-2 text-sm text-muted-foreground">在这里查看你上传过的图片。</p>
-    </div>
-
     <div v-if="loading" class="rounded-md border border-border bg-muted/30 p-6 text-sm text-muted-foreground">
       Loading…
     </div>

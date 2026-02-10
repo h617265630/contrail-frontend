@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -167,7 +168,9 @@ class HomePage extends StatelessWidget {
 }
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({super.key, this.redirectTo});
+
+  final String? redirectTo;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -178,12 +181,21 @@ class _LoginPageState extends State<LoginPage> {
   final _password = TextEditingController();
   bool _loading = false;
 
+  String _safeRedirectTarget() {
+    final raw = (widget.redirectTo ?? '').trim();
+    if (raw.isEmpty) return '/home';
+    final decoded = Uri.decodeComponent(raw);
+    if (!decoded.startsWith('/')) return '/home';
+    if (decoded.startsWith('//')) return '/home';
+    return decoded;
+  }
+
   Future<void> _submit() async {
     setState(() => _loading = true);
     try {
       await context.read<AuthState>().login(username: _username.text.trim(), password: _password.text);
       if (!mounted) return;
-      context.go('/home');
+      context.go(_safeRedirectTarget());
     } catch (e) {
       await _showError(context, e);
     } finally {
@@ -277,18 +289,146 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 }
 
-class NotificationPage extends StatelessWidget {
-  const NotificationPage({super.key});
+class NotificationPage extends StatefulWidget {
+  const NotificationPage({super.key, this.initialUrl});
+
+  final String? initialUrl;
+
+  @override
+  State<NotificationPage> createState() => _NotificationPageState();
+}
+
+class _NotificationPageState extends State<NotificationPage> {
+  final _url = TextEditingController();
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _url.text = (widget.initialUrl ?? '').trim();
+  }
+
+  @override
+  void didUpdateWidget(covariant NotificationPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final next = (widget.initialUrl ?? '').trim();
+    if (next.isNotEmpty && next != oldWidget.initialUrl && _url.text.trim().isEmpty) {
+      _url.text = next;
+    }
+  }
+
+  @override
+  void dispose() {
+    _url.dispose();
+    super.dispose();
+  }
+
+  Future<void> _paste() async {
+    final data = await Clipboard.getData('text/plain');
+    final text = (data?.text ?? '').trim();
+    if (text.isEmpty) return;
+    if (!mounted) return;
+    setState(() => _url.text = text);
+  }
+
+  Future<void> _import() async {
+    final raw = _url.text.trim();
+    final uri = Uri.tryParse(raw);
+    final ok = uri != null && (uri.scheme == 'http' || uri.scheme == 'https') && uri.host.isNotEmpty;
+    if (!ok) {
+      await _showError(context, 'Please paste a valid http(s) URL');
+      return;
+    }
+
+    final auth = context.read<AuthState>();
+    if (!auth.isAuthed) {
+      final target = '/notification?url=${Uri.encodeQueryComponent(raw)}';
+      context.go('/login?from=${Uri.encodeQueryComponent(target)}');
+      return;
+    }
+
+    setState(() => _loading = true);
+    try {
+      final services = context.read<AppServices>();
+      await services.resourceApi.createMineFromUrl(url: raw);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Imported')));
+      context.go('/my-resources');
+    } catch (e) {
+      await _showError(context, e);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Notification')),
-      body: const Padding(
-        padding: EdgeInsets.all(16),
-        child: Text(
-          'Public paths/resources should avoid sensitive content and include a clear title/description for discoverability.',
-        ),
+      appBar: AppBar(title: const Text('Message')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Center(
+            child: Column(
+              children: [
+                Icon(Icons.inbox_outlined, size: 44, color: theme.hintColor),
+                const SizedBox(height: 10),
+                Text('Share Inbox', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                Text(
+                  'Paste a URL from YouTube (or any website) and import it as a resource.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              border: Border.all(color: theme.colorScheme.outline, width: 1),
+            ),
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  controller: _url,
+                  decoration: const InputDecoration(
+                    labelText: 'URL',
+                    hintText: 'https://…',
+                    prefixIcon: Icon(Icons.link, size: 18),
+                  ),
+                  keyboardType: TextInputType.url,
+                  textInputAction: TextInputAction.done,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    SizedBox(
+                      height: 40,
+                      child: OutlinedButton(
+                        onPressed: _loading ? null : _paste,
+                        child: const Text('Paste'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 120,
+                      height: 40,
+                      child: FilledButton(
+                        onPressed: _loading ? null : _import,
+                        child: Text(_loading ? 'Importing…' : 'Import'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -307,6 +447,114 @@ class _ResourceLibraryPageState extends State<ResourceLibraryPage> {
   List<DbResource> _resources = const [];
   List<Category> _categories = const [];
   int? _categoryId;
+
+  int _colsForWidth(double width) {
+    if (width >= 1100) return 4;
+    if (width >= 860) return 3;
+    return 2;
+  }
+
+  void _openPublicResource(DbResource r) {
+    final type = r.resourceType;
+    if (type == 'video') {
+      context.go('/resources/video/${r.id}');
+    } else if (type == 'document') {
+      context.go('/resources/document/${r.id}');
+    } else {
+      context.go('/resources/article/${r.id}');
+    }
+  }
+
+  Widget _buildCard(BuildContext context, DbResource r) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final category = (r.categoryName ?? '').trim();
+    final chipText = category.isEmpty ? '—' : category;
+    final summary = (r.summary ?? '').trim();
+
+    return InkWell(
+      onTap: () => _openPublicResource(r),
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: (r.thumbnail ?? '').trim().isEmpty
+                  ? Container(color: scheme.surfaceContainerHighest)
+                  : Image.network(
+                      r.thumbnail!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(color: scheme.surfaceContainerHighest),
+                    ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: scheme.outline, width: 1),
+                      color: scheme.surface,
+                    ),
+                    child: Text(
+                      chipText,
+                      style: theme.textTheme.labelSmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '#${r.id.toString().padLeft(3, '0')}',
+                    style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+              child: Text(
+                r.title,
+                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Text(
+                summary.isEmpty ? '—' : summary,
+                style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      r.platform,
+                      style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    r.resourceType,
+                    style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Future<void> _load() async {
     setState(() {
@@ -383,25 +631,19 @@ class _ResourceLibraryPageState extends State<ResourceLibraryPage> {
                         ),
                       ),
                     Expanded(
-                      child: ListView.separated(
-                        itemCount: filtered.length,
-                        separatorBuilder: (a, b) => const Divider(height: 1),
-                        itemBuilder: (context, idx) {
-                          final r = filtered[idx];
-                          return ListTile(
-                            title: Text(r.title),
-                            subtitle: Text('${r.resourceType} · ${r.categoryName ?? '-'}'),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () {
-                              final type = r.resourceType;
-                              if (type == 'video') {
-                                context.go('/resources/video/${r.id}');
-                              } else if (type == 'document') {
-                                context.go('/resources/document/${r.id}');
-                              } else {
-                                context.go('/resources/article/${r.id}');
-                              }
-                            },
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final cols = _colsForWidth(constraints.maxWidth);
+                          return GridView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: cols,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: cols == 2 ? 0.78 : 0.9,
+                            ),
+                            itemCount: filtered.length,
+                            itemBuilder: (context, idx) => _buildCard(context, filtered[idx]),
                           );
                         },
                       ),
@@ -425,10 +667,9 @@ class _MyResourcesPageState extends State<MyResourcesPage> {
   List<DbResource> _resources = const [];
 
   final _search = TextEditingController();
-  bool _expandAll = true;
-  final Set<String> _collapsedDeckKeys = <String>{};
 
   Future<void> _load() async {
+    debugPrint('MyResourcesPage _load() start');
     setState(() {
       _loading = true;
       _error = '';
@@ -437,12 +678,15 @@ class _MyResourcesPageState extends State<MyResourcesPage> {
       final api = context.read<AppServices>();
       final res = await api.resourceApi.listMine();
       if (!mounted) return;
+      debugPrint('MyResourcesPage _load() success: ${res.length}');
       setState(() => _resources = res);
     } catch (e) {
       if (!mounted) return;
+      debugPrint('MyResourcesPage _load() error: $e');
       setState(() => _error = e is ApiException ? e.message : e.toString());
     } finally {
       if (mounted) setState(() => _loading = false);
+      debugPrint('MyResourcesPage _load() end. loading=$_loading error=$_error total=${_resources.length}');
     }
   }
 
@@ -450,15 +694,6 @@ class _MyResourcesPageState extends State<MyResourcesPage> {
   void initState() {
     super.initState();
     _load();
-  }
-
-  Future<void> _delete(int id) async {
-    try {
-      await context.read<AppServices>().resourceApi.deleteMine(id);
-      await _load();
-    } catch (e) {
-      await _showError(context, e);
-    }
   }
 
   void _openResource(DbResource r) {
@@ -469,52 +704,6 @@ class _MyResourcesPageState extends State<MyResourcesPage> {
     } else {
       context.go('/my-resources/article/${r.id}');
     }
-  }
-
-  String _deckKey(DbResource r) {
-    final raw = (r.categoryName ?? '').trim();
-    return raw.isEmpty ? 'Other' : raw;
-  }
-
-  Map<String, List<DbResource>> _groupDecks(List<DbResource> list) {
-    final map = <String, List<DbResource>>{};
-    for (final r in list) {
-      final k = _deckKey(r);
-      (map[k] ??= <DbResource>[]).add(r);
-    }
-    final keys = map.keys.toList()..sort();
-    return {for (final k in keys) k: map[k]!};
-  }
-
-  bool _isDeckExpanded(String deckKey) {
-    if (_expandAll) return true;
-    return !_collapsedDeckKeys.contains(deckKey);
-  }
-
-  void _toggleDeck(String deckKey) {
-    if (_expandAll) return;
-    setState(() {
-      if (_collapsedDeckKeys.contains(deckKey)) {
-        _collapsedDeckKeys.remove(deckKey);
-      } else {
-        _collapsedDeckKeys.add(deckKey);
-      }
-    });
-  }
-
-  void _toggleExpandAll() {
-    setState(() {
-      _expandAll = !_expandAll;
-      if (_expandAll) {
-        _collapsedDeckKeys.clear();
-      }
-    });
-  }
-
-  int _gridColumnsForWidth(double width) {
-    const cardMin = 170.0;
-    final cols = (width / cardMin).floor().clamp(1, 5);
-    return cols;
   }
 
   Widget _buildResourceCard(BuildContext context, DbResource r, {required int delayMs}) {
@@ -584,7 +773,6 @@ class _MyResourcesPageState extends State<MyResourcesPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const Spacer(),
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                 child: Row(
@@ -601,21 +789,6 @@ class _MyResourcesPageState extends State<MyResourcesPage> {
                       r.resourceType,
                       style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
                     ),
-                    const SizedBox(width: 6),
-                    PopupMenuButton<String>(
-                      padding: EdgeInsets.zero,
-                      onSelected: (v) {
-                        if (v == 'edit') {
-                          context.go('/my-resources/${r.id}/edit');
-                        } else if (v == 'delete') {
-                          _delete(r.id);
-                        }
-                      },
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(value: 'edit', child: Text('Edit')),
-                        PopupMenuItem(value: 'delete', child: Text('Delete')),
-                      ],
-                    ),
                   ],
                 ),
               ),
@@ -628,6 +801,7 @@ class _MyResourcesPageState extends State<MyResourcesPage> {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('MyResourcesPage build. loading=$_loading error=$_error total=${_resources.length}');
     final q = _search.text.trim().toLowerCase();
     final filtered = q.isEmpty
         ? _resources
@@ -638,8 +812,6 @@ class _MyResourcesPageState extends State<MyResourcesPage> {
             final platform = r.platform.toLowerCase();
             return title.contains(q) || summary.contains(q) || category.contains(q) || platform.contains(q);
           }).toList();
-
-    final decks = _groupDecks(filtered);
 
     return Scaffold(
       appBar: AppBar(
@@ -652,177 +824,108 @@ class _MyResourcesPageState extends State<MyResourcesPage> {
           ? const Center(child: CircularProgressIndicator())
           : _error.isNotEmpty
               ? Center(child: Padding(padding: const EdgeInsets.all(16), child: Text(_error)))
-              : ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              : Column(
                   children: [
-                    Text(
-                      '${filtered.length} resources in ${decks.length} decks',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).hintColor),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _search,
-                            decoration: const InputDecoration(
-                              hintText: 'Search resources...',
-                              prefixIcon: Icon(Icons.search, size: 18),
-                            ),
-                            onChanged: (_) => setState(() {}),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('My Resources', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${filtered.length} resources',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).hintColor),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        SizedBox(
-                          height: 40,
-                          child: FilledButton(
-                            onPressed: () => context.go('/my-resources/add'),
-                            child: const Text('Add'),
+                          const SizedBox(height: 4),
+                          Text(
+                            'loading=$_loading  error=${_error.isEmpty ? '—' : _error}  total=${_resources.length}',
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).hintColor),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: _toggleExpandAll,
-                            child: Text(_expandAll ? '收起全部' : '展开全部'),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
-                    for (final entry in decks.entries) ...[
-                      _DeckSection(
-                        title: entry.key,
-                        count: entry.value.length,
-                        expanded: _isDeckExpanded(entry.key),
-                        showChevron: !_expandAll,
-                        onToggle: () => _toggleDeck(entry.key),
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final cols = _gridColumnsForWidth(constraints.maxWidth);
-                            final cards = entry.value;
-                            return GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: cols,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
-                                childAspectRatio: 0.78,
+                          const SizedBox(height: 14),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _search,
+                                  decoration: const InputDecoration(
+                                    hintText: 'Search resources...',
+                                    prefixIcon: Icon(Icons.search, size: 18),
+                                  ),
+                                  onChanged: (_) => setState(() {}),
+                                ),
                               ),
-                              itemCount: cards.length,
-                              itemBuilder: (context, i) {
-                                final row = i ~/ cols;
-                                final col = i % cols;
-                                final delay = row * 260 + col * 70;
-                                return _buildResourceCard(context, cards[i], delayMs: delay);
-                              },
-                            );
-                          },
-                        ),
+                              const SizedBox(width: 12),
+                              SizedBox(
+                                width: 88,
+                                height: 40,
+                                child: FilledButton(
+                                  onPressed: () => context.go('/my-resources/add'),
+                                  child: const Text('Add'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 18),
-                    ],
+                    ),
+                    Expanded(
+                      child: filtered.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text('No resources yet', style: Theme.of(context).textTheme.titleSmall),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Tap + to add your first resource.',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).hintColor),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  SizedBox(
+                                    width: 160,
+                                    child: OutlinedButton(onPressed: _load, child: const Text('Reload')),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : LayoutBuilder(
+                              builder: (context, constraints) {
+                                final cols = constraints.maxWidth >= 860 ? 3 : 2;
+                                return GridView.builder(
+                                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                                  addSemanticIndexes: false,
+                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: cols,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                    childAspectRatio: cols == 2 ? 0.78 : 0.9,
+                                  ),
+                                  itemCount: filtered.length,
+                                  itemBuilder: (context, i) {
+                                    return _buildResourceCard(context, filtered[i], delayMs: 0);
+                                  },
+                                );
+                              },
+                            ),
+                    ),
                   ],
                 ),
     );
   }
 }
 
-class _DeckSection extends StatelessWidget {
-  const _DeckSection({
-    required this.title,
-    required this.count,
-    required this.expanded,
-    required this.child,
-    required this.onToggle,
-    required this.showChevron,
-  });
-
-  final String title;
-  final int count;
-  final bool expanded;
-  final Widget child;
-  final VoidCallback onToggle;
-  final bool showChevron;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InkWell(
-          onTap: showChevron ? onToggle : null,
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ),
-              Text(
-                '$count cards',
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
-              ),
-              if (showChevron) ...[
-                const SizedBox(width: 6),
-                Icon(expanded ? Icons.expand_less : Icons.expand_more, color: theme.hintColor),
-              ],
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        AnimatedCrossFade(
-          crossFadeState: expanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-          duration: const Duration(milliseconds: 220),
-          firstChild: child,
-          secondChild: const SizedBox.shrink(),
-        ),
-      ],
-    );
-  }
-}
-
-class _StaggeredIn extends StatefulWidget {
+class _StaggeredIn extends StatelessWidget {
   const _StaggeredIn({required this.child, required this.delayMs});
   final Widget child;
   final int delayMs;
 
   @override
-  State<_StaggeredIn> createState() => _StaggeredInState();
-}
-
-class _StaggeredInState extends State<_StaggeredIn> {
-  bool _show = false;
-
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(Duration(milliseconds: widget.delayMs), () {
-      if (!mounted) return;
-      setState(() => _show = true);
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AnimatedOpacity(
-      opacity: _show ? 1 : 0,
-      duration: const Duration(milliseconds: 420),
-      curve: Curves.easeOut,
-      child: AnimatedSlide(
-        offset: _show ? Offset.zero : const Offset(-0.05, 0),
-        duration: const Duration(milliseconds: 420),
-        curve: Curves.easeOut,
-        child: widget.child,
-      ),
-    );
+    return child;
   }
 }
 
@@ -1892,7 +1995,7 @@ class _MyPathsPageState extends State<MyPathsPage> {
     });
     try {
       final api = context.read<AppServices>();
-      final res = await api.learningPathApi.listMine();
+      final res = await api.learningPathApi.listPublic();
       if (!mounted) return;
       setState(() => _paths = res);
     } catch (e) {
@@ -1900,15 +2003,6 @@ class _MyPathsPageState extends State<MyPathsPage> {
       setState(() => _error = e is ApiException ? e.message : e.toString());
     } finally {
       if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _delete(int id) async {
-    try {
-      await context.read<AppServices>().learningPathApi.deleteMine(id);
-      await _load();
-    } catch (e) {
-      await _showError(context, e);
     }
   }
 
@@ -1921,36 +2015,108 @@ class _MyPathsPageState extends State<MyPathsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('My Paths'), actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh))]),
+      appBar: AppBar(
+        title: const Text('Paths'),
+        actions: [
+          IconButton(onPressed: _load, icon: const Icon(Icons.refresh)),
+        ],
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error.isNotEmpty
               ? Center(child: Text(_error))
-              : ListView.separated(
-                  itemCount: _paths.length,
-                  separatorBuilder: (a, b) => const Divider(height: 1),
-                  itemBuilder: (context, idx) {
-                    final p = _paths[idx];
-                    return ListTile(
-                      title: Text(p.title),
-                      subtitle: Text(p.categoryName ?? '-'),
-                      onTap: () => context.go('/learningpath/${p.id}/edit'),
-                      trailing: PopupMenuButton<String>(
-                        onSelected: (v) {
-                          if (v == 'edit') {
-                            context.go('/learningpath/${p.id}/edit');
-                          } else if (v == 'detail') {
-                            context.go('/learningpath/${p.id}');
-                          } else if (v == 'delete') {
-                            _delete(p.id);
-                          }
-                        },
-                        itemBuilder: (_) => const [
-                          PopupMenuItem(value: 'detail', child: Text('Detail')),
-                          PopupMenuItem(value: 'edit', child: Text('Edit')),
-                          PopupMenuItem(value: 'delete', child: Text('Delete')),
-                        ],
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    int cols;
+                    if (constraints.maxWidth >= 1100) {
+                      cols = 4;
+                    } else if (constraints.maxWidth >= 860) {
+                      cols = 3;
+                    } else {
+                      cols = 2;
+                    }
+
+                    return GridView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: cols,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: cols == 2 ? 0.92 : 1.05,
                       ),
+                      itemCount: _paths.length,
+                      itemBuilder: (context, idx) {
+                        final p = _paths[idx];
+                        final theme = Theme.of(context);
+                        final scheme = theme.colorScheme;
+                        final cat = (p.categoryName ?? '').trim();
+                        final chipText = cat.isEmpty ? '—' : cat;
+                        final desc = (p.description ?? '').trim();
+
+                        return InkWell(
+                          onTap: () => context.go('/learningpath/${p.id}'),
+                          child: Card(
+                            clipBehavior: Clip.antiAlias,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                AspectRatio(
+                                  aspectRatio: 16 / 9,
+                                  child: (p.coverImageUrl ?? '').trim().isEmpty
+                                      ? Container(color: scheme.surfaceContainerHighest)
+                                      : Image.network(
+                                          p.coverImageUrl!,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => Container(color: scheme.surfaceContainerHighest),
+                                        ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(color: scheme.outline, width: 1),
+                                          color: scheme.surface,
+                                        ),
+                                        child: Text(
+                                          chipText,
+                                          style: theme.textTheme.labelSmall,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        '#${p.id.toString().padLeft(3, '0')}',
+                                        style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+                                  child: Text(
+                                    p.title,
+                                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+                                  child: Text(
+                                    desc.isEmpty ? '—' : desc,
+                                    style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     );
                   },
                 ),
@@ -2205,7 +2371,7 @@ class AccountShellPage extends StatelessWidget {
           ),
           ListTile(
             title: const Text('My Resources'),
-            onTap: () => context.go('/account/my-resources'),
+            onTap: () => context.go('/my-resources'),
           ),
           ListTile(
             title: const Text('My Paths'),
