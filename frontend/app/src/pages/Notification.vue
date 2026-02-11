@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8 -mt-4 md:-mt-6">
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <Card as="section" :hoverable="false" class="rounded-none">
         <div class="p-6 space-y-4">

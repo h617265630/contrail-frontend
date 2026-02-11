@@ -1,11 +1,11 @@
 <template>
-  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8 -mt-4 md:-mt-6">
     <section class="border-b border-border pb-8">
       <div class="grid gap-6 md:grid-cols-12 md:items-end">
         <div class="md:col-span-8">
-          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">What is linktopath?</h1>
+          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">What is Contrail?</h1>
           <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            linktopath is a platform for building personal learning paths. It helps you turn scattered resources—found across
+            Contrail is a platform for building personal learning paths. It helps you turn scattered resources—found across
             YouTube, blogs, and course platforms—into a clear, actionable path you can actually finish.
             Instead of collecting links and losing momentum, you get structure, progress, and feedback in one place.
           </p>
@@ -46,12 +46,12 @@
     <section class="grid gap-6 md:grid-cols-2">
       <Card as="section" :hoverable="false" class="rounded-none">
         <div class="p-6 space-y-3">
-          <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Why linktopath</h2>
+          <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Why Contrail</h2>
           <ul class="space-y-2 text-sm leading-relaxed list-disc list-inside text-muted-foreground">
             <li>Your learning resources are scattered across platforms and hard to organize systematically.</li>
             <li>You save a lot, but you don’t know where to start—or where you stopped.</li>
             <li>Learning happens in small fragments, but you lack a single framework to measure progress and outcomes.</li>
-            <li>linktopath’s goal is to turn fragmented learning into structured, repeatable progress.</li>
+            <li>Contrail's goal is to turn fragmented learning into structured, repeatable progress.</li>
           </ul>
         </div>
       </Card>

@@ -38,6 +38,59 @@ try:
     except Exception as e:
         print('Could not read alembic_version:', e)
 
+    print('\n-- recent webhook_events:')
+    try:
+        cur.execute(
+            """
+            SELECT id, provider, event_type, processed,
+                   COALESCE(NULLIF(error, ''), '-') AS error,
+                   received_at
+            FROM webhook_events
+            ORDER BY id DESC
+            LIMIT 5
+            """
+        )
+        rows = cur.fetchall()
+        for r in rows:
+            print(r)
+    except Exception as e:
+        print('Could not read webhook_events:', e)
+
+    print('\n-- latest webhook_event payload/header snippet:')
+    try:
+        cur.execute(
+            """
+            SELECT id,
+                   LENGTH(COALESCE(payload_json, '')) AS payload_len,
+                   SUBSTRING(COALESCE(payload_json, '') FROM 1 FOR 400) AS payload_head,
+                   SUBSTRING(COALESCE(headers_json, '') FROM 1 FOR 400) AS headers_head
+            FROM webhook_events
+            ORDER BY id DESC
+            LIMIT 1
+            """
+        )
+        row = cur.fetchone()
+        print(row)
+    except Exception as e:
+        print('Could not read latest webhook_event payload/header:', e)
+
+    print('\n-- recent subscriptions:')
+    try:
+        cur.execute(
+            """
+            SELECT id, user_id, provider, provider_subscription_id, plan_code, status,
+                   current_period_end, cancel_at_period_end, updated_at
+            FROM subscriptions
+            ORDER BY id DESC
+            LIMIT 5
+            """
+        )
+        rows = cur.fetchall()
+        for r in rows:
+            print(r)
+    except Exception as e:
+        print('Could not read subscriptions:', e)
+
     cur.close()
     conn.close()
 except Exception as e:

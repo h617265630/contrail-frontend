@@ -70,7 +70,7 @@
 
         <div class="flex items-center justify-between">
           <label class="flex items-center">
-            <input type="checkbox" class="w-4 h-4 border-input rounded-md" />
+            <input v-model="remember" type="checkbox" class="w-4 h-4 border-input rounded-md" />
             <span class="ml-2 text-sm text-muted-foreground">Remember me</span>
           </label>
           <a href="#" class="text-sm text-foreground underline underline-offset-4">Forgot password?</a>
@@ -141,6 +141,7 @@ const authStore = useAuthStore()
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
+const remember = ref(false)
 const errors = reactive({ email: '', password: '' })
 
 const touched = reactive({ email: false, password: false })
@@ -219,7 +220,7 @@ async function handleSubmit() {
       throw new Error('Login response did not include access_token')
     }
 
-    authStore.setToken(token)
+    authStore.setToken(token, remember.value)
     try {
       await authStore.fetchProfile(true)
     } catch (profileError) {
@@ -246,7 +247,7 @@ async function handleGoogleCredential(idToken: string) {
       throw new Error('Google login response did not include access_token')
     }
 
-    authStore.setToken(token)
+    authStore.setToken(token, remember.value)
     try {
       await authStore.fetchProfile(true)
     } catch (profileError) {
@@ -262,6 +263,13 @@ async function handleGoogleCredential(idToken: string) {
 }
 
 onMounted(() => {
+  try {
+    const local = (globalThis as any).localStorage
+    remember.value = local?.getItem?.('learnsmart_remember') === '1'
+  } catch {
+    remember.value = false
+  }
+
   if (!googleEnabled.value) return
   const g = (globalThis as any).google
   if (!g?.accounts?.id) return

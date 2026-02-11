@@ -2,7 +2,7 @@
 	<div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
 		<!-- Banner -->
 		<section
-			class="relative overflow-hidden text-white shadow-xl min-h-[320px] md:min-h-[360px]"
+			class="relative overflow-hidden text-white shadow-xl min-h-[320px] md:min-h-[360px] -mt-4 md:-mt-6"
 			@mouseenter="pauseCarousel"
 			@mouseleave="resumeCarousel"
 		>

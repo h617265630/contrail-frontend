@@ -1,12 +1,21 @@
 <template>
-  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
-    <section v-if="!isUserInfoPage" class="border-b border-border pb-8">
-      <div class="grid gap-6 md:grid-cols-12 md:items-end">
-        <div class="md:col-span-8">
-          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Account</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">管理个人信息、资源与学习路径。</p>
-        </div>
-      </div>
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8 -mt-4 md:-mt-6">
+    <section class="border-b border-border pb-4">
+      <nav aria-label="Breadcrumb" class="text-xs text-muted-foreground">
+        <ol class="flex items-center gap-2">
+          <li v-for="(item, idx) in breadcrumbItems" :key="`${idx}-${item.label}`" class="flex items-center gap-2">
+            <RouterLink
+              v-if="item.to && idx !== breadcrumbItems.length - 1"
+              :to="item.to"
+              class="hover:text-foreground"
+            >
+              {{ item.label }}
+            </RouterLink>
+            <span v-else class="text-foreground font-semibold">{{ item.label }}</span>
+            <span v-if="idx !== breadcrumbItems.length - 1" class="text-muted-foreground">/</span>
+          </li>
+        </ol>
+      </nav>
     </section>
 
     <section>
@@ -108,7 +117,18 @@ const avatarUrl = computed(() => {
   return uid ? getOrCreateDefaultAvatarForUser(uid) : ''
 })
 
-const isUserInfoPage = computed(() => route.path.startsWith('/account/user-info'))
+type BreadcrumbItem = { label: string; to?: string }
+
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => {
+  const base: BreadcrumbItem[] = [{ label: 'Account', to: '/account/user-info' }]
+  const p = String(route.path || '')
+  if (p.startsWith('/account/my-resources')) return [...base, { label: 'My Resources' }]
+  if (p.startsWith('/account/my-paths')) return [...base, { label: 'My Paths' }]
+  if (p.startsWith('/account/user-info')) return [...base, { label: 'User Info' }]
+  if (p.startsWith('/account/plan')) return [...base, { label: 'Plan' }]
+  if (p.startsWith('/account/change-password')) return [...base, { label: 'Change Password' }]
+  return base
+})
 
 function isActive(prefix: string) {
   return route.path.startsWith(prefix)

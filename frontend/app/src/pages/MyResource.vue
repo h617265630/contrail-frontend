@@ -1,14 +1,31 @@
 <template>
   <div class="min-h-screen bg-background">
-    <section class="container mx-auto px-4 py-8">
-      <header class="mb-8 space-y-4">
-        <div class="flex items-center justify-between gap-4">
-          <div>
-            <h1 class="text-2xl font-bold text-foreground">My Collection</h1>
-            <p class="text-muted-foreground mt-1">{{ totalCards }} learning resources in {{ decks.length }} decks</p>
+    <section class="container mx-auto px-4 py-8 -mt-4 md:-mt-6">
+      <div class="border-b border-border pb-4 mb-8">
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <nav aria-label="Breadcrumb" class="text-xs text-muted-foreground">
+            <ol class="flex items-center gap-2">
+              <li v-for="(item, idx) in breadcrumbItems" :key="`${idx}-${item.label}`" class="flex items-center gap-2">
+                <RouterLink
+                  v-if="item.to && idx !== breadcrumbItems.length - 1"
+                  :to="item.to"
+                  class="hover:text-foreground"
+                >
+                  {{ item.label }}
+                </RouterLink>
+                <span v-else class="text-foreground font-semibold">{{ item.label }}</span>
+                <span v-if="idx !== breadcrumbItems.length - 1" class="text-muted-foreground">/</span>
+              </li>
+            </ol>
+          </nav>
+
+          <div class="text-xs text-muted-foreground">
+            {{ totalCards }} learning resources in {{ decks.length }} decks
           </div>
         </div>
+      </div>
 
+      <header class="mb-8 space-y-4">
         <div class="flex w-full flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div class="relative w-full md:max-w-md">
             <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -52,9 +69,8 @@
             <div>
               <div
                 v-if="!isDeckExpanded(deckIndex)"
-                class="relative h-72 overflow-visible"
-                @mouseenter="hoveredDeck = deckIndex"
-                @mouseleave="hoveredDeck = null"
+                class="relative h-72 overflow-visible cursor-pointer"
+                @click="toggleDeck(deckIndex)"
               >
                 <div class="inline-flex items-center h-full" :style="{ paddingLeft: '20px' }">
                   <div
@@ -118,8 +134,6 @@
                 tag="div"
                 class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"
                 appear
-                @mouseenter="hoveredDeck = deckIndex"
-                @mouseleave="hoveredDeck = null"
               >
                 <div
                   v-for="(resource, i) in deck.cards"
@@ -310,7 +324,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Search, X } from 'lucide-vue-next'
 import { deleteMyResource, listMyResources, type DbResource } from '../api/resource'
 import Card from '../components/ui/Card.vue'
@@ -318,8 +332,15 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { formatPlatform } from '../utils/platform'
 
-const route = useRoute()
 const router = useRouter()
+const route = useRoute()
+
+type BreadcrumbItem = { label: string; to?: string }
+
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+  { label: 'Home', to: '/home' },
+  { label: 'My Resources' },
+])
 
 type UiResource = {
   id: number
@@ -341,7 +362,7 @@ const loading = ref(false)
 const deletingId = ref<number | null>(null)
 const publicUpdatingId = ref<number | null>(null)
 
-const hoveredDeck = ref<number | null>(null)
+const clickedDeck = ref<number | null>(null)
 const expandAll = ref(true)
 
 const collapsedPreviewCount = 5
@@ -418,7 +439,7 @@ async function load() {
 
 onMounted(() => {
   expandAll.value = true
-  hoveredDeck.value = null
+  clickedDeck.value = null
   load()
 
   window.addEventListener('focus', load)
@@ -440,7 +461,7 @@ watch(
   () => route.fullPath,
   () => {
     expandAll.value = true
-    hoveredDeck.value = null
+    clickedDeck.value = null
     load()
   },
 )
@@ -487,7 +508,15 @@ const totalCards = computed(() => {
 })
 
 function isDeckExpanded(deckIndex: number) {
-  return expandAll.value || hoveredDeck.value === deckIndex
+  return expandAll.value || clickedDeck.value === deckIndex
+}
+
+function toggleDeck(deckIndex: number) {
+  if (clickedDeck.value === deckIndex) {
+    clickedDeck.value = null
+  } else {
+    clickedDeck.value = deckIndex
+  }
 }
 
 function getCollapsedPreviewCardStyle(cardIndex: number, total: number) {

@@ -1,5 +1,23 @@
 <template>
-  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8 -mt-4 md:-mt-6">
+    <section class="border-b border-border pb-4">
+      <nav aria-label="Breadcrumb" class="text-xs text-muted-foreground">
+        <ol class="flex items-center gap-2">
+          <li v-for="(item, idx) in breadcrumbItems" :key="`${idx}-${item.label}`" class="flex items-center gap-2">
+            <RouterLink
+              v-if="item.to && idx !== breadcrumbItems.length - 1"
+              :to="item.to"
+              class="hover:text-foreground"
+            >
+              {{ item.label }}
+            </RouterLink>
+            <span v-else class="text-foreground font-semibold">{{ item.label }}</span>
+            <span v-if="idx !== breadcrumbItems.length - 1" class="text-muted-foreground">/</span>
+          </li>
+        </ol>
+      </nav>
+    </section>
+
     <section>
       <div class="grid gap-6 lg:grid-cols-12">
         <aside class="lg:col-span-3">
@@ -220,6 +238,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { listCategories, type Category } from '../api/category'
 import { listMyLearningPaths, listPublicLearningPaths, type PublicLearningPath } from '../api/learningPath'
 import { deleteMyResource, deleteResource, listMyResources, listResources, type DbResource } from '../api/resource'
@@ -257,6 +276,13 @@ const subtitle = computed(() => {
   if (activeTab.value === 'myresource') return `共 ${resources.value.length} 条`
   if (activeTab.value === 'category') return `共 ${categories.value.length} 条`
   return `共 ${learningPaths.value.length} 条`
+})
+
+type BreadcrumbItem = { label: string; to?: string }
+
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => {
+  const base: BreadcrumbItem[] = [{ label: 'Tools', to: '/tools' }]
+  return [...base, { label: title.value }]
 })
 
 async function loadResources() {

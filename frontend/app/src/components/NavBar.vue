@@ -4,11 +4,11 @@
       <RouterLink to="/home" class="flex shrink-0 items-center gap-2 font-semibold text-foreground">
         <img
           src="/favicon.svg"
-          alt="linktopath"
+          alt="Contrail"
           class="h-9 w-9 rounded-sm"
         />
         <span class="brand-wordmark text-lg text-foreground">
-          <span class="font-semibold">linktopath</span>
+          <span class="font-semibold">Contrail</span>
         </span>
       </RouterLink>
       <nav class="hidden md:flex items-center gap-6 text-[11px] font-medium tracking-[0.16em] text-muted-foreground uppercase">

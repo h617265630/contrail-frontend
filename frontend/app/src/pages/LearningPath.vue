@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8 -mt-4 md:-mt-6">
       <!-- Section 1: Categories (8 labels) -->
       <section class="space-y-4">
         <div class="flex items-center justify-between">

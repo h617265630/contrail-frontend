@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8 -mt-4 md:-mt-6">
     <div
       v-if="savedToastVisible"
       class="fixed left-1/2 top-6 z-50 -translate-x-1/2 rounded-none border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground shadow"
@@ -47,6 +47,25 @@
         </div>
       </Card>
     </div>
+
+    <section class="border-b border-border pb-4">
+      <nav aria-label="Breadcrumb" class="text-xs text-muted-foreground">
+        <ol class="flex items-center gap-2">
+          <li v-for="(item, idx) in breadcrumbItems" :key="`${idx}-${item.label}`" class="flex items-center gap-2">
+            <RouterLink
+              v-if="item.to && idx !== breadcrumbItems.length - 1"
+              :to="item.to"
+              class="hover:text-foreground"
+            >
+              {{ item.label }}
+            </RouterLink>
+            <span v-else class="text-foreground font-semibold">{{ item.label }}</span>
+            <span v-if="idx !== breadcrumbItems.length - 1" class="text-muted-foreground">/</span>
+          </li>
+        </ol>
+      </nav>
+    </section>
+
     <section>
       <div class="grid gap-6 lg:grid-cols-12">
         <aside class="lg:col-span-3">
@@ -105,20 +124,6 @@
         </aside>
 
         <main class="lg:col-span-9 space-y-4">
-          <Card className="rounded-none" :hoverable="false" padded>
-            <div class="flex items-center justify-between gap-3">
-              <div>
-                <h2 class="text-xl font-semibold text-foreground">{{ tabTitle }}</h2>
-                <p class="text-sm text-muted-foreground mt-1">{{ tabSubtitle }}</p>
-              </div>
-              <div v-if="activeTab === 'markdown'" class="shrink-0">
-                <Button type="button" variant="outline" class="rounded-none" @click="createNewMarkdown">
-                  New
-                </Button>
-              </div>
-            </div>
-          </Card>
-
           <Card className="rounded-none" :hoverable="false" padded>
             <div v-if="activeTab === 'image'" class="space-y-3">
             <input
@@ -271,13 +276,16 @@
                     Show file list
                   </button>
                   <Input v-model="markdownTitle" type="text" placeholder="Document title (optional)" class="rounded-none flex-1" />
+                  <Button type="button" variant="outline" class="rounded-none" @click="createNewMarkdown">
+                    New
+                  </Button>
                 </div>
                 <div class="border border-border overflow-hidden rounded-none flex-1 min-h-0">
                   <CodeMirrorEditor v-model="markdownContent" />
                 </div>
-                <div class="flex items-center gap-3">
-                  <Button type="button" class="rounded-none" :disabled="savingUserFile" @click="saveMarkdown">Save</Button>
+                <div class="flex items-center justify-between gap-3">
                   <p v-if="markdownError" class="text-sm text-destructive">{{ markdownError }}</p>
+                  <Button type="button" class="rounded-none" :disabled="savingUserFile" @click="saveMarkdown">Save</Button>
                 </div>
               </div>
             </div>
@@ -351,7 +359,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import CodeMirrorEditor from '../components/CodeMirrorEditor.vue'
 import Card from '../components/ui/Card.vue'
 import { Button } from '../components/ui/button'
@@ -395,16 +403,23 @@ const tabSubtitle = computed(() => {
   switch (activeTab.value) {
     case 'image': return 'Upload and save image files'
     case 'hand': return 'Take notes on a canvas'
-    case 'idea': return 'Capture thoughts and ideas'
-    case 'markdown': return 'Write documents in Markdown'
-    case 'records': return `Total ${items.value.length} records`
-    default: return ''
+    case 'idea': return 'Save ideas and thoughts'
+    case 'markdown': return 'Write markdown documents'
+    case 'records': return 'Review your records'
   }
 })
 
 function selectTab(tab: CreatorTab) {
   activeTab.value = tab
 }
+
+type BreadcrumbItem = { label: string; to?: string }
+
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+  { label: 'Home', to: '/home' },
+  { label: 'Creator Center', to: '/creator' },
+  { label: tabTitle.value },
+])
 
 type CreatorItem = {
   id: string

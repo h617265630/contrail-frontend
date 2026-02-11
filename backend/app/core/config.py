@@ -34,6 +34,8 @@ class Settings:
 	GOOGLE_CLIENT_ID: str = os.environ.get("GOOGLE_CLIENT_ID", "")
 	GOOGLE_CLIENT_SECRET: str = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 
+	FASTSPRING_WEBHOOK_SECRET: str = os.environ.get("FASTSPRING_WEBHOOK_SECRET", "")
+
 
 # Singleton settings instance
 settings = Settings()

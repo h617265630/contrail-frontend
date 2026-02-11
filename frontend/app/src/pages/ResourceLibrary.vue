@@ -1,10 +1,10 @@
 <template>
   <div class="min-h-screen bg-background">
-    <div class="container mx-auto px-4 py-8">
-      <main class="flex flex-col gap-12">
+    <div class="container mx-auto px-4 py-6 -mt-4 md:-mt-6">
+      <main class="flex flex-col gap-8">
 
     <Card as="section" :hoverable="false" class="mx-auto w-full max-w-6xl rounded-none">
-      <div class="p-4">
+      <div class="p-3">
         <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
           <div class="flex flex-col sm:flex-row gap-3 flex-1 w-full lg:w-auto">
             <div class="flex gap-3 flex-1">
@@ -15,7 +15,7 @@
                 type="text"
                 placeholder="Search resources..."
                 v-model="searchQuery"
-                class="h-10 w-full rounded-none pl-10"
+                class="h-9 w-full rounded-none pl-10"
               />
             </div>
             </div>
@@ -23,7 +23,7 @@
             <div class="relative">
               <select
                 v-model="selectedCategory"
-                class="h-10 appearance-none rounded-none border border-input bg-background pl-10 pr-10 text-sm text-foreground outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer"
+                class="h-9 appearance-none rounded-none border border-input bg-background pl-10 pr-10 text-sm text-foreground outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer"
               >
                 <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
               </select>

@@ -7,11 +7,61 @@ import { getCurrentUser } from '../api/user'
 // Use globalThis.localStorage to avoid TS build errors when DOM lib types are not available.
 const TOKEN_KEY = 'learnsmart_token'
 const USER_KEY = 'learnsmart_user'
+const REMEMBER_KEY = 'learnsmart_remember'
+
+function getLocalStorage() {
+  try {
+    return (globalThis as any).localStorage
+  } catch {
+    return null
+  }
+}
+
+function getSessionStorage() {
+  try {
+    return (globalThis as any).sessionStorage
+  } catch {
+    return null
+  }
+}
+
+function isRememberedPref(): boolean {
+  try {
+    const storage = getLocalStorage()
+    return storage?.getItem(REMEMBER_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function setRememberedPref(next: boolean) {
+  try {
+    const storage = getLocalStorage()
+    if (!storage) return
+    if (next) {
+      storage.setItem(REMEMBER_KEY, '1')
+    } else {
+      storage.removeItem(REMEMBER_KEY)
+    }
+  } catch {
+    return
+  }
+}
+
+function hasLocalToken(): boolean {
+  try {
+    const storage = getLocalStorage()
+    return !!storage?.getItem(TOKEN_KEY)
+  } catch {
+    return false
+  }
+}
 
 function readToken(): string | null {
   try {
-    const storage = (globalThis as any).localStorage
-    return storage?.getItem(TOKEN_KEY) || null
+    const local = getLocalStorage()
+    const session = getSessionStorage()
+    return local?.getItem(TOKEN_KEY) || session?.getItem(TOKEN_KEY) || null
   } catch {
     return null
   }
@@ -19,34 +69,57 @@ function readToken(): string | null {
 
 function readUser(): UserProfile | null {
   try {
-    const storage = (globalThis as any).localStorage
-    const raw = storage?.getItem(USER_KEY)
+    const local = getLocalStorage()
+    const session = getSessionStorage()
+    const raw = local?.getItem(USER_KEY) || session?.getItem(USER_KEY)
     return raw ? (JSON.parse(raw) as UserProfile) : null
   } catch {
     return null
   }
 }
 
-function persistToken(next: string | null) {
+function persistToken(next: string | null, remember?: boolean) {
   try {
-    const storage = (globalThis as any).localStorage
-    if (next) {
-      storage?.setItem(TOKEN_KEY, next)
+    const local = getLocalStorage()
+    const session = getSessionStorage()
+    if (!next) {
+      local?.removeItem(TOKEN_KEY)
+      session?.removeItem(TOKEN_KEY)
+      setRememberedPref(false)
+      return
+    }
+
+    const shouldRemember = typeof remember === 'boolean' ? remember : (hasLocalToken() || isRememberedPref())
+    setRememberedPref(shouldRemember)
+    if (shouldRemember) {
+      local?.setItem(TOKEN_KEY, next)
+      session?.removeItem(TOKEN_KEY)
     } else {
-      storage?.removeItem(TOKEN_KEY)
+      session?.setItem(TOKEN_KEY, next)
+      local?.removeItem(TOKEN_KEY)
     }
   } catch {
     // ignore storage errors
   }
 }
 
-function persistUser(next: UserProfile | null) {
+function persistUser(next: UserProfile | null, remember?: boolean) {
   try {
-    const storage = (globalThis as any).localStorage
-    if (next) {
-      storage?.setItem(USER_KEY, JSON.stringify(next))
+    const local = getLocalStorage()
+    const session = getSessionStorage()
+    if (!next) {
+      local?.removeItem(USER_KEY)
+      session?.removeItem(USER_KEY)
+      return
+    }
+
+    const shouldRemember = typeof remember === 'boolean' ? remember : hasLocalToken()
+    if (shouldRemember) {
+      local?.setItem(USER_KEY, JSON.stringify(next))
+      session?.removeItem(USER_KEY)
     } else {
-      storage?.removeItem(USER_KEY)
+      session?.setItem(USER_KEY, JSON.stringify(next))
+      local?.removeItem(USER_KEY)
     }
   } catch {
     // ignore storage errors
@@ -59,16 +132,16 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthed = computed(() => !!token.value)
   const avatarBuster = ref(0)
 
-  function setToken(next: string | null) {
+  function setToken(next: string | null, remember?: boolean) {
     token.value = next
-    persistToken(next)
+    persistToken(next, remember)
   }
 
-  function setUser(next: UserProfile | null) {
+  function setUser(next: UserProfile | null, remember?: boolean) {
     const prevAvatar = String((user.value as any)?.avatar_url || '').trim()
     const nextAvatar = String((next as any)?.avatar_url || '').trim()
     user.value = next
-    persistUser(next)
+    persistUser(next, remember)
     if (next && nextAvatar && nextAvatar !== prevAvatar) {
       avatarBuster.value += 1
     }

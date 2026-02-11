@@ -1,9 +1,9 @@
 <template>
-  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8 -mt-4 md:-mt-6">
     <section class="border-b border-border pb-8">
       <div class="grid gap-6 md:grid-cols-12 md:items-end">
         <div class="md:col-span-8">
-          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Choose the plan that fits you</h1>
+          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Subscribe now</h1>
           <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Use linktopath’s core features to start learning with structure.</p>
         </div>
         <div class="md:col-span-4 md:flex md:justify-end">
@@ -109,7 +109,7 @@ type BillingCycle = 'monthly' | 'yearly'
 
 type Plan = {
   id: string
-  name: 'Free' | 'Basic' | 'Pro'
+  name: string
   description: string
   suitable: string
   features: string[]
@@ -128,8 +128,10 @@ const loadError = ref('')
 
 function hasToken() {
   try {
-    const storage = (globalThis as any).localStorage
-    return Boolean(String(storage?.getItem?.('learnsmart_token') || '').trim())
+    const local = (globalThis as any).localStorage
+    const session = (globalThis as any).sessionStorage
+    const token = String(local?.getItem?.('learnsmart_token') || session?.getItem?.('learnsmart_token') || '').trim()
+    return Boolean(token)
   } catch {
     return false
   }
@@ -148,23 +150,37 @@ onMounted(async () => {
   }
 })
 
-const currentPlan = computed(() => (subscription.value?.effective_plan || 'Free') as Plan['name'])
+const currentPlanId = computed(() => {
+  const code = String(subscription.value?.plan_code || '').trim().toLowerCase()
+  if (!code) return 'free'
+  if (code.startsWith('basic_yearly')) return 'basic'
+  if (code.startsWith('basic_')) return 'pro'
+  if (code.startsWith('pro_')) return 'pro'
+  return 'free'
+})
 
-function planCta(name: Plan['name']) {
-  if (name === 'Free') return 'Continue with Free'
-  if (name === 'Basic') return currentPlan.value === 'Pro' ? 'Downgrade to Basic (coming soon)' : 'Subscribe to Basic (coming soon)'
-  return currentPlan.value === 'Basic' ? 'Upgrade to Pro (coming soon)' : 'Subscribe to Pro (coming soon)'
+const currentPlan = computed(() => {
+  if (currentPlanId.value === 'pro') return 'Pro'
+  if (currentPlanId.value === 'basic') return 'Basic'
+  return 'Free'
+})
+
+function planCta(id: Plan['id']) {
+  if (id === 'free') return 'Continue with Free'
+  if (id === 'pro') return 'Subscribe to Pro (coming soon)'
+  return 'Subscribe to Basic (coming soon)'
 }
 
-function planPriceText(name: Plan['name']) {
-  if (name === 'Free') return '$0'
-  if (name === 'Basic') return billingCycle.value === 'monthly' ? '$6' : '$60'
-  return billingCycle.value === 'monthly' ? '$12' : '$120'
+function planPriceText(id: Plan['id']) {
+  if (id === 'free') return '$0'
+  if (id === 'pro') return billingCycle.value === 'monthly' ? '$6' : '$60'
+  return '$48'
 }
 
-function planPriceSuffix(name: Plan['name']) {
-  if (name === 'Free') return ''
-  return billingCycle.value === 'monthly' ? '/mo' : '/yr'
+function planPriceSuffix(id: Plan['id']) {
+  if (id === 'free') return ''
+  if (id === 'pro') return billingCycle.value === 'monthly' ? '/mo' : '/yr'
+  return '/yr'
 }
 
 const plans = computed<Plan[]>(() => [
@@ -173,39 +189,39 @@ const plans = computed<Plan[]>(() => [
     name: 'Free',
     description: 'For getting started with learning paths',
     suitable: 'New users building their first learning paths',
-    features: ['Browse all public resources', 'Browse all public learning paths', 'Create up to 5 learning paths', 'Track your progress anytime'],
+    features: ['Browse all public resources', 'Browse all public learning paths', 'Create up to 2 learning paths', 'Add up to 80 resources', 'Track your progress anytime'],
     tagline: 'Start learning with structure using linktopath’s core features.',
-    cta: planCta('Free'),
-    priceText: planPriceText('Free'),
-    priceSuffix: planPriceSuffix('Free'),
-  },
-  {
-    id: 'basic',
-    name: 'Basic',
-    description: 'More space for personal learning management',
-    suitable: 'Learners with clear goals who need more room to organize',
-    features: ['Create up to 10 learning paths', 'See full progress anytime', 'Create up to 5 private learning paths', 'Manage your structure more flexibly'],
-    tagline: 'Balance public and private while staying focused on your plan.',
-    cta: planCta('Basic'),
-    priceText: planPriceText('Basic'),
-    priceSuffix: planPriceSuffix('Basic'),
+    cta: planCta('free'),
+    priceText: planPriceText('free'),
+    priceSuffix: planPriceSuffix('free'),
   },
   {
     id: 'pro',
     name: 'Pro',
-    description: 'For power learners and creators',
-    suitable: 'Long-term learners, heavy users, and creators',
-    features: ['Unlimited learning paths', 'AI-generated learning notes and summaries', 'AI analysis of chapters and structure', 'AI-based recommendations to optimize resources and paths'],
-    tagline: 'Make AI your learning copilot to continuously improve outcomes.',
-    cta: planCta('Pro'),
+    description: 'More space for personal learning management',
+    suitable: 'Learners with clear goals who need more room to organize',
+    features: ['Create up to 10 learning paths', 'See full progress anytime', 'Create up to 5 private learning paths', 'Manage your structure more flexibly'],
+    tagline: 'Balance public and private while staying focused on your plan.',
+    cta: planCta('pro'),
+    priceText: planPriceText('pro'),
+    priceSuffix: planPriceSuffix('pro'),
+  },
+  {
+    id: 'basic',
+    name: 'Basic',
+    description: 'Yearly billing with 20% off',
+    suitable: 'Learners who prefer yearly billing and better value',
+    features: ['Create up to 10 learning paths', 'See full progress anytime', 'Create up to 5 private learning paths', 'Manage your structure more flexibly'],
+    tagline: 'Pay yearly and save 20% compared to monthly.',
+    cta: planCta('basic'),
     highlight: true,
-    priceText: planPriceText('Pro'),
-    priceSuffix: planPriceSuffix('Pro'),
+    priceText: planPriceText('basic'),
+    priceSuffix: planPriceSuffix('basic'),
   },
 ])
 
 function isCurrent(plan: Plan) {
-  return currentPlan.value === plan.name
+  return currentPlanId.value === plan.id
 }
 
 function onAction(plan: Plan) {

@@ -4,8 +4,9 @@ import type {AxiosInstance} from 'axios'
 // Read token at runtime only; avoids importing pinia/DOM types that may break builds.
 function getToken() {
     try {
-        const storage = (globalThis as any).localStorage
-        return storage?.getItem('learnsmart_token') || ''
+        const local = (globalThis as any).localStorage
+        const session = (globalThis as any).sessionStorage
+        return local?.getItem('learnsmart_token') || session?.getItem('learnsmart_token') || ''
     } catch {
         return ''
     }
@@ -13,9 +14,13 @@ function getToken() {
 
 function clearAuth() {
   try {
-    const storage = (globalThis as any).localStorage
-    storage?.removeItem?.('learnsmart_token')
-    storage?.removeItem?.('learnsmart_user')
+    const local = (globalThis as any).localStorage
+    const session = (globalThis as any).sessionStorage
+    local?.removeItem?.('learnsmart_token')
+    local?.removeItem?.('learnsmart_user')
+    local?.removeItem?.('learnsmart_remember')
+    session?.removeItem?.('learnsmart_token')
+    session?.removeItem?.('learnsmart_user')
   } catch {
     // ignore storage errors
   }

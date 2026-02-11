@@ -30,9 +30,21 @@
                   : 'bg-foreground text-background hover:bg-foreground/90 hover:text-background'
               "
               :disabled="fromMyPaths ? false : usingThisPath"
-              @click="fromMyPaths ? startLearning() : openUseThisPath()"
+              @click="fromMyPaths ? startLearning() : startLearningFromPublic()"
             >
-              {{ fromMyPaths ? 'Start' : (usingThisPath ? 'Saving…' : 'Use this path') }}
+              Start
+            </Button>
+
+            <Button
+              v-if="!fromMyPaths"
+              type="button"
+              variant="outline"
+              size="sm"
+              class="rounded-none"
+              :disabled="usingThisPath"
+              @click="openUseThisPath()"
+            >
+              {{ usingThisPath ? 'Saving…' : 'Use this path' }}
             </Button>
           </div>
         </div>
@@ -357,6 +369,29 @@ const usingThisPath = ref(false)
 function startLearning() {
   if (!id.value) return
   router.push({ name: 'learningpath-linear', params: { id: id.value } })
+}
+
+async function startLearningFromPublic() {
+  if (usingThisPath.value) return
+  const raw = String(route.params.id || '').trim()
+  if (!/^[0-9]+$/.test(raw)) return
+
+  usingThisPath.value = true
+  try {
+    const nid = Number(raw)
+    const res = await attachPublicLearningPathToMe(nid)
+    const nextId = res?.learning_path?.id
+    const finalId = typeof nextId === 'number' ? String(nextId) : raw
+    router.push({ name: 'learningpath-linear', params: { id: finalId } })
+  } catch (e: any) {
+    showUseModal.value = true
+    useModalState.value = 'error'
+    useModalTitle.value = '保存失败'
+    useModalMessage.value = String(e?.response?.data?.detail || e?.message || '保存失败')
+    useModalHint.value = ''
+  } finally {
+    usingThisPath.value = false
+  }
 }
 
 type UseModalState = 'confirm' | 'done' | 'error'

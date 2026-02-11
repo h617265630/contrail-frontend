@@ -1,5 +1,23 @@
 <template>
-  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8 -mt-4 md:-mt-6">
+    <section class="border-b border-border pb-4">
+      <nav aria-label="Breadcrumb" class="text-xs text-muted-foreground">
+        <ol class="flex items-center gap-2">
+          <li v-for="(item, idx) in breadcrumbItems" :key="`${idx}-${item.label}`" class="flex items-center gap-2">
+            <RouterLink
+              v-if="item.to && idx !== breadcrumbItems.length - 1"
+              :to="item.to"
+              class="hover:text-foreground"
+            >
+              {{ item.label }}
+            </RouterLink>
+            <span v-else class="text-foreground font-semibold">{{ item.label }}</span>
+            <span v-if="idx !== breadcrumbItems.length - 1" class="text-muted-foreground">/</span>
+          </li>
+        </ol>
+      </nav>
+    </section>
+
     <section>
       <div class="grid gap-6 lg:grid-cols-12">
         <aside class="lg:col-span-3">
@@ -36,13 +54,6 @@
 
         <main class="lg:col-span-9 space-y-4">
           <Card className="rounded-none" :hoverable="false" padded>
-            <div>
-              <h2 class="text-xl font-semibold text-foreground">{{ tabTitle }}</h2>
-              <p class="text-sm text-muted-foreground mt-1">{{ tabSubtitle }}</p>
-            </div>
-          </Card>
-
-          <Card className="rounded-none" :hoverable="false" padded>
             <RouterView />
           </Card>
         </main>
@@ -72,4 +83,12 @@ const tabSubtitle = computed(() => {
   if (isActive('/partical/flashed-ideas')) return '记录灵感片段，快速归档。'
   return '收集图片素材，沉淀灵感来源。'
 })
+
+type BreadcrumbItem = { label: string; to?: string }
+
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+  { label: 'Home', to: '/home' },
+  { label: 'Partical', to: '/partical/image' },
+  { label: tabTitle.value },
+])
 </script>
