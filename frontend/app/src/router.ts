@@ -7,6 +7,7 @@ const LearningPath = () => import('./pages/LearningPath.vue')
 const Login = () => import('./pages/Login.vue')
 const Register = () => import('./pages/Register.vue')
 const ResourceLibrary = () => import('./pages/ResourceLibrary.vue')
+const ResourcesTrend = () => import('./pages/ResourcesTrend.vue')
 const ResourceVideo = () => import('./pages/ResourceVideo.vue')
 const ResourceDocument = () => import('./pages/ResourceDocument.vue')
 const ResourceArticle = () => import('./pages/ResourceArticle.vue')
@@ -65,6 +66,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/login', name: 'login', component: Login },
   { path: '/register', name: 'register', component: Register },
   { path: '/resources', name: 'resources', component: ResourceLibrary },
+  { path: '/resources-trend', name: 'resources-trend', component: ResourcesTrend },
   { path: '/my-resources', name: 'my-resources', component: MyResource },
   { path: '/my-resources/add', name: 'add-resource', component: AddResource },
   // My resources (typed)

@@ -48,15 +48,44 @@
           <h2 class="text-xl sm:text-2xl font-semibold text-foreground">{{ resource.title }}</h2>
 
           <div v-if="pathItemId != null" class="rounded-md border border-border bg-muted/30 p-4">
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-muted-foreground">Progress</span>
-              <span class="font-semibold text-foreground">{{ trackedProgress }}%</span>
+            <div class="flex items-center justify-between text-sm mb-2">
+              <span class="text-muted-foreground">Learning Progress</span>
+              <div class="flex items-center gap-2">
+                <input
+                  type="number"
+                  v-model.number="manualProgress"
+                  min="0"
+                  max="100"
+                  class="w-16 h-8 px-2 text-sm border border-border rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  @keyup.enter="updateManualProgress"
+                />
+                <span class="font-semibold text-foreground">%</span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  class="h-8 px-3"
+                  :disabled="progressUpdating || manualProgress === trackedProgress"
+                  @click="updateManualProgress"
+                >
+                  Update
+                </Button>
+              </div>
             </div>
-            <div class="mt-2 h-2 w-full bg-muted">
-              <div
-                class="h-2 bg-foreground transition-all duration-300"
-                :style="{ width: `${trackedProgress}%` }"
+            <div class="relative">
+              <input
+                type="range"
+                v-model.number="manualProgress"
+                min="0"
+                max="100"
+                class="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer"
+                style="accent-color: hsl(var(--foreground))"
               />
+              <div class="mt-1 flex justify-between text-xs text-muted-foreground">
+                <span>0%</span>
+                <span class="text-foreground font-medium">{{ trackedProgress }}% saved</span>
+                <span>100%</span>
+              </div>
             </div>
           </div>
 
@@ -172,6 +201,7 @@ const pathItemId = computed(() => {
 })
 
 const trackedProgress = ref(0)
+const manualProgress = ref(0)
 let progressTimer: number | null = null
 const progressUpdating = ref(false)
 const lastSentProgress = ref(0)
@@ -199,8 +229,10 @@ async function seedProgressFromServer() {
   try {
     const row = await getMyProgressForItem(pathItemId.value)
     trackedProgress.value = Number(row?.progress_percentage) || 0
+    manualProgress.value = trackedProgress.value
   } catch {
     trackedProgress.value = 0
+    manualProgress.value = 0
   }
   lastSentProgress.value = trackedProgress.value
 
@@ -288,6 +320,7 @@ async function startProgressTimer() {
     progressUpdating.value = true
     try {
       trackedProgress.value = pct
+      manualProgress.value = pct
       lastSentProgress.value = pct
       await upsertMyProgress({ path_item_id: pid, progress_percentage: pct })
     } catch {
@@ -527,6 +560,32 @@ function openOnYouTube() {
   window.open(url, '_blank', 'noopener,noreferrer')
 }
 
+async function updateManualProgress() {
+  const pid = pathItemId.value
+  if (pid == null) return
+  if (progressUpdating.value) return
+  
+  // Validate and clamp progress value
+  let pct = Math.round(Number(manualProgress.value) || 0)
+  pct = Math.max(0, Math.min(100, pct))
+  manualProgress.value = pct
+  
+  if (pct === trackedProgress.value) return
+  
+  progressUpdating.value = true
+  try {
+    trackedProgress.value = pct
+    lastSentProgress.value = pct
+    await upsertMyProgress({ path_item_id: pid, progress_percentage: pct })
+  } catch (e) {
+    console.error('Failed to update progress:', e)
+    // Revert on error
+    manualProgress.value = trackedProgress.value
+  } finally {
+    progressUpdating.value = false
+  }
+}
+
 async function markComplete() {
   const pid = pathItemId.value
   if (pid == null) return
@@ -534,6 +593,7 @@ async function markComplete() {
   progressUpdating.value = true
   try {
     trackedProgress.value = 100
+    manualProgress.value = 100
     lastSentProgress.value = 100
     await upsertMyProgress({ path_item_id: pid, progress_percentage: 100 })
   } catch {

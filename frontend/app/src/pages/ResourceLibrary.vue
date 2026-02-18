@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-background">
     <div class="container mx-auto px-4 py-6 -mt-4 md:-mt-6">
-      <main class="flex flex-col gap-8">
+      <main class="flex flex-col gap-4">
 
     <Card as="section" :hoverable="false" class="mx-auto w-full max-w-6xl rounded-none">
       <div class="p-3">

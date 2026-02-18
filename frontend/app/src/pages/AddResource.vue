@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8 -mt-4 md:-mt-6">
     <Card as="section" :hoverable="false" class="rounded-none">
       <div class="border-b border-border bg-background px-6 py-4">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -209,17 +209,30 @@
                   <!-- Weight -->
                   <div>
                     <label class="block text-sm font-medium text-foreground mb-2">Weight</label>
-                    <select
-                      v-model="selectedWeight"
-                      class="w-full h-10 px-3 border border-border rounded-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background bg-background cursor-pointer"
-                    >
-                      <option value="">Select weight</option>
-                      <option value="soil">Soil</option>
-                      <option value="iron">Iron</option>
-                      <option value="bronze">Bronze</option>
-                      <option value="silver">Silver</option>
-                      <option value="gold">Gold</option>
-                    </select>
+                    <div class="flex gap-3 items-start">
+                      <select
+                        v-model="selectedWeight"
+                        class="flex-1 h-10 px-3 border border-border rounded-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background bg-background cursor-pointer"
+                      >
+                        <option value="">Select weight</option>
+                        <option value="soil">Soil</option>
+                        <option value="iron">Iron</option>
+                        <option value="bronze">Bronze</option>
+                        <option value="silver">Silver</option>
+                        <option value="gold">Gold</option>
+                        <option value="obsidian">Obsidian Neumorphism</option>
+                        <option value="sketch">Sketch / Wireframe</option>
+                        <option value="metallic">Metallic</option>
+                      </select>
+                      <div
+                        v-if="selectedWeight"
+                        :class="['w-20 h-20 rounded-md border shadow-sm transition-all duration-300', weightCardClass]"
+                      >
+                        <div class="h-full flex items-center justify-center text-xs font-semibold" :class="weightTextClass">
+                          {{ weightLabel }}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -682,13 +695,16 @@ function getErrorMessage(e: any, fallback: string) {
   return fallback
 }
 
-type Weight = '' | 'soil' | 'iron' | 'bronze' | 'silver' | 'gold'
+type Weight = '' | 'soil' | 'iron' | 'bronze' | 'silver' | 'gold' | 'obsidian' | 'sketch' | 'metallic'
 
 function toManualWeight(w: Weight): number {
   if (w === 'gold') return 5
   if (w === 'silver') return 4
   if (w === 'bronze') return 3
   if (w === 'iron') return 2
+  if (w === 'metallic') return 6
+  if (w === 'obsidian') return 7
+  if (w === 'sketch') return 8
   return 1
 }
 
@@ -699,7 +715,31 @@ const weightCardClass = computed(() => {
   if (w === 'bronze') return 'border-amber-300 bg-amber-50'
   if (w === 'silver') return 'border-zinc-200 bg-zinc-50'
   if (w === 'gold') return 'border-yellow-300 bg-yellow-50'
+  if (w === 'obsidian') return 'border-gray-800 bg-gradient-to-br from-gray-900 to-gray-800 shadow-inner'
+  if (w === 'sketch') return 'border-dashed border-2 border-gray-400 bg-white'
+  if (w === 'metallic') return 'border-gray-400 bg-gradient-to-br from-gray-300 via-gray-200 to-gray-300 shadow-lg'
   return 'border-border bg-card'
+})
+
+const weightTextClass = computed(() => {
+  const w = (selectedWeight.value || '') as Weight
+  if (w === 'obsidian') return 'text-gray-300'
+  if (w === 'sketch') return 'text-gray-600'
+  if (w === 'metallic') return 'text-gray-700'
+  return 'text-foreground'
+})
+
+const weightLabel = computed(() => {
+  const w = (selectedWeight.value || '') as Weight
+  if (w === 'soil') return 'SOIL'
+  if (w === 'iron') return 'IRON'
+  if (w === 'bronze') return 'BRONZE'
+  if (w === 'silver') return 'SILVER'
+  if (w === 'gold') return 'GOLD'
+  if (w === 'obsidian') return 'OBSIDIAN'
+  if (w === 'sketch') return 'SKETCH'
+  if (w === 'metallic') return 'METAL'
+  return ''
 })
 
 const selectedPlatformPlaceholder = computed(() => {

@@ -151,11 +151,11 @@
                 <span class="text-xs text-muted-foreground">Go</span>
               </RouterLink>
               <RouterLink
-                to="/tools"
+                to="/my-resources"
                 class="flex items-center justify-between rounded-xl px-3 py-2 transition-colors hover:bg-accent hover:text-accent-foreground"
               >
-                <span>Tools</span>
-                <span class="text-xs text-muted-foreground">DB</span>
+                <span>{{ t('My Resources') }}</span>
+                <span class="text-xs text-muted-foreground">Hot</span>
               </RouterLink>
               <RouterLink
                 to="/my-paths"
@@ -164,8 +164,6 @@
                 <span>{{ t('My Paths') }}</span>
                 <span class="text-xs text-muted-foreground">Go</span>
               </RouterLink>
-           
-
               <RouterLink
                 to="/partical"
                 class="flex items-center justify-between rounded-xl px-3 py-2 transition-colors hover:bg-accent hover:text-accent-foreground"
@@ -173,13 +171,12 @@
                 <span>Partical</span>
                 <span class="text-xs text-muted-foreground">Go</span>
               </RouterLink>
-
               <RouterLink
-                to="/my-resources"
+                to="/tools"
                 class="flex items-center justify-between rounded-xl px-3 py-2 transition-colors hover:bg-accent hover:text-accent-foreground"
               >
-                <span>{{ t('My Resources') }}</span>
-                <span class="text-xs text-muted-foreground">Hot</span>
+                <span>Tools</span>
+                <span class="text-xs text-muted-foreground">DB</span>
               </RouterLink>
               <RouterLink
                 to="/creator"

@@ -8,6 +8,7 @@ from app.routers import category
 from app.routers import reader
 from app.routers import user_image
 from app.routers import user_file
+from app.routers import trending
 from app.routers.rbac import role, user, permission, user_role, role_permission
 
 
@@ -91,6 +92,7 @@ app.include_router(user_image.router)
 app.include_router(user_file.router)
 app.include_router(subscription.router)
 app.include_router(webhooks.router)
+app.include_router(trending.router)
 
 @app.on_event("startup")
 async def startup_event():
