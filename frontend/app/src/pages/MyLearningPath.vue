@@ -554,7 +554,7 @@ const particalPoolPaths = computed(() => paths.value.filter(p => normalizePathTy
 
 const allGroupedEmpty = computed(() => !linearPaths.value.length && !structuredPaths.value.length && !particalPoolPaths.value.length)
 
-const viewMode = ref<'grid' | 'list'>('grid')
+const viewMode = ref<string>('grid')
 
 const coverByPathId = ref<Record<number, string>>({})
 

@@ -24,11 +24,11 @@
             <div class="p-4 flex flex-col gap-3">
               <div class="space-y-1">
                 <h3 class="text-gray-900 font-semibold text-sm leading-snug line-clamp-2" :title="path.title">{{ path.title }}</h3>
-                <p class="text-gray-600 text-xs line-clamp-2" :title="path.description">{{ path.description }}</p>
+                <p class="text-gray-600 text-xs line-clamp-2" :title="path.description ?? ''">{{ path.description }}</p>
               </div>
               <div class="flex items-center justify-between text-xs text-gray-500">
                 <span>{{ path.category_name || '未分类' }}</span>
-                <span>{{ path.level || 'Beginner' }}</span>
+                <span>{{ (path as any).level || 'Beginner' }}</span>
               </div>
             </div>
           </Card>

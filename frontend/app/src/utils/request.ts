@@ -41,8 +41,8 @@ function redirectToLogin() {
 }
 
 const request:AxiosInstance =  axios.create({
-  // FastAPI base URL
-    baseURL:'http://localhost:8000',
+  // FastAPI base URL — use env var for production, fallback to localhost for dev
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
     timeout:10000,
 })
 
