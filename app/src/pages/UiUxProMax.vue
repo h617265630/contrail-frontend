@@ -82,7 +82,7 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 
 // Load the skill markdown as a raw string (no extra markdown renderer dependency)
-import skillRaw from '../../../../skills/ui-ux-pro-max/SKILL.md?raw'
+import skillRaw from '../assets/skills/ui-ux-pro-max.md?raw'
 
 type SkillSection = {
   key: string
