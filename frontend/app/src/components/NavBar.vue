@@ -154,7 +154,7 @@
                 to="/my-resources"
                 class="flex items-center justify-between rounded-xl px-3 py-2 transition-colors hover:bg-accent hover:text-accent-foreground"
               >
-                <span>{{ t('My Resources') }}</span>
+                <span>{{ t('My Collection') }}</span>
                 <span class="text-xs text-muted-foreground">Hot</span>
               </RouterLink>
               <RouterLink

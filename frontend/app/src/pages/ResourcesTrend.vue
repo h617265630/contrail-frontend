@@ -73,7 +73,7 @@
     </Card>
 
       <div v-else class="mt-4 mx-auto w-full max-w-6xl">
-        <div class="grid grid-cols-1 gap-4 justify-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+        <div class="grid grid-cols-1 gap-4 justify-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 mb-8">
           <Card
             v-for="resource in filteredResources"
             :key="resource.id"
@@ -113,6 +113,20 @@
               </div>
             </div>
           </Card>
+        </div>
+        
+        <!-- Loading more indicator -->
+        <div v-if="loadingMore" class="mt-8 text-center py-8">
+          <p class="text-sm text-muted-foreground">Loading more resources...</p>
+        </div>
+        
+        <!-- Show more button or end message -->
+        <div v-else-if="canShowMore || (hasMoreData && displayedCount >= allFilteredResources.length)" class="mt-8 text-center py-8">
+          <p class="text-xs text-muted-foreground mb-4">Scroll down to load more</p>
+        </div>
+        
+        <div v-else-if="filteredResources.length > 0" class="mt-8 text-center py-8">
+          <p class="text-sm text-muted-foreground">✨ You've reached the end</p>
         </div>
       </div>
       </main>
@@ -205,7 +219,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { BookOpen, ChevronDown, Filter, Search } from 'lucide-vue-next'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -214,22 +228,28 @@ import { getCombinedTrending, type TrendingItem } from '../api/trending'
 
 const fallbackThumb = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=225&fit=crop'
 
-const resources = ref<TrendingItem[]>([])
+const allResources = ref<TrendingItem[]>([])  // All loaded resources
+const displayedCount = ref(15)  // Number of items to display
+const itemsPerPage = 15  // Load 15 more items each time
 const loading = ref(false)
+const loadingMore = ref(false)
 const error = ref('')
 const selectedSource = ref<string>('all')
 const searchQuery = ref('')
+const hasMoreData = ref(true)  // Whether there's more data to load from API
+const currentPage = ref(1)  // Track current page for GitHub API
 
 const searchInputEl = ref<HTMLInputElement | null>(null)
 
 const activeResourceId = ref<string | number | null>(null)
 const activeResource = computed(() => {
   if (activeResourceId.value === null) return null
-  return resources.value.find(r => r.id === activeResourceId.value) || null
+  return allResources.value.find(r => r.id === activeResourceId.value) || null
 })
 
-const filteredResources = computed(() => {
-  return resources.value.filter(r => {
+// All filtered resources (based on search and source filter)
+const allFilteredResources = computed(() => {
+  return allResources.value.filter(r => {
     const matchesSource = selectedSource.value === 'all' || r.platform.toLowerCase() === selectedSource.value.toLowerCase()
     const q = searchQuery.value.trim().toLowerCase()
     if (!q) return matchesSource
@@ -238,6 +258,16 @@ const filteredResources = computed(() => {
     const desc = (r.summary || '').toLowerCase()
     return matchesSource && (title.includes(q) || desc.includes(q))
   })
+})
+
+// Resources to display (limited by displayedCount for lazy loading)
+const filteredResources = computed(() => {
+  return allFilteredResources.value.slice(0, displayedCount.value)
+})
+
+// Check if we can show more items from already loaded data
+const canShowMore = computed(() => {
+  return displayedCount.value < allFilteredResources.value.length
 })
 
 function getPlatformColor(platform?: string) {
@@ -263,8 +293,17 @@ function formatNumber(num: number) {
   return String(num)
 }
 
-async function loadTrendingData() {
-  loading.value = true
+async function loadTrendingData(reset = true) {
+  if (reset) {
+    loading.value = true
+    currentPage.value = 1
+    allResources.value = []
+    displayedCount.value = itemsPerPage
+    hasMoreData.value = true
+  } else {
+    loadingMore.value = true
+  }
+  
   error.value = ''
   try {
     // Note: YouTube API key should be configured in environment or settings
@@ -275,7 +314,20 @@ async function loadTrendingData() {
       // youtube_api_key: 'YOUR_API_KEY_HERE', // User needs to configure this
     })
     
-    resources.value = data.items || []
+    if (reset) {
+      allResources.value = data.items || []
+    } else {
+      // Append new items (in real scenario, you'd fetch next page)
+      // For now, since API doesn't support pagination, we'll just show more from existing data
+      allResources.value = [...allResources.value, ...(data.items || [])]
+    }
+    
+    // Check if we got fewer items than requested (means no more data)
+    if (!data.items || data.items.length < 30) {
+      hasMoreData.value = false
+    }
+    
+    currentPage.value++
     
     // Show warning if YouTube failed
     if (data.sources?.youtube?.error && !data.sources.youtube.error.includes('No YouTube API key')) {
@@ -283,9 +335,38 @@ async function loadTrendingData() {
     }
   } catch (e: any) {
     error.value = String(e?.response?.data?.detail || e?.message || 'Failed to load trending resources')
-    resources.value = []
+    if (reset) {
+      allResources.value = []
+    }
   } finally {
     loading.value = false
+    loadingMore.value = false
+  }
+}
+
+function loadMoreItems() {
+  // If we have more filtered items to show from already loaded data
+  if (canShowMore.value) {
+    displayedCount.value += itemsPerPage
+  }
+  // If we've shown all loaded items and there might be more data from API
+  else if (hasMoreData.value && !loadingMore.value) {
+    // In a real scenario with paginated API, fetch next page here
+    // For now, just increase display count
+    displayedCount.value += itemsPerPage
+  }
+}
+
+function handleScroll() {
+  const scrollTop = window.scrollY || document.documentElement.scrollTop
+  const windowHeight = window.innerHeight
+  const documentHeight = document.documentElement.scrollHeight
+  
+  // Trigger load more when user scrolls to 80% of the page
+  const scrollPercentage = (scrollTop + windowHeight) / documentHeight
+  
+  if (scrollPercentage > 0.8 && !loading.value && !loadingMore.value) {
+    loadMoreItems()
   }
 }
 
@@ -306,6 +387,11 @@ function openSource(resource: TrendingItem) {
 
 onMounted(() => {
   loadTrendingData()
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
 })
 </script>
 

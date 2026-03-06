@@ -6,17 +6,30 @@
     </main>
     <AppFooter />
 
-    <div v-if="showOnboarding" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-      <div class="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div v-if="showOnboarding" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4" @click.self="skipOnboarding">
+      <div class="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
         <div class="flex items-center justify-between border-b border-gray-200 p-6">
           <h2 class="text-lg font-semibold text-gray-900">Welcome</h2>
-          <button
-            type="button"
-            class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100"
-            @click="skipOnboarding"
-          >
-            Skip
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100"
+              @click="skipOnboarding"
+            >
+              Skip
+            </button>
+            <button
+              type="button"
+              class="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              @click="skipOnboarding"
+              aria-label="Close"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div class="p-6">
@@ -26,7 +39,7 @@
             <div v-if="onboardingLoading" class="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
               Loading categories…
             </div>
-            <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div v-else class="grid grid-cols-1 gap-3">
               <label
                 v-for="c in onboardingCategories"
                 :key="c.id"
@@ -48,7 +61,7 @@
 
           <div v-else class="space-y-4">
             <div class="text-sm text-gray-700">Quick tour</div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 gap-3">
               <div class="rounded-xl border border-gray-200 bg-white p-4">
                 <div class="font-semibold text-gray-900">Resources</div>
                 <div class="mt-1 text-sm text-gray-600">Browse public resources and open details.</div>

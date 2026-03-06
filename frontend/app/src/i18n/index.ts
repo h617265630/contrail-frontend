@@ -44,7 +44,7 @@ const zhCN: Record<string, string> = {
   'Search...': '搜索…',
   'User menu': '用户菜单',
   'My Paths': '我的学习路径',
-  'My Resources': '我的资源收藏',
+  'My Collection': '我的收藏',
   'Creator Center': '创作中心',
   'Log out': '退出登录',
   'CreatePath': '创建路径',
