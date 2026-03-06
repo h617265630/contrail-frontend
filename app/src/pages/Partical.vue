@@ -1,0 +1,94 @@
+<template>
+  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8 -mt-4 md:-mt-6">
+    <section class="border-b border-border pb-4">
+      <nav aria-label="Breadcrumb" class="text-xs text-muted-foreground">
+        <ol class="flex items-center gap-2">
+          <li v-for="(item, idx) in breadcrumbItems" :key="`${idx}-${item.label}`" class="flex items-center gap-2">
+            <RouterLink
+              v-if="item.to && idx !== breadcrumbItems.length - 1"
+              :to="item.to"
+              class="hover:text-foreground"
+            >
+              {{ item.label }}
+            </RouterLink>
+            <span v-else class="text-foreground font-semibold">{{ item.label }}</span>
+            <span v-if="idx !== breadcrumbItems.length - 1" class="text-muted-foreground">/</span>
+          </li>
+        </ol>
+      </nav>
+    </section>
+
+    <section>
+      <div class="grid gap-6 lg:grid-cols-12">
+        <aside class="lg:col-span-3">
+          <Card className="rounded-none" :hoverable="false" padded>
+            <div class="space-y-1">
+              <p class="text-sm font-semibold text-foreground">Partical</p>
+              <p class="text-xs text-muted-foreground">素材收集与灵感记录</p>
+            </div>
+
+            <div class="mt-4 space-y-2">
+              <RouterLink to="/partical/image" class="block">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  class="w-full justify-start rounded-none"
+                  :class="isActive('/partical/image') ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
+                >
+                  Image
+                </Button>
+              </RouterLink>
+              <RouterLink to="/partical/flashed-ideas" class="block">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  class="w-full justify-start rounded-none"
+                  :class="isActive('/partical/flashed-ideas') ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'text-foreground hover:bg-muted/30'"
+                >
+                  Flashed Ideas
+                </Button>
+              </RouterLink>
+            </div>
+          </Card>
+        </aside>
+
+        <main class="lg:col-span-9 space-y-4">
+          <Card className="rounded-none" :hoverable="false" padded>
+            <RouterView />
+          </Card>
+        </main>
+      </div>
+    </section>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
+import Card from '../components/ui/Card.vue'
+import { Button } from '../components/ui/button'
+
+const route = useRoute()
+
+function isActive(prefix: string) {
+  return route.path.startsWith(prefix)
+}
+
+const tabTitle = computed(() => {
+  if (isActive('/partical/flashed-ideas')) return 'Flashed Ideas'
+  return 'Image'
+})
+
+const tabSubtitle = computed(() => {
+  if (isActive('/partical/flashed-ideas')) return '记录灵感片段，快速归档。'
+  return '收集图片素材，沉淀灵感来源。'
+})
+
+type BreadcrumbItem = { label: string; to?: string }
+
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+  { label: 'Home', to: '/home' },
+  { label: 'Partical', to: '/partical/image' },
+  { label: tabTitle.value },
+])
+</script>

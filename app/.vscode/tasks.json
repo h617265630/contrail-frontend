@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "删除 frontend/app/src/data 目录",
+			"type": "shell",
+			"command": "rm -rf ./src/data",
+			"args": [],
+			"group": "build"
+		}
+	]
+}
