@@ -334,6 +334,7 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { useAuthStore } from '../stores/auth'
 import { useI18n, type AppLang } from '../i18n'
+import { toBackendAbsoluteUrl } from '../utils/backendUrl'
 import { getOrCreateDefaultAvatarForUser } from '../utils/avatars'
 
 const RouterLinkComp = RouterLink
@@ -360,9 +361,7 @@ const displayName = computed(() => user.value?.username || 'User')
 const avatarUrl = computed(() => {
   const explicit = String((user.value as any)?.avatar_url || '').trim()
   if (explicit) {
-    const abs = explicit.startsWith('http://') || explicit.startsWith('https://')
-      ? explicit
-      : `http://localhost:8000${explicit.startsWith('/') ? '' : '/'}${explicit}`
+    const abs = toBackendAbsoluteUrl(explicit)
     const sep0 = abs.includes('?') ? '&' : '?'
     const withV = `${abs}${sep0}v=${avatarBuster.value}`
     const sep = explicit.includes('?') ? '&' : '?'

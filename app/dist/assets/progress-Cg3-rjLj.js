@@ -1,0 +1,1 @@
+import{D as e}from"./index-C35qJWTs.js";function t(r){return e.get("/progress/me",{params:{learning_path_id:r}})}function o(r){return e.get(`/progress/me/item/${r}`)}function n(r){return e.put("/progress/me",r)}export{o as g,t as l,n as u};

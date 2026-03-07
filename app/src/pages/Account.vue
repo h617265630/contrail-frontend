@@ -91,6 +91,7 @@ import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '../stores/auth'
 import { getOrCreateDefaultAvatarForUser } from '../utils/avatars'
+import { toBackendAbsoluteUrl } from '../utils/backendUrl'
 import Card from '../components/ui/Card.vue'
 
 const route = useRoute()
@@ -108,10 +109,7 @@ const initials = computed(() => displayName.value.slice(0, 2).toUpperCase())
 const avatarUrl = computed(() => {
   const explicit = String((user.value as any)?.avatar_url || '').trim()
   if (explicit) {
-    const abs = explicit.startsWith('http://') || explicit.startsWith('https://')
-      ? explicit
-      : `http://localhost:8000${explicit.startsWith('/') ? '' : '/'}${explicit}`
-    return abs
+    return toBackendAbsoluteUrl(explicit)
   }
   const uid = Number((user.value as any)?.id || 0)
   return uid ? getOrCreateDefaultAvatarForUser(uid) : ''

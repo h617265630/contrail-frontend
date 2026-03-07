@@ -98,6 +98,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '../stores/auth'
 import { getOrCreateDefaultAvatarForUser } from '../utils/avatars'
+import { toBackendAbsoluteUrl } from '../utils/backendUrl'
 import Card from '../components/ui/Card.vue'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -117,9 +118,7 @@ const initials = computed(() => displayName.value.slice(0, 2).toUpperCase())
 const avatarUrl = computed(() => {
   const explicit = String((user.value as any)?.avatar_url || '').trim()
   if (explicit) {
-    const abs = explicit.startsWith('http://') || explicit.startsWith('https://')
-      ? explicit
-      : `http://localhost:8000${explicit.startsWith('/') ? '' : '/'}${explicit}`
+    const abs = toBackendAbsoluteUrl(explicit)
     const sep = abs.includes('?') ? '&' : '?'
     return `${abs}${sep}v=${avatarBuster.value}`
   }
