@@ -41,8 +41,12 @@ function redirectToLogin() {
 }
 
 const request:AxiosInstance =  axios.create({
-  // FastAPI base URL — use env var for production, fallback to localhost for dev
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
+  // FastAPI base URL
+  // - Dev: fallback to localhost
+  // - Prod: fallback to api.learnpathly.com to avoid accidentally shipping localhost
+    baseURL:
+      import.meta.env.VITE_API_BASE_URL ||
+      (import.meta.env.PROD ? 'https://api.learnpathly.com' : 'http://localhost:8000'),
     timeout:10000,
 })
 

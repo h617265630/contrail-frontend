@@ -1,4 +1,7 @@
-const API_BASE = String(import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '')
+const API_BASE = String(
+  import.meta.env.VITE_API_BASE_URL ||
+    (import.meta.env.PROD ? 'https://api.learnpathly.com' : 'http://localhost:8000'),
+).replace(/\/$/, '')
 
 export function toBackendAbsoluteUrl(input: string): string {
   const explicit = String(input || '').trim()
