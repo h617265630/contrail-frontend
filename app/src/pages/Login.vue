@@ -21,6 +21,8 @@
               type="text"
               v-model="email"
               @blur="onBlur('email')"
+              :aria-invalid="errors.email ? 'true' : 'false'"
+              :aria-describedby="errors.email ? 'login-email-error' : undefined"
               :class="[
                 'pl-9',
                 errors.email ? 'border-destructive' : '',
@@ -29,7 +31,7 @@
               @update:modelValue="onInput('email')"
             />
 
-            <span v-if="errors.email" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none">
+            <span id="login-email-error" v-if="errors.email" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none" role="alert">
               {{ errors.email }}
             </span>
           </div>
@@ -44,6 +46,8 @@
               :type="showPassword ? 'text' : 'password'"
               v-model="password"
               @blur="onBlur('password')"
+              :aria-invalid="errors.password ? 'true' : 'false'"
+              :aria-describedby="errors.password ? 'login-password-error' : undefined"
               :class="[
                 'pl-9 pr-10',
                 errors.password ? 'border-destructive' : '',
@@ -62,15 +66,15 @@
               <Eye v-else class="w-4 h-4" />
             </Button>
 
-            <span v-if="errors.password" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none">
+            <span id="login-password-error" v-if="errors.password" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none" role="alert">
               {{ errors.password }}
             </span>
           </div>
         </div>
 
         <div class="flex items-center justify-between">
-          <label class="flex items-center">
-            <input v-model="remember" type="checkbox" class="w-4 h-4 border-input rounded-md" />
+          <label for="login-remember" class="flex items-center">
+            <input id="login-remember" v-model="remember" type="checkbox" class="w-4 h-4 border-input rounded-md" />
             <span class="ml-2 text-sm text-muted-foreground">Remember me</span>
           </label>
           <a href="#" class="text-sm text-foreground underline underline-offset-4">Forgot password?</a>
@@ -81,7 +85,7 @@
           :disabled="loading || !isFormValid"
           variant="outline"
           size="lg"
-          class="w-full rounded-none border-border bg-[#8ecbff] text-white transition-all hover:-translate-y-px hover:bg-[#8ecbff]/90 hover:text-white hover:shadow-sm active:translate-y-0"
+          class="w-full rounded-none border-border bg-primary text-primary-foreground transition-all hover:bg-primary/90 hover:text-primary-foreground hover:shadow-sm"
         >
           {{ loading ? 'Signing in...' : 'Sign In' }}
         </Button>
@@ -288,7 +292,7 @@ onMounted(() => {
     theme: 'outline',
     size: 'large',
     shape: 'rectangular',
-    width: 360,
+    width: Math.min(360, window.innerWidth - 32),
   })
 })
 

@@ -10,6 +10,11 @@
 				aria-hidden="true"
 				:src="bannerSlides[activeBannerIndex].image"
 				alt=""
+				loading="eager"
+				decoding="async"
+				fetchpriority="high"
+				width="1600"
+				height="900"
 				class="absolute inset-0 h-full w-full object-cover"
 			/>
 			<div class="absolute inset-0 bg-black/35" aria-hidden="true" />
@@ -18,7 +23,7 @@
 					<template v-if="activeBannerIndex === 0">
 						<h1 class="text-xl md:text-2xl font-bold leading-tight">{{ t('Build system-level skills with structured learning paths') }}</h1>
 						<p class="text-white/90">{{ t('This is a Learning Path Platform: create and discover great learning paths, turn scattered knowledge into an actionable plan, and track progress as you improve over time.') }}</p>
-						<p class="text-white-200 italic text-xs tracking-wide">
+						<p class="text-white/80 italic text-xs tracking-wide">
 							Read
 							<Button
 								:as="RouterLinkComp"
@@ -37,19 +42,19 @@
 								to="/learningpool"
 								variant="default"
 								size="sm"
-								class="rounded-none bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+								class="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								Start now
 								<span aria-hidden>→</span>
 							</Button>
 							<Button
 								:as="RouterLinkComp"
-								to="/my-paths"
+								to="/learningpool"
 								variant="outline"
 								size="sm"
 								class="rounded-none"
 							>
-								View all paths
+								Browse pool
 							</Button>
 							<Button
 								:as="RouterLinkComp"
@@ -71,7 +76,7 @@
 								to="/learningpool"
 								variant="default"
 								size="sm"
-								class="rounded-none bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+								class="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								Explore
 								<span aria-hidden>→</span>
@@ -88,11 +93,6 @@
 						</div>
 					</template>
 				</div>
-				<div class="hidden md:block w-64 h-40 bg-white/10 backdrop-blur border border-white/20" aria-hidden>
-					<div class="h-full w-full flex items-center justify-center text-white/70 text-sm">
-						{{ bannerSlides[activeBannerIndex].tagline }}
-					</div>
-				</div>
 			</div>
 
 
@@ -101,18 +101,13 @@
 		<section class="border-b border-border pb-8">
 			<div class="grid gap-6 md:grid-cols-12 md:items-end">
 				<div class="md:col-span-8">
-					<h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">
-						{{ t('Build system-level skills with structured learning paths') }}
-					</h1>
-					<p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-						{{ t('This is a Learning Path Platform: create and discover great learning paths, turn scattered knowledge into an actionable plan, and track progress as you improve over time.') }}
-					</p>
-					<p class="mt-3 text-xs text-muted-foreground">
+					<h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Quick Actions</h2>
+					<p class="mt-2 text-xs text-muted-foreground">
 						Read
 						<RouterLink to="/about" class="mx-1 underline underline-offset-4 hover:text-foreground">
 							About
 						</RouterLink>
-						for a quick overview.
+						for a quick overview, then jump to your next task.
 					</p>
 				</div>
 				<div class="md:col-span-4 md:flex md:justify-end">
@@ -122,7 +117,7 @@
 							to="/learningpool"
 							variant="default"
 							size="sm"
-							class="rounded-none bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+							class="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed"
 						>
 							Start now
 						</Button>
@@ -174,8 +169,8 @@
 					class="block"
 				>
 					<Card as="article" :hoverable="true" className="rounded-md">
-						<div class="relative h-28 bg-gray-100">
-							<img :src="path.thumbnail" :alt="path.title" class="w-full h-full object-cover" />
+						<div class="relative h-28 bg-muted">
+							<img :src="path.thumbnail" :alt="path.title" loading="lazy" decoding="async" width="320" height="112" class="w-full h-full object-cover" />
 						</div>
 						<div class="p-4 flex flex-col gap-3">
 							<div class="space-y-1">
@@ -209,7 +204,7 @@
 					Open LearningPool
 				</Button>
 			</div>
-			<div class="columns-1 sm:columns-2 md:columns-3 lg:columns-6 gap-4">
+			<div class="columns-1 sm:columns-2 md:columns-3 lg:columns-5 gap-4">
 				<RouterLink
 					v-for="(path, idx) in randomPoolPaths"
 					:key="`${path.id}-${idx}`"
@@ -217,8 +212,8 @@
 					class="block mb-4 break-inside-avoid"
 				>
 					<Card as="article" :hoverable="true" className="rounded-md">
-						<div :class="['relative bg-gray-100', randomCoverHeightClass(idx)]">
-							<img :src="path.thumbnail" :alt="path.title" class="w-full h-full object-cover" />
+						<div :class="['relative bg-muted', randomCoverHeightClass(idx)]">
+							<img :src="path.thumbnail" :alt="path.title" loading="lazy" decoding="async" width="320" height="192" class="w-full h-full object-cover" />
 						</div>
 						<div class="p-4 flex flex-col gap-3">
 							<div class="space-y-1">
@@ -278,12 +273,14 @@ const bannerSlides = [
 
 const activeBannerIndex = ref(0)
 let bannerTimer: ReturnType<typeof setInterval> | null = null
+let prefersReducedMotion = false
 
 function nextBanner() {
 	activeBannerIndex.value = (activeBannerIndex.value + 1) % bannerSlides.length
 }
 
 function startCarousel() {
+	if (prefersReducedMotion) return
 	if (bannerTimer) return
 	bannerTimer = setInterval(() => {
 		nextBanner()
@@ -342,6 +339,7 @@ function pickRandomWithReplacement<T>(items: T[], count: number) {
 const randomPoolPaths = ref<FeaturedPath[]>([])
 
 onMounted(async () => {
+	prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 	startCarousel()
 	try {
 		const db = await listPublicLearningPaths()

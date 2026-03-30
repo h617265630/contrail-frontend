@@ -4,20 +4,20 @@
       <RouterLink to="/home" class="flex shrink-0 items-center gap-2 font-semibold text-foreground">
         <img
           src="/favicon.svg"
-          alt="Contrail"
+          alt="Learnpathly"
           class="h-9 w-9 rounded-sm"
         />
         <span class="brand-wordmark text-lg text-foreground">
-          <span class="font-semibold">Contrail</span>
+          <span class="font-semibold">Learnpathly</span>
         </span>
       </RouterLink>
-      <nav class="hidden md:flex items-center gap-6 text-[11px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+      <nav class="hidden md:flex items-center gap-6 text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
         <Button
           :as="RouterLinkComp"
           to="/learningpool"
           variant="ghost"
           size="sm"
-          class="h-9 rounded-none px-0 py-0 hover:bg-transparent border-b-2 text-[11px]"
+          class="h-9 rounded-none px-0 py-0 hover:bg-transparent border-b-2 text-xs"
           :class="isActive('/learningpool') ? 'text-foreground border-foreground' : 'border-transparent hover:text-foreground hover:border-foreground/30'"
         >
           LearningPool
@@ -27,7 +27,7 @@
           to="/notification"
           variant="ghost"
           size="sm"
-          class="h-9 rounded-none px-0 py-0 hover:bg-transparent border-b-2 text-[11px]"
+          class="h-9 rounded-none px-0 py-0 hover:bg-transparent border-b-2 text-xs"
           :class="isActive('/notification') ? 'text-foreground border-foreground' : 'border-transparent hover:text-foreground hover:border-foreground/30'"
         >
           Notification
@@ -37,7 +37,7 @@
           to="/about"
           variant="ghost"
           size="sm"
-          class="h-9 rounded-none px-0 py-0 hover:bg-transparent border-b-2 text-[11px]"
+          class="h-9 rounded-none px-0 py-0 hover:bg-transparent border-b-2 text-xs"
           :class="isActive('/about') ? 'text-foreground border-foreground' : 'border-transparent hover:text-foreground hover:border-foreground/30'"
         >
           About
@@ -47,7 +47,7 @@
           to="/plan"
           variant="ghost"
           size="sm"
-          class="h-9 rounded-none px-0 py-0 hover:bg-transparent border-b-2 text-[11px]"
+          class="h-9 rounded-none px-0 py-0 hover:bg-transparent border-b-2 text-xs"
           :class="isActive('/plan') ? 'text-foreground border-foreground' : 'border-transparent hover:text-foreground hover:border-foreground/30'"
         >
           Plan
@@ -57,7 +57,7 @@
           to="/resources"
           variant="ghost"
           size="sm"
-          class="h-9 rounded-none px-0 py-0 hover:bg-transparent border-b-2 text-[11px]"
+          class="h-9 rounded-none px-0 py-0 hover:bg-transparent border-b-2 text-xs"
           :class="isActive('/resources') ? 'text-foreground border-primary' : 'border-transparent hover:text-foreground hover:border-foreground/30'"
         >
           <Library class="h-4 w-4" />
@@ -104,6 +104,8 @@
           class="relative hidden md:block"
           @mouseenter="openDesktopMenu"
           @mouseleave="scheduleDesktopMenuClose"
+          @focusin="openDesktopMenu"
+          @focusout="handleDesktopMenuFocusOut"
         >
           <Button
             type="button"
@@ -111,10 +113,15 @@
             size="sm"
             class="h-9 rounded-none border-0 bg-transparent px-1 py-1 text-left font-semibold hover:bg-transparent"
             :aria-label="t('User menu')"
+            :aria-expanded="desktopMenuOpen ? 'true' : 'false'"
+            aria-haspopup="menu"
+            @keydown.enter.prevent="toggleDesktopMenu"
+            @keydown.space.prevent="toggleDesktopMenu"
+            @keydown.escape.prevent="closeDesktopMenu"
           >
             <div class="h-8 w-8 shrink-0 overflow-hidden rounded-full">
               <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" referrerpolicy="no-referrer" class="h-full w-full rounded-full object-cover" />
-              <div v-else class="flex h-full w-full items-center justify-center bg-linear-to-r from-blue-500 to-indigo-500 text-white text-xs">
+              <div v-else class="flex h-full w-full items-center justify-center bg-primary text-primary-foreground text-xs">
                 {{ userInitials }}
               </div>
             </div>
@@ -123,6 +130,7 @@
 
           <div
             v-if="desktopMenuOpen"
+            role="menu"
             class="absolute right-0 mt-2 w-60 rounded-xl border border-border bg-background p-3 shadow-xl"
             @mouseenter="openDesktopMenu"
             @mouseleave="scheduleDesktopMenuClose"
@@ -132,7 +140,7 @@
                 <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" referrerpolicy="no-referrer" class="h-full w-full rounded-full object-cover" />
                 <div
                   v-else
-                  class="flex h-full w-full items-center justify-center bg-linear-to-r from-blue-500 to-indigo-500 text-white text-lg"
+                  class="flex h-full w-full items-center justify-center bg-primary text-primary-foreground text-lg"
                 >
                   {{ userInitials }}
                 </div>
@@ -155,7 +163,7 @@
                 class="flex items-center justify-between rounded-xl px-3 py-2 transition-colors hover:bg-accent hover:text-accent-foreground"
               >
                 <span>{{ t('My Collection') }}</span>
-                <span class="text-xs text-muted-foreground">Hot</span>
+                <span class="text-xs text-muted-foreground">Go</span>
               </RouterLink>
               <RouterLink
                 to="/my-paths"
@@ -212,10 +220,10 @@
             type="button"
             variant="ghost"
             size="sm"
-            class="h-9 rounded-full border border-border px-3 text-xs font-medium tracking-[0.14em] uppercase text-white shadow-sm transition-colors"
+            class="h-9 rounded-full border border-border px-3 text-xs font-medium tracking-[0.14em] uppercase text-primary-foreground shadow-sm transition-colors"
             :class="createMenuOpen
-              ? 'bg-[#8ecbff]/80 hover:bg-[#8ecbff]/80'
-              : 'bg-[#8ecbff] hover:bg-[#8ecbff]/90'"
+              ? 'bg-primary/80 hover:bg-primary/80'
+              : 'bg-primary hover:bg-primary/90'"
             @click="createMenuOpen = !createMenuOpen"
           >
             <span><span class="font-bold">+</span>CREATE</span>
@@ -257,7 +265,7 @@
             type="button"
             variant="ghost"
             size="icon"
-            class="hidden md:inline-flex h-9 w-9 rounded-none border-0 bg-transparent text-foreground hover:bg-transparent hover:text-foreground/80"
+            class="hidden md:inline-flex h-11 w-11 rounded-none border-0 bg-transparent text-foreground hover:bg-transparent hover:text-foreground/80"
             :aria-label="t('Language')"
             @click="langMenuOpen = !langMenuOpen"
           >
@@ -322,7 +330,7 @@
     </div>
   </div>
   <!-- spacer to prevent fixed header from covering page content -->
-  <div class="h-16 md:h-16"></div>
+  <div class="h-16"></div>
 </template>
 
 <script setup lang="ts">
@@ -428,9 +436,30 @@ function scheduleDesktopMenuClose() {
   }, 180)
 }
 
+function closeDesktopMenu() {
+  if (desktopMenuCloseTimer) {
+    clearTimeout(desktopMenuCloseTimer)
+    desktopMenuCloseTimer = null
+  }
+  desktopMenuOpen.value = false
+}
+
+function toggleDesktopMenu() {
+  if (desktopMenuOpen.value) closeDesktopMenu()
+  else openDesktopMenu()
+}
+
+function handleDesktopMenuFocusOut(event: FocusEvent) {
+  const nextTarget = event.relatedTarget as Node | null
+  const currentTarget = event.currentTarget as HTMLElement | null
+  if (!currentTarget) return
+  if (nextTarget && currentTarget.contains(nextTarget)) return
+  closeDesktopMenu()
+}
+
 function handleLogout() {
   authStore.logout()
-  desktopMenuOpen.value = false
+  closeDesktopMenu()
   open.value = false
   router.push('/home')
 }

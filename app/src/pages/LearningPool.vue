@@ -3,8 +3,8 @@
     <section class="space-y-4">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-xl font-semibold text-gray-900">Learning Paths</h2>
-          <p class="text-gray-600 text-sm">
+          <h2 class="text-xl font-semibold text-foreground">Learning Paths</h2>
+          <p class="text-muted-foreground text-sm">
             <span v-if="searchQuery">搜索 "{{ searchQuery }}" 的结果：{{ learningPaths.length }} 个学习路径</span>
             <span v-else>所有公开学习路径：{{ learningPaths.length }} 个</span>
           </p>
@@ -18,16 +18,16 @@
           class="block"
         >
           <Card as="article" :hoverable="true">
-            <div class="relative h-28 bg-gray-100">
-              <img :src="path.cover_image_url || fallbackThumb" :alt="path.title" class="w-full h-full object-cover" />
+            <div class="relative h-28 bg-muted">
+              <img :src="path.cover_image_url || fallbackThumb" :alt="path.title" loading="lazy" decoding="async" width="320" height="112" class="w-full h-full object-cover" />
             </div>
             <div class="p-4 flex flex-col gap-3">
               <div class="space-y-1">
-                <h3 class="text-gray-900 font-semibold text-sm leading-snug line-clamp-2" :title="path.title">{{ path.title }}</h3>
-                <p class="text-gray-600 text-xs line-clamp-2" :title="path.description ?? ''">{{ path.description }}</p>
+                <h3 class="text-foreground font-semibold text-sm leading-snug line-clamp-2" :title="path.title">{{ path.title }}</h3>
+                <p class="text-muted-foreground text-xs line-clamp-2" :title="path.description ?? ''">{{ path.description }}</p>
               </div>
-              <div class="flex items-center justify-between text-xs text-gray-500">
-                <span>{{ path.category_name || '未分类' }}</span>
+              <div class="flex items-center justify-between text-xs text-muted-foreground">
+                <span>{{ path.category_name || t('Uncategorized') }}</span>
                 <span>{{ (path as any).level || 'Beginner' }}</span>
               </div>
             </div>
@@ -39,12 +39,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import Card from '../components/ui/Card.vue'
 import { listPublicLearningPaths, type PublicLearningPath } from '../api/learningPath'
+import { useI18n } from '../i18n'
 
 const route = useRoute()
+const { t } = useI18n()
 const fallbackThumb = 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=900&h=506&fit=crop'
 const allPaths = ref<PublicLearningPath[]>([])
 
@@ -77,10 +79,5 @@ async function loadPaths() {
 
 onMounted(() => {
   loadPaths()
-})
-
-// 监听搜索参数变化
-watch(() => route.query.search, () => {
-  // 搜索参数变化时，computed 会自动重新计算
 })
 </script>

@@ -1,11 +1,13 @@
-import { Teleport, defineComponent, h, inject, provide, ref, computed, type PropType, onMounted, onBeforeUnmount } from 'vue'
+import { Teleport, defineComponent, h, inject, provide, ref, type PropType, watch, onBeforeUnmount } from 'vue'
 import { cn } from './cn'
 
 const DialogSymbol = Symbol('DialogContext')
+let dialogTitleSeed = 0
 
 interface DialogContext {
   open: ReturnType<typeof ref<boolean>>
   setOpen: (val: boolean) => void
+  titleId: string
 }
 
 function useDialogContext() {
@@ -23,6 +25,7 @@ export const Dialog = defineComponent({
   emits: ['update:modelValue', 'open', 'close'],
   setup(props, { emit, slots }) {
     const internalOpen = ref(props.modelValue ?? props.defaultOpen)
+    const titleId = `ui-dialog-title-${++dialogTitleSeed}`
 
     const setOpen = (val: boolean) => {
       internalOpen.value = val
@@ -30,7 +33,7 @@ export const Dialog = defineComponent({
       emit(val ? 'open' : 'close')
     }
 
-    provide(DialogSymbol, { open: internalOpen, setOpen })
+    provide(DialogSymbol, { open: internalOpen, setOpen, titleId })
 
     return () => slots.default?.({ open: internalOpen.value, setOpen })
   },
@@ -58,7 +61,7 @@ export const DialogOverlay = defineComponent({
   props: { class: { type: [String, Array, Object] as PropType<any>, default: '' } },
   setup(props) {
     const { open } = useDialogContext()
-    const base = 'fixed inset-0 z-50 bg-black/50 transition-opacity'
+    const base = 'fixed inset-0 z-50 bg-foreground/50 transition-opacity'
     return () => (open.value ? h('div', { class: cn(base, props.class) }) : null)
   },
 })
@@ -72,13 +75,21 @@ export const DialogContent = defineComponent({
       if (e.key === 'Escape') ctx.setOpen(false)
     }
 
-    onMounted(() => window.addEventListener('keydown', onKeydown))
+    watch(
+      () => ctx.open.value,
+      (isOpen) => {
+        if (isOpen) window.addEventListener('keydown', onKeydown)
+        else window.removeEventListener('keydown', onKeydown)
+      },
+      { immediate: true },
+    )
+
     onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
     const content = () =>
-      h('div', { class: cn('fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-lg border bg-white p-6 shadow-lg', props.class), ...attrs }, [
+      h('div', { class: cn('fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-lg border bg-background text-foreground p-6 shadow-lg', props.class), role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': ctx.titleId, ...attrs }, [
         slots.default?.(),
-        h(DialogClose, { class: 'absolute right-4 top-4 text-gray-500 hover:text-gray-700' }, { default: () => '×' }),
+        h(DialogClose, { class: 'absolute right-4 top-4 text-muted-foreground hover:text-foreground', 'aria-label': 'Close dialog' }, { default: () => '×' }),
       ])
 
     return () =>
@@ -122,7 +133,8 @@ export const DialogTitle = defineComponent({
   name: 'UiDialogTitle',
   props: { class: { type: [String, Array, Object] as PropType<any>, default: '' } },
   setup(props, { slots }) {
-    return () => h('h3', { class: cn('text-lg font-semibold leading-none', props.class) }, slots.default?.())
+    const ctx = useDialogContext()
+    return () => h('h3', { id: ctx.titleId, class: cn('text-lg font-semibold leading-none', props.class) }, slots.default?.())
   },
 })
 
@@ -130,6 +142,6 @@ export const DialogDescription = defineComponent({
   name: 'UiDialogDescription',
   props: { class: { type: [String, Array, Object] as PropType<any>, default: '' } },
   setup(props, { slots }) {
-    return () => h('p', { class: cn('text-sm text-gray-600', props.class) }, slots.default?.())
+    return () => h('p', { class: cn('text-sm text-muted-foreground', props.class) }, slots.default?.())
   },
 })

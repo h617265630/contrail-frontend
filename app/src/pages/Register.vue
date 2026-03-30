@@ -21,6 +21,8 @@
               type="text"
               v-model="form.username"
               @blur="onBlur('username')"
+              :aria-invalid="fieldErrors.username ? 'true' : 'false'"
+              :aria-describedby="fieldErrors.username ? 'register-username-error' : undefined"
               :class="[
                 'pl-9',
                 fieldErrors.username ? 'border-destructive' : '',
@@ -29,7 +31,7 @@
               @update:modelValue="onInput('username')"
             />
 
-            <span v-if="fieldErrors.username" class="absolute left-9 -bottom-5 text-xs text-red-500 pointer-events-none">
+            <span id="register-username-error" v-if="fieldErrors.username" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none" role="alert">
               {{ fieldErrors.username }}
             </span>
           </div>
@@ -44,6 +46,8 @@
               type="email"
               v-model="form.email"
               @blur="onBlur('email')"
+              :aria-invalid="fieldErrors.email ? 'true' : 'false'"
+              :aria-describedby="fieldErrors.email ? 'register-email-error' : undefined"
               :class="[
                 'pl-9',
                 fieldErrors.email ? 'border-destructive' : '',
@@ -52,7 +56,7 @@
               @update:modelValue="onInput('email')"
             />
 
-            <span v-if="fieldErrors.email" class="absolute left-9 -bottom-5 text-xs text-red-500 pointer-events-none">
+            <span id="register-email-error" v-if="fieldErrors.email" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none" role="alert">
               {{ fieldErrors.email }}
             </span>
           </div>
@@ -67,6 +71,8 @@
               :type="showPassword ? 'text' : 'password'"
               v-model="form.password"
               @blur="onBlur('password')"
+              :aria-invalid="fieldErrors.password ? 'true' : 'false'"
+              :aria-describedby="fieldErrors.password ? 'register-password-error' : undefined"
               :class="[
                 'pl-9 pr-10',
                 fieldErrors.password ? 'border-destructive' : '',
@@ -85,7 +91,7 @@
               <Eye v-else class="w-4 h-4" />
             </Button>
 
-            <span v-if="fieldErrors.password" class="absolute left-9 -bottom-5 text-xs text-red-500 pointer-events-none">
+            <span id="register-password-error" v-if="fieldErrors.password" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none" role="alert">
               {{ fieldErrors.password }}
             </span>
           </div>
@@ -100,6 +106,8 @@
               :type="showConfirmPassword ? 'text' : 'password'"
               v-model="form.confirm_password"
               @blur="onBlur('confirm_password')"
+              :aria-invalid="fieldErrors.confirm_password ? 'true' : 'false'"
+              :aria-describedby="fieldErrors.confirm_password ? 'register-confirm-password-error' : undefined"
               :class="[
                 'pl-9 pr-10',
                 fieldErrors.confirm_password ? 'border-destructive' : '',
@@ -118,7 +126,7 @@
               <Eye v-else class="w-4 h-4" />
             </Button>
 
-            <span v-if="fieldErrors.confirm_password" class="absolute left-9 -bottom-5 text-xs text-red-500 pointer-events-none">
+            <span id="register-confirm-password-error" v-if="fieldErrors.confirm_password" class="absolute left-9 -bottom-5 text-xs text-destructive pointer-events-none" role="alert">
               {{ fieldErrors.confirm_password }}
             </span>
           </div>
@@ -127,8 +135,8 @@
         <div class="flex items-start">
           <input type="checkbox" id="terms" class="w-4 h-4 border-input rounded-md mt-1" />
           <label for="terms" class="ml-2 text-sm text-muted-foreground">
-            I agree to the <a href="#" class="text-foreground underline underline-offset-4">Terms of Service</a> and
-            <a href="#" class="text-foreground underline underline-offset-4"> Privacy Policy</a>
+            I agree to the <RouterLink to="/about" class="text-foreground underline underline-offset-4">Terms of Service</RouterLink> and
+            <RouterLink to="/about" class="text-foreground underline underline-offset-4"> Privacy Policy</RouterLink>
           </label>
         </div>
 
@@ -137,11 +145,11 @@
           :disabled="loading || !isFormValid"
           variant="outline"
           size="lg"
-          class="w-full rounded-none border-border bg-[#8ecbff] text-white transition-all hover:-translate-y-px hover:bg-[#8ecbff]/90 hover:text-white hover:shadow-sm active:translate-y-0"
+          class="w-full rounded-none border-border bg-primary text-primary-foreground transition-all hover:-translate-y-px hover:bg-primary/90 hover:text-primary-foreground hover:shadow-sm active:translate-y-0"
         >
           {{ loading ? 'Creating...' : 'Create Account' }}
         </Button>
-        <p v-if="formError" class="text-red-500 text-sm text-center">{{ formError }}</p>
+        <p v-if="formError" class="text-destructive text-sm text-center">{{ formError }}</p>
         <p v-if="successMessage" class="text-foreground text-sm text-center">{{ successMessage }}</p>
         </form>
 
