@@ -16,9 +16,9 @@ const ROUTE_META: Array<{ match: (path: string) => boolean; meta: SeoMeta }> = [
   {
     match: (path) => path === '/' || path === '/home',
     meta: {
-      title: 'Learnpathly - Learning paths and AI-guided study planning',
+      title: 'Learnpathly',
       description: 'Discover learning resources, organize them into paths, and generate AI-guided study plans on Learnpathly.',
-      canonicalPath: '/home',
+      canonicalPath: '/',
     },
   },
   {
