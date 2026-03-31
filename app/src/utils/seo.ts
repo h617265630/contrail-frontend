@@ -1,7 +1,7 @@
 import type { Router, RouteLocationNormalizedLoaded } from 'vue-router'
 
 const SITE_NAME = 'Learnpathly'
-const SITE_URL = String(import.meta.env.VITE_SITE_URL || 'https://learnpathly.com').trim().replace(/\/$/, '')
+const SITE_URL = String(import.meta.env.VITE_SITE_URL || 'https://www.learnpathly.com').trim().replace(/\/$/, '')
 const DEFAULT_TITLE = 'Learnpathly'
 const DEFAULT_DESCRIPTION = 'Learnpathly helps you discover resources, build learning paths, and generate AI-guided study plans.'
 
