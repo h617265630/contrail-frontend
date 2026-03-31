@@ -3,7 +3,10 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 // Lazy-loaded routes to avoid ReferenceError during HMR/initial load
 const Home = () => import('./pages/Home.vue')
 const LearningPathsList = () => import('./pages/MyLearningPath.vue')
-const LearningPath = () => import('./pages/LearningPath.vue')
+const LearningPool = () => import('./pages/LearningPool.vue')
+const LearningPathDetail = () => import('./pages/LearningPathDetail.vue')
+const LearningPathLinear = () => import('./pages/LearningPathLinear.vue')
+const LearningPathEdit = () => import('./pages/LearningPathEdit.vue')
 const Login = () => import('./pages/Login.vue')
 const Register = () => import('./pages/Register.vue')
 const ResourceLibrary = () => import('./pages/ResourceLibrary.vue')
@@ -20,14 +23,13 @@ const ParticalImage = () => import('./pages/ParticalImage.vue')
 const ParticalFlashedIdeas = () => import('./pages/ParticalFlashedIdeas.vue')
 const MyPartical = () => import('./pages/MyPartical.vue')
 const MyParticalHome = () => import('./pages/MyParticalHome.vue')
-const LearningPathDetail = () => import('./pages/LearningPathDetail.vue')
-const LearningPathLinear = () => import('./pages/LearningPathLinear.vue')
 const LearningPoolCategory = () => import('./pages/LearningPoolCategory.vue')
 const CreatePath = () => import('./pages/CreatePath.vue')
-const LearningPathEdit = () => import('./pages/LearningPathEdit.vue')
 const Notification = () => import('./pages/Notification.vue')
 const Creator = () => import('./pages/Creator.vue')
 const Deck = () => import('./pages/Deck.vue')
+const AIPath = () => import('./pages/AIPath.vue')
+const AIPathDetail = () => import('./pages/AIPathDetail.vue')
 
 const UiUxProMax = () => import('./pages/UiUxProMax.vue')
 
@@ -54,7 +56,9 @@ const routes: RouteRecordRaw[] = [
   { path: '/notification', name: 'notification', component: Notification },
   { path: '/creator', name: 'creator', component: Creator },
   { path: '/deck', name: 'deck', component: Deck },
-  { path: '/learningpool', name: 'learningpool', component: LearningPath },
+  { path: '/ai-path', name: 'ai-path', component: AIPath },
+  { path: '/ai-path-detail', name: 'ai-path-detail', component: AIPathDetail },
+  { path: '/learningpool', name: 'learningpool', component: LearningPool },
   { path: '/learningpool/category/:category', name: 'learningpool-category', component: LearningPoolCategory },
   { path: '/my-paths', name: 'my-paths', component: LearningPathsList },
   { path: '/createpath', name: 'createpath', component: CreatePath },

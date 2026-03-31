@@ -1,103 +1,205 @@
 <template>
-  <div class="min-h-screen bg-background">
-    <div class="container mx-auto px-4 py-6 -mt-4 md:-mt-6">
-      <main class="flex flex-col gap-4">
+  <div class="min-h-screen bg-stone-50">
 
-    <Card as="section" :hoverable="false" class="mx-auto w-full max-w-6xl rounded-none">
-      <div class="p-3">
-        <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-          <div class="flex flex-col sm:flex-row gap-3 flex-1 w-full lg:w-auto">
-            <div class="flex gap-3 flex-1">
-              <div class="relative flex-1">
-              <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                ref="searchInputEl"
-                type="text"
-                placeholder="Search resources..."
-                v-model="searchQuery"
-                class="h-9 w-full rounded-none pl-10"
-              />
+    <!-- Masthead header -->
+    <header class="border-b border-stone-200 bg-white">
+      <div class="mx-auto max-w-7xl px-4 py-6 md:py-8">
+        <div class="flex items-end justify-between gap-6">
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="h-px w-8 bg-amber-500"></span>
+              <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-stone-400">Discover</span>
             </div>
-            </div>
+            <h1 class="text-3xl md:text-4xl font-black tracking-tight text-stone-900 leading-[0.92]">
+              Resource<br/><span class="text-amber-600">Library.</span>
+            </h1>
+          </div>
+          <p class="hidden md:block text-sm leading-relaxed text-stone-500 max-w-xs">
+            Browse and discover public resources. Add them to your personal library with one click.
+          </p>
+        </div>
 
-            <div class="relative">
-              <select
-                v-model="selectedCategory"
-                class="h-9 appearance-none rounded-none border border-input bg-background pl-10 pr-10 text-sm text-foreground outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer"
-              >
-                <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-              </select>
-              <Filter class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-            </div>
+        <!-- Filter bar -->
+        <div class="mt-6 flex flex-col sm:flex-row gap-3">
+          <!-- Search -->
+          <div class="relative flex-1">
+            <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Search resources, topics..."
+              class="h-10 w-full rounded-none border border-stone-200 bg-white pl-10 pr-4 text-sm text-stone-900 placeholder:text-stone-400 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-100 transition-colors"
+            />
           </div>
 
-          <div class="flex gap-3 w-full lg:w-auto">
+          <!-- Category filter -->
+          <div class="relative">
+            <select
+              v-model="selectedCategory"
+              class="appearance-none h-10 rounded-none border border-stone-200 bg-white pl-4 pr-10 text-sm text-stone-700 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-100 transition-colors cursor-pointer"
+            >
+              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+            </select>
+            <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
           </div>
         </div>
-      </div>
-    </Card>
 
-    <div v-if="loading" class="mx-auto w-full max-w-6xl text-center py-16">
-      <p class="text-sm text-muted-foreground">Loading…</p>
-    </div>
-
-    <Card v-else-if="filteredResources.length === 0" as="section" :hoverable="false" class="mx-auto w-full max-w-6xl rounded-none">
-      <div class="py-16 text-center">
-        <BookOpen class="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
-        <h3 class="text-foreground mb-2">No resources found</h3>
-        <p class="text-muted-foreground mb-6">
-          {{ searchQuery || selectedCategory !== 'All' ? 'Try adjusting your filters' : 'Start by adding your first resource' }}
-        </p>
-      </div>
-    </Card>
-
-      <div v-else class="mt-4 mx-auto w-full max-w-6xl">
-        <div class="grid grid-cols-1 gap-4 justify-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-          <Card
-            v-for="resource in filteredResources"
-            :key="resource.id"
-            class="shrink-0 w-56 min-h-72 rounded-md border border-border bg-card shadow-sm transition-all duration-300 ease-out cursor-pointer hover:shadow-xl hover:!z-[100] card-hover"
-            :hoverable="false"
-            @click="openCard(resource)"
+        <!-- Type pills -->
+        <div class="mt-4 flex gap-2 flex-wrap">
+          <button
+            v-for="t in typeFilters"
+            :key="t.value"
+            type="button"
+            class="h-7 rounded-full border px-3 text-[11px] font-semibold uppercase tracking-wider transition-all"
+            :class="activeType === t.value
+              ? 'border-stone-900 bg-stone-900 text-white'
+              : 'border-stone-200 bg-white text-stone-500 hover:border-stone-400'"
+            @click="activeType = t.value"
           >
-            <div class="h-full flex flex-col overflow-hidden rounded-md">
-              <div class="px-3 py-2 border-b border-border flex items-center justify-between">
-                <span
-                  class="px-2 py-0.5 text-xs font-medium rounded"
-                  :style="{
-                    backgroundColor: getCategoryColor(resourceCategoryLabel(resource)) + '20',
-                    color: getCategoryColor(resourceCategoryLabel(resource)),
-                  }"
-                >
-                  {{ resourceCategoryLabel(resource) || '—' }}
-                </span>
-                <span class="text-xs text-muted-foreground">#{{ String(resource.id).padStart(3, '0') }}</span>
-              </div>
-
-              <div class="relative h-28 bg-white overflow-hidden px-2">
-                <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="w-full h-full object-cover" />
-              </div>
-
-              <div class="px-3 py-2 border-b border-border bg-white">
-                <h3 class="text-sm font-bold text-foreground line-clamp-1" :title="resource.title">{{ resource.title }}</h3>
-              </div>
-
-              <div class="px-3 py-2 flex-1 bg-muted/30">
-                <p class="text-xs text-muted-foreground line-clamp-2">{{ resource.summary || '' }}</p>
-              </div>
-
-              <div class="px-3 py-2 border-t border-border flex items-center justify-between">
-                <span class="text-xs text-muted-foreground">{{ formatPlatform((resource as any).platform) }}</span>
-                <span class="text-xs font-medium text-foreground">{{ displayResourceType(resource) }}</span>
-              </div>
-            </div>
-          </Card>
+            {{ t.label }}
+          </button>
         </div>
       </div>
-      </main>
-    </div>
+    </header>
 
+    <!-- Main content -->
+    <main class="mx-auto max-w-7xl px-4 py-8">
+
+      <!-- Loading -->
+      <div v-if="loading" class="py-20 text-center">
+        <div class="inline-flex items-center gap-3">
+          <div class="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></div>
+          <span class="text-sm text-stone-400">Loading resources…</span>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div v-else-if="filteredResources.length === 0" class="py-20 text-center">
+        <div class="text-5xl mb-4">📭</div>
+        <h3 class="text-base font-semibold text-stone-700 mb-1">No resources found</h3>
+        <p class="text-sm text-stone-400">{{ searchQuery || selectedCategory !== 'All' ? 'Try adjusting your filters.' : 'Nothing public yet.' }}</p>
+      </div>
+
+      <!-- Resource grid: asymmetric editorial layout -->
+      <div v-else>
+        <!-- Results count -->
+        <div class="mb-6 flex items-center justify-between">
+          <p class="text-xs text-stone-400">
+            <span class="font-semibold text-stone-600">{{ filteredResources.length }}</span> resources
+          </p>
+          <button
+            class="text-[11px] font-semibold uppercase tracking-wider text-stone-400 hover:text-stone-600 transition-colors"
+            @click="searchQuery = ''; selectedCategory = 'All'"
+          >
+            Clear filters
+          </button>
+        </div>
+
+        <!-- Editorial grid: alternating large/small cards -->
+        <div class="grid grid-cols-5 gap-4">
+          <template v-for="(resource, idx) in filteredResources" :key="resource.id">
+            <!-- Hero card: every 7th item spans full width -->
+            <div
+              v-if="idx % 7 === 0 && idx > 0"
+              class="col-span-5"
+            >
+              <article
+                class="group relative flex gap-0 rounded-xl overflow-hidden bg-white border border-stone-100 hover:border-stone-200 hover:shadow-lg transition-all duration-300 cursor-pointer"
+                @click="openCard(resource)"
+              >
+                <div class="w-64 h-44 shrink-0 bg-stone-100 overflow-hidden relative transition-transform duration-500 group-hover:scale-105" style="width: 256px; height: 176px; flex-shrink: 0;">
+                  <img
+                    :src="resource.thumbnail || fallbackThumb"
+                    :alt="resource.title"
+                    loading="lazy"
+                    class="block w-full h-full object-cover object-center"
+                    style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+                  />
+                </div>
+                <div class="flex-1 p-6 flex flex-col justify-between">
+                  <div>
+                    <div class="flex items-center gap-2 mb-2">
+                      <span
+                        class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+                        :style="{ backgroundColor: getCategoryColor(resourceCategoryLabel(resource)) + '18', color: getCategoryColor(resourceCategoryLabel(resource)) }"
+                      >
+                        {{ resourceCategoryLabel(resource) }}
+                      </span>
+                      <span class="text-[10px] text-stone-400">#{{ String(resource.id).padStart(3, '0') }}</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-stone-900 leading-snug group-hover:text-amber-700 transition-colors">
+                      {{ resource.title }}
+                    </h3>
+                    <p class="text-sm text-stone-500 mt-2 line-clamp-2">{{ resource.summary || '' }}</p>
+                  </div>
+                  <div class="flex items-center justify-between mt-4">
+                    <span class="text-xs text-stone-400">{{ formatPlatform((resource as any).platform) }} · {{ displayResourceType(resource) }}</span>
+                    <button
+                      class="text-[11px] font-semibold uppercase tracking-wider text-stone-400 hover:text-amber-600 transition-colors"
+                      @click.stop="addToMyResources(resource)"
+                    >
+                      + Add to my resources
+                    </button>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <!-- Standard cards: 5 per row -->
+            <div v-else class="col-span-1 group">
+              <article
+                class="h-full rounded-xl overflow-hidden bg-white border border-stone-100 hover:border-stone-200 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col"
+                @click="openCard(resource)"
+              >
+                <!-- Thumbnail -->
+                <div class="relative bg-stone-100 overflow-hidden transition-transform duration-500 group-hover:scale-105" style="aspect-ratio: 16/9; width: 100%;">
+                  <img
+                    :src="resource.thumbnail || fallbackThumb"
+                    :alt="resource.title"
+                    loading="lazy"
+                    class="block w-full h-full object-cover object-center"
+                    style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+                  />
+                  <!-- Type badge -->
+                  <div class="absolute top-2 left-2">
+                    <span class="inline-flex items-center rounded-full bg-white/90 backdrop-blur-sm border border-white/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-stone-600">
+                      {{ displayResourceType(resource) }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 p-3.5 flex flex-col">
+                  <span
+                    class="text-[10px] font-semibold uppercase tracking-wider mb-1.5"
+                    :style="{ color: getCategoryColor(resourceCategoryLabel(resource)) }"
+                  >
+                    {{ resourceCategoryLabel(resource) }}
+                  </span>
+                  <h3 class="text-sm font-semibold text-stone-800 leading-snug line-clamp-2 group-hover:text-amber-700 transition-colors" :title="resource.title">
+                    {{ resource.title }}
+                  </h3>
+                  <p class="text-xs text-stone-400 mt-1 line-clamp-2 flex-1">{{ resource.summary || '' }}</p>
+                  <div class="flex items-center justify-between mt-3 pt-2 border-t border-stone-50">
+                    <span class="text-[10px] text-stone-400">{{ formatPlatform((resource as any).platform) }}</span>
+                    <button
+                      v-if="!addedToMy[resource.id]"
+                      class="text-[10px] font-semibold text-stone-400 hover:text-amber-600 transition-colors"
+                      @click.stop="addToMyResources(resource)"
+                    >
+                      + Save
+                    </button>
+                    <span v-else class="text-[10px] font-semibold text-emerald-500">Saved</span>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </template>
+        </div>
+      </div>
+    </main>
+
+    <!-- Detail modal -->
     <Teleport to="body">
       <Transition name="modal">
         <div
@@ -105,64 +207,67 @@
           class="fixed inset-0 z-50 flex items-center justify-center p-4"
           @click.self="closeActiveResource"
         >
-          <div class="absolute inset-0 bg-black/50"></div>
-          <div class="relative w-full max-w-md rounded-md overflow-hidden bg-card border border-border shadow-xl">
-            <div class="relative h-48 bg-muted overflow-hidden">
+          <div class="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"></div>
+          <div class="relative w-full max-w-lg rounded-2xl overflow-hidden bg-white shadow-2xl border border-stone-100">
+            <!-- Image header -->
+            <div class="relative bg-stone-100 overflow-hidden" style="aspect-ratio: 16/9; width: 100%;">
               <img
                 :src="activeResource.thumbnail || fallbackThumb"
                 :alt="activeResource.title"
-                class="w-full h-full object-cover"
+                class="block w-full h-full object-cover object-center"
+                style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
               />
               <button
-                class="absolute top-3 right-3 w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white hover:bg-red-600 transition"
+                class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-stone-500 hover:text-stone-900 hover:bg-white transition"
                 @click="closeActiveResource"
+                aria-label="Close"
               >
-                ✕
+                <X class="w-4 h-4" />
               </button>
-            </div>
-
-            <div class="p-4 border-b border-border">
-              <div class="flex items-center gap-2 mb-2">
+              <!-- Category badge -->
+              <div class="absolute bottom-3 left-3">
                 <span
-                  class="px-2 py-0.5 text-xs font-medium rounded"
-                  :style="{
-                    backgroundColor: getCategoryColor(resourceCategoryLabel(activeResource)) + '20',
-                    color: getCategoryColor(resourceCategoryLabel(activeResource)),
-                  }"
+                  class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+                  :style="{ backgroundColor: getCategoryColor(resourceCategoryLabel(activeResource)) + '18', color: getCategoryColor(resourceCategoryLabel(activeResource)) }"
                 >
-                  {{ resourceCategoryLabel(activeResource) || '—' }}
+                  {{ resourceCategoryLabel(activeResource) }}
                 </span>
-                <span class="text-xs text-muted-foreground">#{{ String(activeResource.id).padStart(3, '0') }}</span>
               </div>
-              <h2 class="text-xl font-bold text-foreground">{{ activeResource.title }}</h2>
             </div>
 
-            <div class="p-4">
-              <p class="text-sm text-muted-foreground mb-4">{{ activeResource.summary || '' }}</p>
-              <div class="flex items-center gap-4 text-sm text-muted-foreground">
+            <!-- Content -->
+            <div class="p-6">
+              <div class="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <span class="text-[10px] text-stone-400">#{{ String(activeResource.id).padStart(3, '0') }}</span>
+                  <h2 class="text-xl font-bold text-stone-900 leading-tight mt-1">{{ activeResource.title }}</h2>
+                </div>
+              </div>
+              <p class="text-sm leading-relaxed text-stone-600">{{ activeResource.summary || 'No description available.' }}</p>
+
+              <div class="flex items-center gap-4 mt-4 text-xs text-stone-400">
                 <span>{{ formatPlatform((activeResource as any).platform) }}</span>
-                <span>•</span>
-                <span>{{ displayResourceType(activeResource) }}</span>
+                <span class="text-stone-200">·</span>
+                <span class="font-medium text-stone-600 uppercase text-[10px] tracking-wider">{{ displayResourceType(activeResource) }}</span>
               </div>
             </div>
 
-            <div class="p-4 border-t border-border flex flex-col gap-3">
+            <!-- Actions -->
+            <div class="px-6 pb-6 flex flex-col gap-2">
               <Button
                 type="button"
-                class="w-full rounded-none bg-foreground text-background font-medium hover:bg-foreground/90"
+                class="w-full rounded-full bg-stone-900 text-white hover:bg-stone-800 font-semibold text-sm transition-all hover:-translate-y-px"
                 @click="seeDetail(activeResource)"
               >
-                View
+                View details
               </Button>
-
               <Button
                 type="button"
-                variant="outline"
-                class="w-full rounded-none"
                 :disabled="addingToMy[activeResource.id] || addedToMy[activeResource.id]"
+                class="w-full rounded-full border border-stone-200 text-stone-600 hover:border-stone-900 hover:text-stone-900 font-semibold text-sm transition-all"
                 @click="addToMyResources(activeResource)"
               >
-                {{ addedToMy[activeResource.id] ? 'Added' : (addingToMy[activeResource.id] ? 'Adding…' : 'Add') }}
+                {{ addedToMy[activeResource.id] ? 'Already saved' : (addingToMy[activeResource.id] ? 'Saving…' : '+ Save to my resources') }}
               </Button>
             </div>
           </div>
@@ -170,106 +275,59 @@
       </Transition>
     </Teleport>
 
-
-  <Teleport to="body">
-  <div v-if="showAddResultModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
-    <Card as="section" :hoverable="false" class="w-full max-w-md rounded-none">
-      <div class="flex items-center justify-between border-b border-border p-6">
-        <h2 class="text-lg font-semibold text-foreground">{{ addResultTitle }}</h2>
-        <Button type="button" variant="ghost" size="icon" class="rounded-none" @click="closeAddResultModal">
-          <X class="h-5 w-5" />
-        </Button>
-      </div>
-
-      <div class="space-y-3 p-6">
-        <div class="text-sm text-foreground">{{ addResultMessage }}</div>
-      </div>
-
-      <div class="flex justify-end gap-2 border-t border-border bg-muted/30 p-6">
-        <Button type="button" class="rounded-none" @click="closeAddResultModal">OK</Button>
-      </div>
-    </Card>
-  </div>
-  </Teleport>
-
-  <div v-if="showCreateModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <Card as="section" :hoverable="false" class="w-full max-w-md rounded-none">
-      <div class="flex items-center justify-between border-b border-border p-6">
-        <h2 class="text-lg font-semibold text-foreground">Add Resource</h2>
-        <Button type="button" variant="ghost" size="icon" class="rounded-none" @click="closeCreateModal" :disabled="creating">
-          <X class="h-5 w-5" />
-        </Button>
-      </div>
-
-      <div class="space-y-4 p-6">
-        <div>
-          <label class="mb-2 block text-sm font-semibold text-foreground">Resource URL *</label>
-          <Input v-model="createUrl" type="url" placeholder="Paste YouTube URL" class="rounded-none" />
-        </div>
-
-        <div>
-          <label class="mb-2 block text-sm font-semibold text-foreground">Category</label>
-          <div class="relative">
-            <select
-              v-model="createCategoryId"
-              class="h-10 w-full appearance-none rounded-none border border-input bg-background px-3 pr-10 text-sm text-foreground outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer"
-            >
-              <option value="">选择分类</option>
-              <option v-for="c in dbCategories" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
-            </select>
-            <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+    <!-- Add result toast -->
+    <Teleport to="body">
+      <Transition name="toast">
+        <div
+          v-if="showAddResultModal"
+          class="fixed bottom-6 left-1/2 -translate-x-1/2 z-100 rounded-full bg-stone-900 text-white px-6 py-3 shadow-2xl flex items-center gap-3"
+        >
+          <div v-if="addResultTitle.includes('Success') || addResultTitle.includes('成功')" class="h-5 w-5 rounded-full bg-emerald-500 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
+          <span class="text-sm font-semibold">{{ addResultMessage }}</span>
+          <button class="text-stone-400 hover:text-white transition-colors ml-1" @click="closeAddResultModal">
+            <X class="w-4 h-4" />
+          </button>
         </div>
-
-        <p v-if="createError" class="text-sm text-destructive">{{ createError }}</p>
-      </div>
-
-      <div class="flex justify-end gap-2 border-t border-border bg-muted/30 p-6">
-        <Button type="button" variant="outline" class="rounded-none" @click="closeCreateModal" :disabled="creating">Cancel</Button>
-        <Button type="button" class="rounded-none" @click="submitCreate" :disabled="!createUrl || creating">
-          {{ creating ? 'Saving…' : 'Add' }}
-        </Button>
-      </div>
-    </Card>
-  </div>
+      </Transition>
+    </Teleport>
 
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { BookOpen, ChevronDown, FileText, Filter, Plus, Scissors, Search, Tag, Video, X, Link as LinkIcon } from 'lucide-vue-next'
-import { useRouter } from 'vue-router'
+import { ChevronDown, Search, X } from 'lucide-vue-next'
 import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import Card from '../components/ui/Card.vue'
 import { formatPlatform } from '../utils/platform'
 import {
-  addPublicResourceToMyResourcesWithStatus,
   addPublicResourceToMyResourcesWithStatusAndWeight,
   createMyResourceFromUrl,
-  extractVideoMetadata,
   listMyResources,
   listResources,
   type DbResource,
-  type UrlExtractResponse,
 } from '../api/resource'
 import { listCategories, type Category } from '../api/category'
 
 const dbCategories = ref<Category[]>([])
 const categories = computed(() => ['All', ...dbCategories.value.map(c => c.name)])
-const fallbackThumb = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=225&fit=crop'
+const fallbackThumb = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&h=400&fit=crop'
 
 const resources = ref<DbResource[]>([])
 const loading = ref(false)
 const selectedCategory = ref<string>('All')
 const searchQuery = ref('')
+const activeType = ref('all')
 
-const searchInputEl = ref<HTMLInputElement | null>(null)
+const typeFilters = [
+  { label: 'All', value: 'all' },
+  { label: 'Video', value: 'video' },
+  { label: 'Article', value: 'article' },
+  { label: 'Document', value: 'document' },
+]
 
-const router = useRouter()
-
-const cardMetaById = ref<Record<number, UrlExtractResponse>>({})
+const cardMetaById = ref<Record<number, any>>({})
 const addingToMy = ref<Record<number, boolean>>({})
 const addedToMy = ref<Record<number, boolean>>({})
 
@@ -283,35 +341,23 @@ const showAddResultModal = ref(false)
 const addResultTitle = ref('')
 const addResultMessage = ref('')
 
-const showCreateModal = ref(false)
-const createUrl = ref('')
-const createCategoryId = ref('')
-const creating = ref(false)
-const createError = ref('')
-
 function openAddResultModal(title: string, message: string) {
   addResultTitle.value = title
   addResultMessage.value = message
   showAddResultModal.value = true
+  setTimeout(() => { showAddResultModal.value = false }, 3000)
 }
 
 function closeAddResultModal() {
   showAddResultModal.value = false
-  addResultTitle.value = ''
-  addResultMessage.value = ''
-}
-
-function getCardMeta(id: number) {
-  return cardMetaById.value[id]
 }
 
 function resourceCategoryLabel(resource: DbResource) {
   return String((resource as any).category_name || '').trim() || 'Other'
 }
 
-function normalizeResourceType(resourceType: string) {
-  const t = String(resourceType || '').trim().toLowerCase()
-  return t || 'article'
+function normalizeResourceType(t: string) {
+  return String(t || '').trim().toLowerCase()
 }
 
 function displayResourceType(resource: DbResource) {
@@ -320,87 +366,12 @@ function displayResourceType(resource: DbResource) {
   return 'article'
 }
 
-function typeIcon(type: string) {
-  switch (type) {
-    case 'video':
-      return Video
-    case 'clip':
-      return Scissors
-    case 'link':
-      return LinkIcon
-    case 'document':
-      return FileText
-    case 'article':
-      return BookOpen
-    default:
-      return FileText
-  }
-}
-
-function getTypeColor(type: string) {
-  switch (type) {
-    case 'video':
-      return 'bg-purple-100 text-purple-600'
-    case 'clip':
-      return 'bg-emerald-100 text-emerald-700'
-    case 'link':
-      return 'bg-gray-100 text-gray-700'
-    case 'document':
-      return 'bg-blue-100 text-blue-600'
-    case 'article':
-      return 'bg-green-100 text-green-600'
-    default:
-      return 'bg-gray-100 text-gray-600'
-  }
-}
-
-function formatExtractDate(iso?: string | null) {
-  if (!iso) return ''
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ''
-  return d.toLocaleDateString()
-}
-
 function getCategoryColor(category?: string) {
   const key = String(category || '').trim().toLowerCase() || 'other'
   const palette = ['#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316', '#84cc16']
   let hash = 0
-  for (let i = 0; i < key.length; i += 1) {
-    hash = (hash * 31 + key.charCodeAt(i)) >>> 0
-  }
+  for (let i = 0; i < key.length; i += 1) hash = (hash * 31 + key.charCodeAt(i)) >>> 0
   return palette[hash % palette.length]
-}
-
-async function prefetchCardMetas(list: DbResource[]) {
-  const targets = (list || []).filter(r => {
-    if (!r?.id) return false
-    if (cardMetaById.value[r.id]) return false
-    const url = String(r.source_url || '').trim()
-    return !!url
-  })
-
-  if (targets.length === 0) return
-
-  // simple concurrency limit to avoid flooding the backend
-  const concurrency = 3
-  let idx = 0
-
-  async function worker() {
-    while (idx < targets.length) {
-      const current = targets[idx]
-      idx += 1
-      try {
-        const url = String(current.source_url || '').trim()
-        if (!url) continue
-        const meta = await extractVideoMetadata(url)
-        cardMetaById.value = { ...cardMetaById.value, [current.id]: meta }
-      } catch {
-        // Ignore per-item failures (e.g. non-YouTube link)
-      }
-    }
-  }
-
-  await Promise.all(Array.from({ length: Math.min(concurrency, targets.length) }, () => worker()))
 }
 
 const filteredResources = computed(() => {
@@ -409,70 +380,21 @@ const filteredResources = computed(() => {
     if (platform === 'xiaohongshu' || platform === 'xhs' || platform.includes('小红书')) return false
     if (platform === 'reddit') return false
     const cat = resourceCategoryLabel(r)
-    const matchesCategory = selectedCategory.value === 'All' || cat === selectedCategory.value
+    if (selectedCategory.value !== 'All' && cat !== selectedCategory.value) return false
+    const type = normalizeResourceType(r.resource_type)
+    if (activeType.value !== 'all' && type !== activeType.value) return false
     const q = searchQuery.value.trim().toLowerCase()
-    if (!q) return matchesCategory
-
+    if (!q) return true
     const title = (r.title || '').toLowerCase()
     const desc = (r.summary || '').toLowerCase()
-    return matchesCategory && (title.includes(q) || desc.includes(q))
+    return title.includes(q) || desc.includes(q)
   })
 })
-
-function openCreateModal() {
-  showCreateModal.value = true
-  createUrl.value = ''
-  if (!createCategoryId.value) {
-    const other = dbCategories.value.find(c => String(c.code).toLowerCase() === 'other')
-    createCategoryId.value = other ? String(other.id) : ''
-  }
-  createError.value = ''
-}
-
-function closeCreateModal() {
-  showCreateModal.value = false
-  createUrl.value = ''
-  // keep selected category for next create
-  createError.value = ''
-}
-
-async function submitCreate() {
-  const url = createUrl.value.trim()
-  if (!url) return
-  createError.value = ''
-  creating.value = true
-  try {
-    const catId = createCategoryId.value ? Number(createCategoryId.value) : NaN
-    if (!Number.isFinite(catId)) throw new Error('请选择分类')
-    await createMyResourceFromUrl(url, { category_id: catId })
-
-    closeCreateModal()
-    await loadResources()
-    openAddResultModal('保存成功', '资源已创建并添加到 My Resources。')
-  } catch (e: any) {
-    const msg = e?.response?.data?.detail || e?.message || 'Failed to add resource'
-    createError.value = String(msg)
-  } finally {
-    creating.value = false
-  }
-}
-
-function focusSearch() {
-  try {
-    searchInputEl.value?.focus?.()
-  } catch {
-    // ignore
-  }
-}
 
 async function loadResources() {
   loading.value = true
   try {
     resources.value = await listResources()
-    // best-effort: fill cards with parsed metadata in background
-    void prefetchCardMetas(resources.value)
-
-    // best-effort: mark which ones already exist in My Resources
     void syncAddedFlags()
   } finally {
     loading.value = false
@@ -482,8 +404,6 @@ async function loadResources() {
 async function loadCategories() {
   try {
     dbCategories.value = await listCategories()
-    const other = dbCategories.value.find(c => String(c.code).toLowerCase() === 'other')
-    if (other && !createCategoryId.value) createCategoryId.value = String(other.id)
   } catch {
     dbCategories.value = []
   }
@@ -497,15 +417,7 @@ async function syncAddedFlags() {
       if (r?.id) next[r.id] = true
     }
     addedToMy.value = next
-  } catch {
-    // not logged in / network errors: ignore, keep default Add state
-  }
-}
-
-function viewResource(resource: DbResource) {
-  const t = displayResourceType(resource)
-  const name = t === 'video' ? 'resource-video' : t === 'document' ? 'resource-document' : 'resource-article'
-  router.push({ name, params: { id: resource.id } })
+  } catch { /* ignore */ }
 }
 
 function openCard(resource: DbResource) {
@@ -518,25 +430,26 @@ function closeActiveResource() {
 
 function seeDetail(resource: DbResource) {
   closeActiveResource()
-  viewResource(resource)
+  const t = displayResourceType(resource)
+  const name = t === 'video' ? 'resource-video' : t === 'document' ? 'resource-document' : 'resource-article'
+  // Use router push if available, else open in new tab
+  window.location.href = `/resources/${t}/${resource.id}`
 }
 
 async function addToMyResources(resource: DbResource) {
   if (!resource?.id) return
   if (addingToMy.value[resource.id] || addedToMy.value[resource.id]) return
-
   addingToMy.value = { ...addingToMy.value, [resource.id]: true }
   try {
     const res = await addPublicResourceToMyResourcesWithStatusAndWeight(resource.id, { manual_weight: 1 })
     addedToMy.value = { ...addedToMy.value, [resource.id]: true }
-
     if (res?.already_exists) {
-      openAddResultModal('Already Exists', 'This resource is already in your My Resources.')
+      openAddResultModal('Already Saved', 'This resource is already in your My Resources.')
     } else {
-      openAddResultModal('Added Successfully', 'The resource has been added to My Resources.')
+      openAddResultModal('Saved!', 'Resource added to My Resources.')
     }
   } catch (e: any) {
-    const msg = e?.response?.data?.detail || e?.message || 'Failed to add to my resources'
+    const msg = e?.response?.data?.detail || e?.message || 'Failed to save'
     openAddResultModal('Failed', String(msg))
   } finally {
     addingToMy.value = { ...addingToMy.value, [resource.id]: false }
@@ -550,19 +463,31 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.card-hover:hover {
-  animation: card-tilt-up 0.4s ease forwards;
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 300ms ease;
+}
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+.modal-enter-active .relative,
+.modal-leave-active .relative {
+  transition: transform 300ms ease, opacity 300ms ease;
+}
+.modal-enter-from .relative,
+.modal-leave-to .relative {
+  transform: translateY(16px);
+  opacity: 0;
 }
 
-@keyframes card-tilt-up {
-  0% {
-    transform: rotate(0deg) scale(1);
-  }
-  30% {
-    transform: rotate(-6deg) scale(1.08);
-  }
-  100% {
-    transform: rotate(0deg) scale(1.25);
-  }
+.toast-enter-active,
+.toast-leave-active {
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translate(-50%, 12px);
 }
 </style>
