@@ -49,21 +49,6 @@
           <p v-if="extractError" class="mt-2 text-sm text-destructive">{{ extractError }}</p>
         </div>
 
-        <div>
-          <label class="block text-sm font-semibold text-foreground mb-3">Category</label>
-          <div class="relative">
-            <Tag class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <select
-              v-model="categoryId"
-              class="w-full h-10 appearance-none pl-10 pr-10 px-3 border border-border rounded-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background bg-background cursor-pointer"
-            >
-              <option value="">Category</option>
-              <option v-for="c in dbCategories" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
-            </select>
-            <ChevronDown class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
-          </div>
-        </div>
-
         <div class="rounded-none border border-border bg-muted/30 p-6">
           <div class="flex items-center justify-between gap-3 mb-4">
             <h3 class="text-foreground text-base font-semibold">Preview</h3>
@@ -395,7 +380,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ChevronDown, Tag } from 'lucide-vue-next'
 import { createMyResourceFromUrl, extractVideoMetadata, type UrlExtractResponse } from '../api/resource'
 import { listCategories, type Category } from '../api/category'
 import { Button } from '../components/ui/button'
@@ -879,34 +863,35 @@ watch(
 
 <style scoped>
 .card-hover:hover {
-  animation: card-tilt-up 0.4s ease forwards;
+  animation: card-lift-up 0.4s ease forwards;
 }
 
 .md-card-hover:hover {
-  animation: md-card-tilt-up 0.3s ease forwards;
+  animation: md-card-lift-up 0.3s ease forwards;
 }
 
-@keyframes card-tilt-up {
+/* GPU-accelerated: only translate + scale, no rotate */
+@keyframes card-lift-up {
   0% {
-    transform: rotate(0deg) scale(1);
+    transform: translateY(0) scale(1);
   }
   30% {
-    transform: rotate(-6deg) scale(1.08);
+    transform: translateY(-8px) scale(1.04);
   }
   100% {
-    transform: rotate(0deg) scale(1.25);
+    transform: translateY(-4px) scale(1.08);
   }
 }
 
-@keyframes md-card-tilt-up {
+@keyframes md-card-lift-up {
   0% {
-    transform: rotate(0deg) scale(1);
+    transform: translateY(0) scale(1);
   }
   30% {
-    transform: rotate(-3deg) scale(1.04);
+    transform: translateY(-4px) scale(1.02);
   }
   100% {
-    transform: rotate(0deg) scale(1.08);
+    transform: translateY(-2px) scale(1.05);
   }
 }
 

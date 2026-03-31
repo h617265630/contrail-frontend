@@ -7,7 +7,7 @@ const STORAGE_KEY = 'learnpathly_lang'
 function readInitialLang(): AppLang {
   try {
     const stored = (globalThis as any)?.localStorage?.getItem(STORAGE_KEY)
-    if (stored === 'en' || stored === 'zh-CN') return stored
+    if (stored === 'en') return stored
   } catch {
     // ignore
   }
@@ -44,7 +44,7 @@ const zhCN: Record<string, string> = {
   'Search...': '搜索…',
   'User menu': '用户菜单',
   'My Paths': '我的学习路径',
-  'My Collection': '我的收藏',
+  'My Resources': '我的资源',
   'Creator Center': '创作中心',
   'Log out': '退出登录',
   'CreatePath': '创建路径',
@@ -74,7 +74,6 @@ export function useI18n() {
     t,
     languages: [
       { code: 'en' as const, label: 'English' },
-      { code: 'zh-CN' as const, label: '中文' },
     ],
   }
 }

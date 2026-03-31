@@ -98,52 +98,6 @@
 
 		</section>
 
-		<section class="border-b border-border pb-8">
-			<div class="grid gap-6 md:grid-cols-12 md:items-end">
-				<div class="md:col-span-8">
-					<h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Quick Actions</h2>
-					<p class="mt-2 text-xs text-muted-foreground">
-						Read
-						<RouterLink to="/about" class="mx-1 underline underline-offset-4 hover:text-foreground">
-							About
-						</RouterLink>
-						for a quick overview, then jump to your next task.
-					</p>
-				</div>
-				<div class="md:col-span-4 md:flex md:justify-end">
-					<div class="flex flex-wrap gap-2">
-						<Button
-							:as="RouterLinkComp"
-							to="/learningpool"
-							variant="default"
-							size="sm"
-							class="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed"
-						>
-							Start now
-						</Button>
-						<Button
-							:as="RouterLinkComp"
-							to="/my-paths"
-							variant="outline"
-							size="sm"
-							class="rounded-none"
-						>
-							View all paths
-						</Button>
-						<Button
-							:as="RouterLinkComp"
-							to="/createpath"
-							variant="outline"
-							size="sm"
-							class="rounded-none"
-						>
-							Create path
-						</Button>
-					</div>
-				</div>
-			</div>
-		</section>
-
 		<!-- Featured paths -->
 		<section class="space-y-4">
 			<div class="flex items-center justify-between">

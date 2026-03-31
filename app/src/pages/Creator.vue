@@ -358,9 +358,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import CodeMirrorEditor from '../components/CodeMirrorEditor.vue'
+const CodeMirrorEditor = defineAsyncComponent(() => import('../components/CodeMirrorEditor.vue'))
 import Card from '../components/ui/Card.vue'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'

@@ -10,93 +10,9 @@
     </section>
 
       <!-- Main content -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Resources panel -->
-        <Card as="section" :hoverable="false" class="rounded-none">
-          <div class="p-6 space-y-4">
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Resources</h2>
-              <p class="text-sm text-muted-foreground">{{ filteredResources.length }} results</p>
-            </div>
-          </div>
-
-          <div class="relative">
-            <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              v-model="searchQuery"
-              type="search"
-              placeholder="Search resources..."
-              class="h-10 w-full rounded-none pl-9"
-            />
-          </div>
-
-          <!-- Create resource from URL/share link -->
-          <div class="border border-border bg-background p-4 space-y-3">
-            <div>
-              <p class="text-foreground font-semibold">Create a resource from a link</p>
-              <p class="text-muted-foreground text-xs mt-1">Paste a URL / share link and click Generate. It will be added to the list below.</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <Input
-                v-model="newResourceUrl"
-                type="url"
-                placeholder="https://..."
-                class="h-10 flex-1 rounded-none"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                class="rounded-none"
-                :disabled="!newResourceUrl.trim() || newResourceLoading"
-                @click="createResourceFromUrl"
-              >
-                {{ newResourceLoading ? 'Generating…' : 'Generate' }}
-              </Button>
-            </div>
-            <p v-if="newResourceError" class="text-xs text-red-600">{{ newResourceError }}</p>
-          </div>
-
-          <div class="max-h-130 overflow-y-auto pr-1 space-y-3">
-            <article
-              v-for="r in filteredResources"
-              :key="r.id"
-              class="border border-gray-200 rounded-none overflow-hidden hover:shadow-md transition bg-white"
-              draggable="true"
-              @dragstart="handleDragStart($event, r)"
-            >
-              <div class="flex gap-3 p-3">
-                <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-none bg-gray-100 shrink-0" />
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-start justify-between gap-2">
-                    <h3 class="text-gray-900 font-semibold text-sm line-clamp-1" :title="r.title">{{ r.title }}</h3>
-                    <span class="px-2 py-1 rounded-none text-xs font-semibold" :class="typeBadge(r.type)">{{ r.type }}</span>
-                  </div>
-                  <p class="text-gray-600 text-xs mt-1 line-clamp-2">{{ r.summary }}</p>
-                  <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
-                    <span v-if="r.platform" class="px-2 py-1 rounded-none bg-gray-100 text-gray-700">{{ formatPlatform(r.platform) }}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="border-t border-gray-100 p-3 flex items-center justify-between">
-                <span class="text-xs text-gray-400">Drag into the builder on the right</span>
-                <button
-                  type="button"
-                  class="px-3 py-1.5 rounded-none bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
-                  @click="addResource(r)"
-                >
-                  <Plus class="w-3.5 h-3.5" />
-                  Add
-                </button>
-              </div>
-            </article>
-          </div>
-          </div>
-        </Card>
-
+      <div class="space-y-6">
         <!-- Builder panel -->
-        <Card as="section" :hoverable="false" class="rounded-none" @dragover.prevent @drop="onDrop">
+        <Card as="section" :hoverable="false" class="rounded-none xl:col-span-12">
           <div class="p-6 space-y-4">
           <div class="flex items-center justify-between gap-3">
             <div class="min-w-0">
@@ -282,9 +198,120 @@
               </button>
             </div>
           </div>
+          </div>
+        </Card>
+        </div>
+
+        <!-- Bottom two columns -->
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+          <!-- Resources panel -->
+          <Card as="section" :hoverable="false" class="rounded-none xl:col-span-6">
+          <div class="p-6 space-y-4">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Resources</h2>
+              <p class="text-sm text-muted-foreground">{{ filteredResources.length }} results</p>
+            </div>
+          </div>
+
+          <div class="relative">
+            <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              v-model="searchQuery"
+              type="search"
+              placeholder="Search resources..."
+              class="h-10 w-full rounded-none pl-9"
+            />
+          </div>
+
+          <!-- Create resource from URL/share link -->
+          <div class="border border-border bg-background p-4 space-y-3">
+            <div>
+              <p class="text-foreground font-semibold">Create a resource from a link</p>
+              <p class="text-muted-foreground text-xs mt-1">Paste a URL / share link and click Generate. It will be added to the list below.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <Input
+                v-model="newResourceUrl"
+                type="url"
+                placeholder="https://..."
+                class="h-10 flex-1 rounded-none"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                class="rounded-none"
+                :disabled="!newResourceUrl.trim() || newResourceLoading"
+                @click="createResourceFromUrl"
+              >
+                {{ newResourceLoading ? 'Generating…' : 'Generate' }}
+              </Button>
+            </div>
+            <p v-if="newResourceError" class="text-xs text-red-600">{{ newResourceError }}</p>
+          </div>
+
+          <div class="max-h-[calc(100vh-20px)] overflow-y-auto pr-1 space-y-3 min-h-0">
+            <article
+              v-for="r in filteredResources"
+              :key="r.id"
+              class="border border-gray-200 rounded-none overflow-hidden hover:shadow-md transition bg-white"
+              draggable="true"
+              @dragstart="handleDragStart($event, r)"
+            >
+              <div class="flex gap-3 p-3">
+                <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-none bg-gray-100 shrink-0" />
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-start justify-between gap-2">
+                    <h3 class="text-gray-900 font-semibold text-sm line-clamp-1" :title="r.title">{{ r.title }}</h3>
+                    <span class="px-2 py-1 rounded-none text-xs font-semibold" :class="typeBadge(r.type)">{{ r.type }}</span>
+                  </div>
+                  <p class="text-gray-600 text-xs mt-1 line-clamp-2">{{ r.summary }}</p>
+                  <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
+                    <span v-if="r.platform" class="px-2 py-1 rounded-none bg-gray-100 text-gray-700">{{ formatPlatform(r.platform) }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="border-t border-gray-100 p-3 flex items-center justify-between">
+                <span class="text-xs text-gray-400">Drag into the selected-resources column on the right</span>
+                <button
+                  type="button"
+                  class="px-3 py-1.5 rounded-none bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
+                  @click="addResource(r)"
+                >
+                  <Plus class="w-3.5 h-3.5" />
+                  Add
+                </button>
+              </div>
+            </article>
+          </div>
+          </div>
+        </Card>
+
+        <!-- Selected resources panel -->
+        <Card as="section" :hoverable="false" class="rounded-none xl:col-span-6" @dragover.prevent @drop="onDrop">
+          <div class="p-6 space-y-4">
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Selected Resources</h2>
+              <p class="text-sm text-muted-foreground">
+                <span class="text-muted-foreground">Drag from the center column or click Add</span>
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              class="rounded-none"
+              @click="clearSelected"
+              :disabled="selected.length === 0"
+            >
+              Clear
+            </Button>
+          </div>
 
           <div
-            class="rounded-none border-2 border-dashed p-4"
+            class="rounded-none border-2 border-dashed p-4 max-h-[calc(100vh+120px)] overflow-y-auto"
             :class="selected.length ? 'border-gray-200 bg-gray-50' : 'border-blue-200 bg-blue-50'"
           >
             <div v-if="selected.length === 0" class="text-sm text-gray-600">
@@ -336,21 +363,22 @@
               </div>
             </div>
           </div>
-
-          <div class="pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              class="w-full rounded-none border-border bg-[#8ecbff] text-white transition-all hover:-translate-y-px hover:bg-[#8ecbff]/90 hover:text-white hover:shadow-sm active:translate-y-0"
-              :disabled="!pathMeta.title.trim() || selected.length === 0"
-              @click="createLearningPath"
-            >
-              Create Learning Path
-            </Button>
-          </div>
           </div>
         </Card>
+      </div>
+
+      <!-- Create Learning Path button at bottom -->
+      <div class="pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          class="w-full rounded-none border-border bg-[#8ecbff] text-white transition-all hover:-translate-y-px hover:bg-[#8ecbff]/90 hover:text-white hover:shadow-sm active:translate-y-0"
+          :disabled="!pathMeta.title.trim() || selected.length === 0"
+          @click="createLearningPath"
+        >
+          Create Learning Path
+        </Button>
       </div>
     </div>
 </template>

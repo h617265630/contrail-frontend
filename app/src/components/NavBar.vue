@@ -87,18 +87,6 @@
           />
         </div>
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          class="hidden md:inline-flex h-9 w-9 rounded-none border-0 bg-transparent text-foreground hover:bg-transparent hover:text-foreground/80"
-          :aria-label="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
-          @click="toggleTheme"
-        >
-          <Sun v-if="theme === 'dark'" class="h-5 w-5" />
-          <Moon v-else class="h-5 w-5" />
-        </Button>
-
         <div
           v-if="isAuthed"
           class="relative hidden md:block"
@@ -162,7 +150,7 @@
                 to="/my-resources"
                 class="flex items-center justify-between rounded-xl px-3 py-2 transition-colors hover:bg-accent hover:text-accent-foreground"
               >
-                <span>{{ t('My Collection') }}</span>
+                <span>{{ t('My Resources') }}</span>
                 <span class="text-xs text-muted-foreground">Go</span>
               </RouterLink>
               <RouterLink
@@ -317,15 +305,6 @@
         <RouterLink class="py-2 hover:text-foreground" to="/my-resources/add" @click="open = false">Add resource</RouterLink>
         <RouterLink class="py-2 hover:text-foreground" to="/creator?tab=markdown" @click="open = false">Write note</RouterLink>
         <RouterLink v-if="!isAuthed" class="py-2 hover:text-foreground" to="/login" @click="open = false">Login</RouterLink>
-        <button
-          type="button"
-          class="mt-1 inline-flex items-center justify-between border border-border bg-background px-3 py-2 text-foreground"
-          @click="toggleTheme"
-        >
-          <span>{{ theme === 'dark' ? 'Light mode' : 'Dark mode' }}</span>
-          <Sun v-if="theme === 'dark'" class="h-4 w-4" />
-          <Moon v-else class="h-4 w-4" />
-        </button>
       </div>
     </div>
   </div>
@@ -336,7 +315,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { Library, Plus, Search, User, ChevronDown, LogOut, Globe, Moon, Sun, Menu, X, PenLine } from 'lucide-vue-next'
+import { Library, Plus, Search, User, ChevronDown, LogOut, Globe, Menu, X, PenLine } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -383,21 +362,6 @@ const userLevel = computed(() => (user.value?.is_superuser ? 'Lv.SUPER' : 'Lv.1'
 const userEmail = computed(() => user.value?.email || 'No email')
 const desktopMenuOpen = ref(false)
 let desktopMenuCloseTimer: ReturnType<typeof setTimeout> | null = null
-
-type ThemeMode = 'light' | 'dark'
-const theme = ref<ThemeMode>('light')
-
-function applyTheme(next: ThemeMode) {
-  theme.value = next
-  const root = document.documentElement
-  if (next === 'dark') root.classList.add('dark')
-  else root.classList.remove('dark')
-  localStorage.setItem('theme', next)
-}
-
-function toggleTheme() {
-  applyTheme(theme.value === 'dark' ? 'light' : 'dark')
-}
 
 function selectLang(next: AppLang) {
   setLang(next)
