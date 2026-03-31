@@ -32,5 +32,7 @@ export interface AiPathGenerateResponse {
 }
 
 export function generateAiPath(query: string) {
-  return request.post<AiPathGenerateResponse, AiPathGenerateResponse>('/ai-path/generate', { query })
+  return request.post<AiPathGenerateResponse, AiPathGenerateResponse>('/ai-path/generate', { query }, {
+    timeout: 60000,
+  })
 }

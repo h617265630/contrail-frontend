@@ -110,53 +110,52 @@
                 v-for="(resource, cardIndex) in deck.cards.slice(0, collapsedPreviewCount)"
                 :key="resource.id"
                 :class="[
-                  'shrink-0 w-52 h-52 rounded-lg border bg-white shadow-sm transition-all duration-300 cursor-pointer hover:shadow-xl',
+                  'shrink-0 w-52 rounded-xl overflow-hidden bg-white border border-stone-100 shadow-sm transition-all duration-300 cursor-pointer hover:shadow-xl flex flex-col',
                   getWeightCardClass(resource),
                 ]"
                 :style="getCollapsedPreviewCardStyle(cardIndex, Math.min(deck.cards.length, collapsedPreviewCount))"
                 @click.stop="openCard(resource)"
               >
-                <div class="h-full flex flex-col overflow-hidden rounded-lg">
-                  <!-- Category + id header -->
-                  <div class="px-3 py-2 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
-                    <span
-                      class="text-[10px] font-semibold uppercase tracking-wider"
-                      :style="{ color: getCategoryColor(resource.category) }"
+                <!-- Thumbnail -->
+                <div class="relative bg-stone-100 overflow-hidden transition-transform duration-500 group-hover:scale-105" style="aspect-ratio: 16/9; width: 100%;">
+                  <img
+                    v-if="resource.thumbnail"
+                    :src="resource.thumbnail"
+                    :alt="resource.title"
+                    class="block w-full h-full object-cover object-center"
+                    style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+                  />
+                  <div v-else class="w-full h-full flex items-center justify-center">
+                    <div
+                      class="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold text-white"
+                      :style="{ backgroundColor: getCategoryColor(resource.category) }"
                     >
-                      {{ resource.category || '—' }}
-                    </span>
-                    <span class="text-[10px] text-stone-400">#{{ resource.user_seq ?? resource.id }}</span>
-                  </div>
-                  <!-- Thumbnail -->
-                  <div class="relative h-28 bg-stone-100 overflow-hidden">
-                    <img
-                      v-if="resource.thumbnail"
-                      :src="resource.thumbnail"
-                      :alt="resource.title"
-                      class="block w-full h-full object-cover object-center"
-                      style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
-                    />
-                    <div v-else class="w-full h-full flex items-center justify-center">
-                      <div
-                        class="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold text-white"
-                        :style="{ backgroundColor: getCategoryColor(resource.category) }"
-                      >
-                        {{ resource.title.charAt(0) }}
-                      </div>
+                      {{ resource.title.charAt(0) }}
                     </div>
                   </div>
-                  <!-- Title -->
-                  <div class="px-3 py-2 border-b border-stone-100 bg-white">
-                    <h3 class="text-xs font-bold text-stone-800 line-clamp-1">{{ resource.title }}</h3>
+                  <!-- Type badge -->
+                  <div class="absolute top-2 left-2">
+                    <span class="inline-flex items-center rounded-full bg-white/90 backdrop-blur-sm border border-white/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-stone-600">
+                      {{ resource.type }}
+                    </span>
                   </div>
-                  <!-- Summary -->
-                  <div class="px-3 py-2 flex-1 bg-stone-50/50">
-                    <p class="text-[11px] text-stone-400 line-clamp-2">{{ resource.summary }}</p>
-                  </div>
-                  <!-- Footer -->
-                  <div class="px-3 py-2 border-t border-stone-100 flex items-center justify-between bg-stone-50/30">
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 p-3 flex flex-col">
+                  <span
+                    class="text-[10px] font-semibold uppercase tracking-wider mb-1"
+                    :style="{ color: getCategoryColor(resource.category) }"
+                  >
+                    {{ resource.category || '—' }}
+                  </span>
+                  <h3 class="text-xs font-semibold text-stone-800 leading-snug line-clamp-2 group-hover:text-amber-700 transition-colors" :title="resource.title">
+                    {{ resource.title }}
+                  </h3>
+                  <p class="text-[11px] text-stone-400 mt-1 line-clamp-2 flex-1">{{ resource.summary }}</p>
+                  <div class="flex items-center justify-between mt-2 pt-2 border-t border-stone-50">
                     <span class="text-[10px] text-stone-400">{{ formatPlatform(resource.platform) }}</span>
-                    <span class="text-[10px] font-semibold text-stone-600 uppercase tracking-wider">{{ resource.type }}</span>
+                    <span class="text-[10px] text-stone-400">#{{ resource.user_seq ?? resource.id }}</span>
                   </div>
                 </div>
               </div>
@@ -168,54 +167,58 @@
             v-else
             class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"
           >
-            <div
+            <article
               v-for="(resource, i) in deck.cards"
               :key="resource.id"
               :class="[
-                'rounded-lg border bg-white shadow-sm transition-all duration-200 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 group',
+                'rounded-xl overflow-hidden bg-white border border-stone-100 hover:border-stone-200 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col',
                 getWeightCardClass(resource),
               ]"
               @click="openCard(resource)"
             >
-              <div class="h-full flex flex-col overflow-hidden rounded-lg">
-                <div class="px-3 py-2 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
-                  <span
-                    class="text-[10px] font-semibold uppercase tracking-wider"
-                    :style="{ color: getCategoryColor(resource.category) }"
+              <!-- Thumbnail -->
+              <div class="relative bg-stone-100 overflow-hidden transition-transform duration-500 group-hover:scale-105" style="aspect-ratio: 16/9; width: 100%;">
+                <img
+                  v-if="resource.thumbnail"
+                  :src="resource.thumbnail"
+                  :alt="resource.title"
+                  class="block w-full h-full object-cover object-center"
+                  style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center">
+                  <div
+                    class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                    :style="{ backgroundColor: getCategoryColor(resource.category) }"
                   >
-                    {{ resource.category || '—' }}
-                  </span>
-                  <span class="text-[10px] text-stone-400">#{{ resource.user_seq ?? resource.id }}</span>
-                </div>
-                <div class="relative h-28 bg-stone-100 overflow-hidden">
-                  <img
-                    v-if="resource.thumbnail"
-                    :src="resource.thumbnail"
-                    :alt="resource.title"
-                    class="block w-full h-full object-cover"
-                    style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
-                  />
-                  <div v-else class="w-full h-full flex items-center justify-center">
-                    <div
-                      class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
-                      :style="{ backgroundColor: getCategoryColor(resource.category) }"
-                    >
-                      {{ resource.title.charAt(0) }}
-                    </div>
+                    {{ resource.title.charAt(0) }}
                   </div>
                 </div>
-                <div class="px-3 py-2 border-b border-stone-100 bg-white">
-                  <h3 class="text-xs font-bold text-stone-800 line-clamp-1">{{ resource.title }}</h3>
-                </div>
-                <div class="px-3 py-2 flex-1 bg-stone-50/50">
-                  <p class="text-[11px] text-stone-400 line-clamp-2">{{ resource.summary }}</p>
-                </div>
-                <div class="px-3 py-2 border-t border-stone-100 flex items-center justify-between bg-stone-50/30">
-                  <span class="text-[10px] text-stone-400">{{ formatPlatform(resource.platform) }}</span>
-                  <span class="text-[10px] font-semibold text-stone-600 uppercase tracking-wider">{{ resource.type }}</span>
+                <!-- Type badge -->
+                <div class="absolute top-2 left-2">
+                  <span class="inline-flex items-center rounded-full bg-white/90 backdrop-blur-sm border border-white/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-stone-600">
+                    {{ resource.type }}
+                  </span>
                 </div>
               </div>
-            </div>
+
+              <!-- Content -->
+              <div class="flex-1 p-3.5 flex flex-col">
+                <span
+                  class="text-[10px] font-semibold uppercase tracking-wider mb-1.5"
+                  :style="{ color: getCategoryColor(resource.category) }"
+                >
+                  {{ resource.category || '—' }}
+                </span>
+                <h3 class="text-sm font-semibold text-stone-800 leading-snug line-clamp-2 group-hover:text-amber-700 transition-colors" :title="resource.title">
+                  {{ resource.title }}
+                </h3>
+                <p class="text-xs text-stone-400 mt-1 line-clamp-2 flex-1">{{ resource.summary }}</p>
+                <div class="flex items-center justify-between mt-3 pt-2 border-t border-stone-50">
+                  <span class="text-[10px] text-stone-400">{{ formatPlatform(resource.platform) }}</span>
+                  <span class="text-[10px] font-semibold text-stone-400">#{{ resource.user_seq ?? resource.id }}</span>
+                </div>
+              </div>
+            </article>
           </div>
 
           <p class="text-xs text-stone-400 mt-4">{{ deck.cards.length }} cards</p>
@@ -233,11 +236,11 @@
         >
           <div class="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"></div>
           <div class="relative w-full max-w-md rounded-2xl overflow-hidden bg-white shadow-2xl border border-stone-100">
-            <div class="relative h-56 bg-stone-100 overflow-hidden">
+            <div class="relative bg-stone-100 overflow-hidden" style="aspect-ratio: 16/9; width: 100%;">
               <img
                 :src="activeResource.thumbnail || fallbackThumb"
                 :alt="activeResource.title"
-                class="block w-full h-full object-cover"
+                class="block w-full h-full object-cover object-center"
                 style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
               />
               <button
