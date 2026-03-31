@@ -171,7 +171,7 @@
               v-for="(resource, i) in deck.cards"
               :key="resource.id"
               :class="[
-                'rounded-xl overflow-hidden bg-white border border-stone-100 hover:border-stone-200 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col',
+                'aspect-4/5 rounded-xl overflow-hidden bg-white border border-stone-100 hover:border-stone-200 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col',
                 getWeightCardClass(resource),
               ]"
               @click="openCard(resource)"

@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { useAuthStore } from './stores/auth'
 
 // Lazy-loaded routes to avoid ReferenceError during HMR/initial load
 const Home = () => import('./pages/Home.vue')
@@ -48,6 +49,14 @@ const Plan = () => import('./pages/Plan.vue')
 const Tool = () => import('./pages/Tool.vue')
 const Stack = () => import('./pages/stackUI/Stack.vue')
 const CardUI = () => import('./pages/CardUI.vue')
+
+// Admin pages
+const AdminLayout = () => import('./pages/admin/AdminLayout.vue')
+const AdminDashboard = () => import('./pages/admin/Dashboard.vue')
+const AdminUserManagement = () => import('./pages/admin/UserManagement.vue')
+const AdminResourceManagement = () => import('./pages/admin/ResourceManagement.vue')
+const AdminLearningPathManagement = () => import('./pages/admin/LearningPathManagement.vue')
+const AdminAnalytics = () => import('./pages/admin/Analytics.vue')
 
 const routes: RouteRecordRaw[] = [
   // Canonical routes
@@ -132,11 +141,50 @@ const routes: RouteRecordRaw[] = [
   { path: '/about/resources', name: 'about-resources', component: AboutResources },
   { path: '/about/learning-paths', name: 'about-learning-paths', component: AboutLearningPaths },
   { path: '/about/progress', name: 'about-progress', component: AboutProgress },
+
+  // Admin routes
+  {
+    path: '/admin',
+    component: AdminLayout,
+    meta: { requiresAdmin: true },
+    children: [
+      { path: '', redirect: { name: 'admin-dashboard' } },
+      { path: 'dashboard', name: 'admin-dashboard', component: AdminDashboard },
+      { path: 'users', name: 'admin-users', component: AdminUserManagement },
+      { path: 'resources', name: 'admin-resources', component: AdminResourceManagement },
+      { path: 'paths', name: 'admin-paths', component: AdminLearningPathManagement },
+      { path: 'analytics', name: 'admin-analytics', component: AdminAnalytics },
+    ],
+  },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+// Admin route guard
+router.beforeEach(async (to, _from, next) => {
+  if (to.meta?.requiresAdmin) {
+    const authStore = useAuthStore()
+    // Ensure auth state is loaded
+    if (authStore.isAuthed && !authStore.user) {
+      try {
+        await authStore.fetchProfile()
+      } catch {
+        authStore.logout()
+        next({ name: 'login' })
+        return
+      }
+    }
+    const user = authStore.user as any
+    if (!user?.is_superuser) {
+      // Redirect non-admins to home
+      next({ name: 'home' })
+      return
+    }
+  }
+  next()
 })
 
 export default router
