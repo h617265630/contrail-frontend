@@ -43,7 +43,7 @@
   </div>
 
   <!-- Main navbar -->
-  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100">
+  <header class="sticky top-0 z-40 bg-stone-50 backdrop-blur-md border-b border-stone-100">
     <div class="mx-auto max-w-7xl px-4">
       <div class="h-16 flex items-center justify-between gap-8">
         <!-- Logo -->
