@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-background text-foreground flex flex-col">
     <NavBar />
-    <main class="py-6 px-4 flex-1">
+    <main class="pt-16 py-6 px-4 flex-1">
       <router-view />
     </main>
     <AppFooter />

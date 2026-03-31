@@ -618,7 +618,7 @@ function showMdSuccessToast(text: string) {
 
 function extractUrls(text: string) {
   const matches = String(text || '').match(/https?:\/\/[^\s)\]>]+/g) || []
-  return Array.from(new Set(matches.map(u => u.replace(/[),.;\]]+$/, '').trim()).filter(Boolean))
+  return Array.from(new Set(matches.map(u => u.replace(/[),.;\]]+$/, '').trim()).filter(Boolean)))
 }
 
 function guessUrlKind(url: string) {

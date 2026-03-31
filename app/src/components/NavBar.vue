@@ -263,9 +263,6 @@
       </div>
     </div>
   </header>
-
-  <!-- Bottom spacer -->
-  <div class="h-16" />
 </template>
 
 <script setup lang="ts">
