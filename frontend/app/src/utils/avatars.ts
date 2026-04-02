@@ -1,4 +1,4 @@
-const STORAGE_PREFIX = 'contrail_default_avatar:'
+const STORAGE_PREFIX = 'learnpathly_default_avatar:'
 
 function safeGetStorage() {
   try {

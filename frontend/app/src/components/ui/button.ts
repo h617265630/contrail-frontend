@@ -32,9 +32,11 @@ export const Button = defineComponent({
     disabled: { type: Boolean, default: false },
   },
   setup(props, { slots, attrs }) {
+    const isNativeButton = computed(() => props.as === 'button')
     const classes = computed(() =>
       cn(
         'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+        !isNativeButton.value && props.disabled ? 'pointer-events-none opacity-50' : '',
         variantClass[props.variant],
         sizeClass[props.size],
         props.class,
@@ -46,8 +48,10 @@ export const Button = defineComponent({
         props.as as any,
         {
           class: classes.value,
-          disabled: props.disabled,
-          type: attrs.type ?? (props.as === 'button' ? 'button' : undefined),
+          disabled: isNativeButton.value ? props.disabled : undefined,
+          'aria-disabled': !isNativeButton.value && props.disabled ? 'true' : undefined,
+          tabindex: !isNativeButton.value && props.disabled ? -1 : (attrs as any).tabindex,
+          type: attrs.type ?? (isNativeButton.value ? 'button' : undefined),
           ...attrs,
         },
         slots.default ? slots.default() : undefined,

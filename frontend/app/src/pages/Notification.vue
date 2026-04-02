@@ -1,148 +1,195 @@
 <template>
-  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8 -mt-4 md:-mt-6">
-    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <Card as="section" :hoverable="false" class="rounded-none">
-        <div class="p-6 space-y-4">
+  <div class="min-h-screen bg-stone-50">
+
+    <!-- Masthead -->
+    <header class="border-b-2 border-stone-900 bg-white">
+      <div class="mx-auto max-w-7xl px-4 py-6 md:py-8">
+        <div class="flex items-end justify-between">
           <div>
-            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Platform updates</h2>
-            <p class="text-sm text-muted-foreground">New features</p>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="h-px w-8 bg-rose-500"></span>
+              <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-stone-400">Updates</span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-black tracking-tight text-stone-900 leading-[0.9]">
+              What's<br/><span class="text-rose-600">New.</span>
+            </h1>
           </div>
-          <div class="space-y-3">
-            <article v-for="n in platformUpdates" :key="n.id" class="border border-border bg-background p-4">
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <p class="text-xs text-muted-foreground">{{ n.date }}</p>
-                  <h3 class="text-foreground font-semibold mt-1 line-clamp-1" :title="n.title">{{ n.title }}</h3>
-                </div>
-                <span class="shrink-0 px-2 py-1 border border-border bg-background text-xs font-semibold text-foreground">New</span>
-              </div>
-              <p class="text-muted-foreground text-sm mt-2 line-clamp-3" :title="n.body">{{ n.body }}</p>
-            </article>
+          <div class="hidden md:flex flex-col items-end gap-2">
+            <span class="text-[10px] font-semibold uppercase tracking-widest text-stone-400">Platform · Rules · Status</span>
           </div>
         </div>
-      </Card>
+      </div>
+    </header>
 
-      <Card as="section" :hoverable="false" class="rounded-none">
-        <div class="p-6 space-y-4">
-          <div>
-            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Important changes</h2>
-            <p class="text-sm text-muted-foreground">Rules & policies</p>
+    <main class="mx-auto max-w-7xl px-4 py-8">
+
+      <!-- Platform Updates -->
+      <section class="mb-14">
+        <!-- Section header -->
+        <div class="flex items-center gap-4 mb-8">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-8 bg-blue-600 rounded-full"></div>
+            <span class="text-sm font-black uppercase tracking-widest text-stone-900">Platform</span>
           </div>
-          <div class="space-y-3">
-            <article v-for="n in ruleChanges" :key="n.id" class="border border-border bg-background p-4">
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <p class="text-xs text-muted-foreground">{{ n.date }}</p>
-                  <h3 class="text-foreground font-semibold mt-1 line-clamp-1" :title="n.title">{{ n.title }}</h3>
-                </div>
-                <span class="shrink-0 px-2 py-1 border border-border bg-background text-xs font-semibold text-foreground">Rule</span>
+          <div class="flex-1 h-px bg-stone-200"></div>
+        </div>
+
+        <!-- Numbered editorial cards -->
+        <div class="space-y-3">
+          <article
+            v-for="(n, idx) in platformUpdates"
+            :key="n.id"
+            class="group relative pl-14 py-6 border-b border-stone-100 hover:border-stone-200 transition-colors"
+          >
+            <!-- Large index number -->
+            <span class="absolute left-0 top-4 text-[72px] font-black leading-none text-stone-100 select-none pointer-events-none group-hover:text-stone-200 transition-colors" aria-hidden="true">
+              {{ String(idx + 1).padStart(2, '0') }}
+            </span>
+
+            <div class="relative">
+              <div class="flex items-center gap-3 mb-2">
+                <time class="text-xs text-stone-400 font-medium">{{ n.date }}</time>
+                <span class="inline-flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-600">
+                  New
+                </span>
               </div>
-              <p class="text-muted-foreground text-sm mt-2 line-clamp-3" :title="n.body">{{ n.body }}</p>
-            </article>
+              <h3 class="text-base font-bold text-stone-900 leading-snug">{{ n.title }}</h3>
+              <p class="text-sm text-stone-500 mt-2 leading-relaxed max-w-2xl">{{ n.body }}</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Rules & Policies -->
+      <section class="mb-14">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-8 bg-amber-600 rounded-full"></div>
+            <span class="text-sm font-black uppercase tracking-widest text-stone-900">Rules & Policy</span>
+          </div>
+          <div class="flex-1 h-px bg-stone-200"></div>
+        </div>
+
+        <div class="space-y-3">
+          <article
+            v-for="(n, idx) in ruleChanges"
+            :key="n.id"
+            class="group relative pl-14 py-6 border-b border-stone-100 hover:border-stone-200 transition-colors"
+          >
+            <span class="absolute left-0 top-4 text-[72px] font-black leading-none text-stone-100 select-none pointer-events-none group-hover:text-stone-200 transition-colors" aria-hidden="true">
+              {{ String(idx + 1).padStart(2, '0') }}
+            </span>
+
+            <div class="relative">
+              <div class="flex items-center gap-3 mb-2">
+                <time class="text-xs text-stone-400 font-medium">{{ n.date }}</time>
+                <span class="inline-flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-600">
+                  Policy
+                </span>
+              </div>
+              <h3 class="text-base font-bold text-stone-900 leading-snug">{{ n.title }}</h3>
+              <p class="text-sm text-stone-500 mt-2 leading-relaxed max-w-2xl">{{ n.body }}</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Service Status -->
+      <section class="mb-14">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-8 bg-emerald-600 rounded-full"></div>
+            <span class="text-sm font-black uppercase tracking-widest text-stone-900">Service Status</span>
+          </div>
+          <div class="flex-1 h-px bg-stone-200"></div>
+          <!-- Always-on status indicator -->
+          <div class="flex items-center gap-2">
+            <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-emerald-600">All operational</span>
           </div>
         </div>
-      </Card>
 
-      <Card as="section" :hoverable="false" class="rounded-none">
-        <div class="p-6 space-y-4">
-          <div>
-            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Service status</h2>
-            <p class="text-sm text-muted-foreground">Availability & incidents</p>
-          </div>
-          <div class="space-y-3">
-            <article v-for="s in serviceStatus" :key="s.id" class="border border-border bg-background p-4">
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <p class="text-xs text-muted-foreground">{{ s.date }}</p>
-                  <h3 class="text-foreground font-semibold mt-1 line-clamp-1" :title="s.title">{{ s.title }}</h3>
-                </div>
-                <span class="shrink-0 px-2 py-1 border border-border bg-background text-xs font-semibold" :class="statusBadgeClass(s.status)">
+        <div class="space-y-3">
+          <article
+            v-for="(s, idx) in serviceStatus"
+            :key="s.id"
+            class="group relative pl-14 py-6 border-b border-stone-100 hover:border-stone-200 transition-colors"
+          >
+            <span class="absolute left-0 top-4 text-[72px] font-black leading-none text-stone-100 select-none pointer-events-none group-hover:text-stone-200 transition-colors" aria-hidden="true">
+              {{ String(idx + 1).padStart(2, '0') }}
+            </span>
+
+            <div class="relative">
+              <div class="flex items-center gap-3 mb-2">
+                <time class="text-xs text-stone-400 font-medium">{{ s.date }}</time>
+                <span
+                  class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+                  :class="statusClasses(s.status)"
+                >
+                  <span class="h-1.5 w-1.5 rounded-full" :class="statusDotClass(s.status)"></span>
                   {{ s.status }}
                 </span>
               </div>
-              <p class="text-muted-foreground text-sm mt-2 line-clamp-3" :title="s.body">{{ s.body }}</p>
-            </article>
-          </div>
+              <h3 class="text-base font-bold text-stone-900 leading-snug">{{ s.title }}</h3>
+              <p class="text-sm text-stone-500 mt-2 leading-relaxed max-w-2xl">{{ s.body }}</p>
+            </div>
+          </article>
         </div>
-      </Card>
-    </section>
-
-    <Card v-if="!isAuthed" as="section" :hoverable="false" class="rounded-none">
-      <div class="p-6">
-        <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Personal notifications</h2>
-        <p class="mt-2 text-sm text-muted-foreground">Sign in to see social & collaboration, progress, and path notifications.</p>
-        <div class="mt-4">
-          <Button :as="RouterLinkComp" to="/login" variant="outline" size="sm" class="rounded-none">Sign in</Button>
-        </div>
-      </div>
-    </Card>
-
-    <section v-else class="space-y-10">
-      <section class="grid gap-6 md:grid-cols-2">
-        <Card as="section" :hoverable="false" class="rounded-none">
-          <div class="p-6 space-y-4">
-            <div>
-              <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Social & Collaboration - coming soon</h2>
-              <p class="text-sm text-muted-foreground">Interactions around your content</p>
-            </div>
-            <div class="space-y-3">
-              <article v-for="n in socialNotifications" :key="n.id" class="border border-border bg-background p-4">
-                <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0">
-                    <p class="text-xs text-muted-foreground">{{ n.date }}</p>
-                    <h3 class="text-foreground font-semibold mt-1 line-clamp-1" :title="n.title">{{ n.title }}</h3>
-                  </div>
-                  <span class="shrink-0 px-2 py-1 border border-border bg-background text-xs font-semibold text-foreground">{{ n.kind }}</span>
-                </div>
-                <p class="text-muted-foreground text-sm mt-2 line-clamp-3" :title="n.body">{{ n.body }}</p>
-              </article>
-            </div>
-          </div>
-        </Card>
-
-        <Card as="section" :hoverable="false" class="rounded-none">
-          <div class="p-6 space-y-4">
-            <div>
-              <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Progress - coming soon</h2>
-              <p class="text-sm text-muted-foreground">Learning signals & milestones</p>
-            </div>
-            <div class="space-y-3">
-              <article v-for="n in progressNotifications" :key="n.id" class="border border-border bg-background p-4">
-                <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0">
-                    <p class="text-xs text-muted-foreground">{{ n.date }}</p>
-                    <h3 class="text-foreground font-semibold mt-1 line-clamp-1" :title="n.title">{{ n.title }}</h3>
-                  </div>
-                  <span class="shrink-0 px-2 py-1 border border-border bg-background text-xs font-semibold text-foreground">{{ n.kind }}</span>
-                </div>
-                <p class="text-muted-foreground text-sm mt-2 line-clamp-3" :title="n.body">{{ n.body }}</p>
-              </article>
-            </div>
-          </div>
-        </Card>
       </section>
 
-      <Card as="section" :hoverable="false" class="rounded-none">
-        <div class="p-6 space-y-4">
-          <div>
-            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Path - coming soon</h2>
-            <p class="text-sm text-muted-foreground">Changes and activity around paths</p>
+      <!-- Divider -->
+      <div class="border-t-2 border-stone-900 mb-14"></div>
+
+      <!-- Personal Notifications (auth-gated) -->
+      <section v-if="!isAuthed">
+        <!-- Auth gate -->
+        <div class="py-16 text-center">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-stone-100 mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-stone-400"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <article v-for="n in pathUpdateNotifications" :key="n.id" class="border border-border bg-background p-4">
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <p class="text-xs text-muted-foreground">{{ n.date }}</p>
-                  <h3 class="text-foreground font-semibold mt-1 line-clamp-1" :title="n.title">{{ n.title }}</h3>
-                </div>
-                <span class="shrink-0 px-2 py-1 border border-border bg-background text-xs font-semibold text-foreground">{{ n.kind }}</span>
-              </div>
-              <p class="text-muted-foreground text-sm mt-2 line-clamp-3" :title="n.body">{{ n.body }}</p>
-            </article>
-          </div>
+          <h3 class="text-lg font-bold text-stone-700 mb-2">Sign in to see your notifications</h3>
+          <p class="text-sm text-stone-400 mb-6 max-w-sm mx-auto">Social activity, progress milestones, and path updates will appear here once you're signed in.</p>
+          <Button
+            :as="RouterLinkComp"
+            to="/login"
+            class="rounded-full bg-stone-900 text-white hover:bg-stone-800 font-semibold text-sm px-8 py-2.5 transition-all hover:-translate-y-px"
+          >
+            Sign in
+          </Button>
         </div>
-      </Card>
-    </section>
+      </section>
+
+      <template v-else>
+        <!-- Social -->
+        <section class="mb-14">
+          <div class="flex items-center gap-4 mb-8">
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-8 bg-violet-600 rounded-full"></div>
+              <span class="text-sm font-black uppercase tracking-widest text-stone-900">Social</span>
+            </div>
+            <div class="flex-1 h-px bg-stone-200"></div>
+          </div>
+          <div class="rounded-xl border border-dashed border-stone-200 bg-stone-50/50 py-12 text-center">
+            <p class="text-sm text-stone-400">Social and collaboration features coming soon.</p>
+          </div>
+        </section>
+
+        <!-- Progress -->
+        <section class="mb-14">
+          <div class="flex items-center gap-4 mb-8">
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-8 bg-cyan-600 rounded-full"></div>
+              <span class="text-sm font-black uppercase tracking-widest text-stone-900">Progress</span>
+            </div>
+            <div class="flex-1 h-px bg-stone-200"></div>
+          </div>
+          <div class="rounded-xl border border-dashed border-stone-200 bg-stone-50/50 py-12 text-center">
+            <p class="text-sm text-stone-400">Progress tracking and milestone notifications coming soon.</p>
+          </div>
+        </section>
+      </template>
+
+    </main>
   </div>
 </template>
 
@@ -150,17 +197,14 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { Button } from '../components/ui/button'
-import Card from '../components/ui/Card.vue'
 import { useAuthStore } from '../stores/auth'
 
 const RouterLinkComp = RouterLink
-
 const auth = useAuthStore()
 const isAuthed = computed(() => auth.isAuthed)
 
 type TextNotice = { id: string; date: string; title: string; body: string }
 type ServiceNotice = TextNotice & { status: 'operational' | 'degraded' | 'incident' }
-type TypedNotice = TextNotice & { kind: string }
 
 const platformUpdates: TextNotice[] = [
   {
@@ -196,74 +240,15 @@ const serviceStatus: ServiceNotice[] = [
   },
 ]
 
-const socialNotifications: TypedNotice[] = [
-  {
-    id: 'sn1',
-    date: '2026-01-31',
-    kind: 'Comment',
-    title: 'Someone commented on your path',
-    body: 'A new comment was posted under one of your learning paths. Open the path to view it.',
-  },
-  {
-    id: 'sn2',
-    date: '2026-01-31',
-    kind: 'Reference',
-    title: 'Someone referenced your resource',
-    body: 'A public learning path referenced a resource you created or shared.',
-  },
-  {
-    id: 'sn3',
-    date: '2026-01-31',
-    kind: 'Follow',
-    title: 'Someone followed you',
-    body: 'You have a new follower. Social and collaboration features will be expanded over time.',
-  },
-]
+function statusClasses(status: ServiceNotice['status']) {
+  if (status === 'operational') return 'border-emerald-100 bg-emerald-50 text-emerald-700'
+  if (status === 'degraded') return 'border-amber-100 bg-amber-50 text-amber-700'
+  return 'border-red-100 bg-red-50 text-red-700'
+}
 
-const progressNotifications: TypedNotice[] = [
-  {
-    id: 'pn1',
-    date: '2026-01-31',
-    kind: 'Step completed',
-    title: 'You completed a step',
-    body: 'Your learning progress for that step has been updated.',
-  },
-  {
-    id: 'pn2',
-    date: '2026-01-31',
-    kind: 'Milestone',
-    title: 'Milestone: 30% complete',
-    body: 'You reached 30% completion on a learning path.',
-  },
-  {
-    id: 'pn3',
-    date: '2026-01-31',
-    kind: 'Reminder',
-    title: 'Keep-learning reminders (optional)',
-    body: 'You can set daily or weekly reminders to stay consistent.',
-  },
-]
-
-const pathUpdateNotifications: TypedNotice[] = [
-  {
-    id: 'un1',
-    date: '2026-01-31',
-    kind: 'Updated',
-    title: 'A path you follow was updated',
-    body: 'The author updated the path (added / removed / reordered steps).',
-  },
-  {
-    id: 'un2',
-    date: '2026-01-31',
-    kind: 'Forked',
-    title: 'Your path was forked or saved',
-    body: 'Your learning path received a new fork or save.',
-  },
-]
-
-function statusBadgeClass(status: ServiceNotice['status']) {
-  if (status === 'operational') return 'text-foreground'
-  if (status === 'degraded') return 'text-muted-foreground'
-  return 'text-destructive'
+function statusDotClass(status: ServiceNotice['status']) {
+  if (status === 'operational') return 'bg-emerald-500'
+  if (status === 'degraded') return 'bg-amber-500'
+  return 'bg-red-500'
 }
 </script>

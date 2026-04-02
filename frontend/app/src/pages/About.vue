@@ -1,80 +1,174 @@
 <template>
-  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8 -mt-4 md:-mt-6">
-    <section class="border-b border-border pb-8">
-      <div class="grid gap-6 md:grid-cols-12 md:items-end">
-        <div class="md:col-span-8">
-          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">What is Contrail?</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Contrail is a platform for building personal learning paths. It helps you turn scattered resources—found across
-            YouTube, blogs, and course platforms—into a clear, actionable path you can actually finish.
-            Instead of collecting links and losing momentum, you get structure, progress, and feedback in one place.
+  <div class="min-h-screen">
+
+    <!-- Editorial hero -->
+    <section class="relative overflow-hidden bg-stone-50 border-b border-stone-200">
+      <!-- Decorative large background text -->
+      <div class="absolute inset-0 flex items-center justify-end pr-8 pointer-events-none select-none" aria-hidden="true">
+        <span class="text-[20vw] font-black text-stone-100 leading-none tracking-tighter">LP</span>
+      </div>
+
+      <div class="relative mx-auto max-w-7xl px-4 py-16 md:py-24">
+        <div class="max-w-2xl">
+          <div class="flex items-center gap-3 mb-8">
+            <span class="h-px w-12 bg-emerald-600"></span>
+            <span class="text-[11px] font-bold uppercase tracking-[0.25em] text-stone-400">About</span>
+          </div>
+
+          <h1 class="text-5xl md:text-7xl font-black tracking-tight text-stone-900 leading-[0.92] mb-8">
+            Learn<br/>
+            <span class="text-emerald-600">with</span><br/>
+            intention.
+          </h1>
+
+          <p class="text-base leading-relaxed text-stone-600 max-w-lg">
+            Learnpathly is a personal learning platform. We help you turn scattered resources—videos, articles, links—into clear, actionable paths you can actually finish.
           </p>
         </div>
       </div>
     </section>
 
-    <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <Card as="article" :hoverable="false" class="rounded-none">
-        <div class="p-6 space-y-2 flex flex-col h-full">
-          <h3 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Resources</h3>
-          <p class="text-sm leading-relaxed text-muted-foreground">Import videos, articles, documents, and links—then manage them in one library instead of browser bookmarks.</p>
-          <div class="pt-4 mt-auto flex justify-end">
-            <Button :as="RouterLinkComp" to="/about/resources" variant="outline" size="sm" class="rounded-none">Learn more</Button>
+    <!-- What we solve + core features: asymmetric 2-col -->
+    <section class="mx-auto max-w-7xl px-4 py-16 md:py-20">
+      <div class="grid grid-cols-12 gap-8 md:gap-12">
+
+        <!-- Left: problem statement -->
+        <div class="col-span-12 md:col-span-5">
+          <div class="sticky top-24">
+            <span class="text-[11px] font-bold uppercase tracking-[0.25em] text-amber-600 mb-4 block">The problem</span>
+            <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-stone-900 leading-tight mb-6">
+              You collect more than you complete.
+            </h2>
+            <p class="text-sm leading-relaxed text-stone-500 mb-6">
+              Browser bookmarks pile up. YouTube watch-later becomes watch-never. Articles are saved and forgotten. Learning happens in fragments—and without a clear structure, progress is invisible and motivation fades.
+            </p>
+            <p class="text-sm leading-relaxed text-stone-500">
+              Learnpathly gives you a framework: turn any topic into a path, add resources in order, and track your progress as you go. Not just a library—a system for finishing what you start.
+            </p>
           </div>
         </div>
-      </Card>
-      <Card as="article" :hoverable="false" class="rounded-none">
-        <div class="p-6 space-y-2 flex flex-col h-full">
-          <h3 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Learning Paths</h3>
-          <p class="text-sm leading-relaxed text-muted-foreground">Drag resources into a path, reorder steps, and shape a learning rhythm that fits your goal and schedule.</p>
-          <div class="pt-4 mt-auto flex justify-end">
-            <Button :as="RouterLinkComp" to="/about/learning-paths" variant="outline" size="sm" class="rounded-none">Learn more</Button>
+
+        <!-- Right: three feature columns -->
+        <div class="col-span-12 md:col-span-7">
+          <div class="grid grid-cols-12 gap-6">
+            <!-- Resources -->
+            <div class="col-span-12 sm:col-span-4 group relative">
+              <div class="absolute -left-3 top-0 text-[80px] font-black text-stone-100 leading-none select-none pointer-events-none" aria-hidden="true">1</div>
+              <div class="relative pt-14">
+                <div class="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+                <h3 class="text-lg font-bold text-stone-900 mb-2">Resources</h3>
+                <p class="text-sm leading-relaxed text-stone-500">Import videos, articles, documents, and links. Keep them in one organized library instead of scattered browser tabs.</p>
+                <RouterLink to="/about/resources" class="inline-flex items-center gap-1 mt-4 text-[11px] font-bold uppercase tracking-widest text-emerald-600 hover:text-emerald-700 transition-colors">
+                  How it works
+                  <span aria-hidden>→</span>
+                </RouterLink>
+              </div>
+            </div>
+
+            <!-- Learning Paths -->
+            <div class="col-span-12 sm:col-span-4 group relative">
+              <div class="absolute -left-3 top-0 text-[80px] font-black text-stone-100 leading-none select-none pointer-events-none" aria-hidden="true">2</div>
+              <div class="relative pt-14">
+                <div class="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </div>
+                <h3 class="text-lg font-bold text-stone-900 mb-2">Learning Paths</h3>
+                <p class="text-sm leading-relaxed text-stone-500">Drag resources into a path, reorder steps, and shape a learning rhythm that fits your goal and schedule.</p>
+                <RouterLink to="/about/learning-paths" class="inline-flex items-center gap-1 mt-4 text-[11px] font-bold uppercase tracking-widest text-sky-600 hover:text-sky-700 transition-colors">
+                  How it works
+                  <span aria-hidden>→</span>
+                </RouterLink>
+              </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="col-span-12 sm:col-span-4 group relative">
+              <div class="absolute -left-3 top-0 text-[80px] font-black text-stone-100 leading-none select-none pointer-events-none" aria-hidden="true">3</div>
+              <div class="relative pt-14">
+                <div class="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </div>
+                <h3 class="text-lg font-bold text-stone-900 mb-2">Progress</h3>
+                <p class="text-sm leading-relaxed text-stone-500">Track progress per resource and see completion at a glance. Learning stays continuous, not fragmented.</p>
+                <RouterLink to="/about/progress" class="inline-flex items-center gap-1 mt-4 text-[11px] font-bold uppercase tracking-widest text-amber-600 hover:text-amber-700 transition-colors">
+                  How it works
+                  <span aria-hidden>→</span>
+                </RouterLink>
+              </div>
+            </div>
+          </div>
+
+          <!-- Additional feature list -->
+          <div class="mt-12 border-t border-stone-200 pt-8">
+            <div class="grid grid-cols-2 gap-6">
+              <div class="flex items-start gap-3">
+                <div class="mt-0.5 h-5 w-5 rounded-full bg-violet-100 flex items-center justify-center shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-violet-600"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div>
+                  <h4 class="text-sm font-semibold text-stone-800">Personal Pool</h4>
+                  <p class="text-xs text-stone-500 mt-0.5">Save quick ideas and turn them into resources later.</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="mt-0.5 h-5 w-5 rounded-full bg-violet-100 flex items-center justify-center shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-violet-600"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div>
+                  <h4 class="text-sm font-semibold text-stone-800">Public & Private</h4>
+                  <p class="text-xs text-stone-500 mt-0.5">Choose what you share and what stays personal.</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="mt-0.5 h-5 w-5 rounded-full bg-violet-100 flex items-center justify-center shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-violet-600"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div>
+                  <h4 class="text-sm font-semibold text-stone-800">Discover</h4>
+                  <p class="text-xs text-stone-500 mt-0.5">Browse public paths and resources from other learners.</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="mt-0.5 h-5 w-5 rounded-full bg-violet-100 flex items-center justify-center shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-violet-600"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div>
+                  <h4 class="text-sm font-semibold text-stone-800">Track</h4>
+                  <p class="text-xs text-stone-500 mt-0.5">Record progress per step and see overall completion.</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </Card>
-      <Card as="article" :hoverable="false" class="rounded-none">
-        <div class="p-6 space-y-2 flex flex-col h-full">
-          <h3 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Progress</h3>
-          <p class="text-sm leading-relaxed text-muted-foreground">Track progress per resource and see how much of a path you’ve completed—so learning stays continuous, not fragmented.</p>
-          <div class="pt-4 mt-auto flex justify-end">
-            <Button :as="RouterLinkComp" to="/about/progress" variant="outline" size="sm" class="rounded-none">Learn more</Button>
-          </div>
-        </div>
-      </Card>
+      </div>
     </section>
 
-    <section class="grid gap-6 md:grid-cols-2">
-      <Card as="section" :hoverable="false" class="rounded-none">
-        <div class="p-6 space-y-3">
-          <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Why Contrail</h2>
-          <ul class="space-y-2 text-sm leading-relaxed list-disc list-inside text-muted-foreground">
-            <li>Your learning resources are scattered across platforms and hard to organize systematically.</li>
-            <li>You save a lot, but you don’t know where to start—or where you stopped.</li>
-            <li>Learning happens in small fragments, but you lack a single framework to measure progress and outcomes.</li>
-            <li>Contrail's goal is to turn fragmented learning into structured, repeatable progress.</li>
-          </ul>
-        </div>
-      </Card>
-      <Card as="section" :hoverable="false" class="rounded-none">
-        <div class="p-6 space-y-3">
-          <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Core Features</h2>
-          <ul class="space-y-2 text-sm leading-relaxed list-disc list-inside text-muted-foreground">
-            <li><span class="font-semibold text-foreground">Resource</span>: discover public resources and keep your own private library.</li>
-            <li><span class="font-semibold text-foreground">Learning Path</span>: build a path by adding resources, reordering steps, and categorizing.</li>
-            <li><span class="font-semibold text-foreground">Progress</span>: record learning progress per step and see overall completion at a glance.</li>
-            <li><span class="font-semibold text-foreground">Personal Pool</span>: save quick ideas (links, images, notes) and turn them into resources later.</li>
-            <li><span class="font-semibold text-foreground">Public & Private</span>: choose what you share and what stays personal.</li>
-          </ul>
-        </div>
-      </Card>
+    <!-- Divider with label -->
+    <div class="border-t border-stone-200 mx-auto max-w-7xl px-4">
+      <div class="flex items-center gap-6 py-6">
+        <span class="h-px flex-1 bg-linear-to-r from-stone-200 to-transparent"></span>
+        <span class="text-[11px] font-bold uppercase tracking-[0.25em] text-stone-400">Philosophy</span>
+        <span class="h-px flex-1 bg-linear-to-l from-stone-200 to-transparent"></span>
+      </div>
+    </div>
+
+    <!-- Philosophy statement -->
+    <section class="mx-auto max-w-7xl px-4 py-12 pb-20">
+      <div class="max-w-3xl">
+        <blockquote class="text-2xl md:text-3xl font-light leading-snug text-stone-700">
+          "Structure doesn't constrain creativity—it
+          <span class="font-semibold text-emerald-700">amplifies</span> it. A learning path isn't a rigid curriculum; it's a
+          <span class="font-semibold text-sky-700">map</span> that keeps you oriented when the terrain gets steep."
+        </blockquote>
+        <p class="mt-6 text-sm text-stone-400">— Learnpathly, Design Principles</p>
+      </div>
     </section>
+
   </div>
 </template>
 
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
-import Card from '../components/ui/Card.vue'
-import { Button } from '../components/ui/button'
-
-const RouterLinkComp = RouterLink
 </script>

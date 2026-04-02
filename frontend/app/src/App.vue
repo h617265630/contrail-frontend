@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-background text-foreground flex flex-col">
     <NavBar />
-    <main class="py-6 px-4 flex-1">
+    <main class="pt-16 py-6 px-4 flex-1">
       <router-view />
     </main>
     <AppFooter />
@@ -122,6 +122,7 @@ import NavBar from './components/NavBar.vue'
 import AppFooter from './components/AppFooter.vue'
 import { useAuthStore } from './stores/auth'
 import { listCategories, type Category } from './api/category'
+import { setAnalyticsUser } from './utils/analytics'
 
 const authStore = useAuthStore()
 
@@ -203,6 +204,14 @@ watch(
   () => authStore.isAuthed,
   (next) => {
     if (next) void maybeShowOnboarding()
+  },
+  { immediate: true },
+)
+
+watch(
+  () => authStore.user,
+  (next) => {
+    setAnalyticsUser(next)
   },
   { immediate: true },
 )

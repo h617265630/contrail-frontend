@@ -18,5 +18,10 @@ node_modules/
 # Vite build output (keep source, ignore artifacts)
 frontend/app/dist/
 
+# Environment variables (contain secrets – never commit!)
+.env
+.env.local
+.env.*.local
+
 # OS
 .DS_Store

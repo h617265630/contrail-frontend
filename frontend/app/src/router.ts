@@ -1,9 +1,13 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { useAuthStore } from './stores/auth'
 
 // Lazy-loaded routes to avoid ReferenceError during HMR/initial load
 const Home = () => import('./pages/Home.vue')
 const LearningPathsList = () => import('./pages/MyLearningPath.vue')
-const LearningPath = () => import('./pages/LearningPath.vue')
+const LearningPool = () => import('./pages/LearningPool.vue')
+const LearningPathDetail = () => import('./pages/LearningPathDetail.vue')
+const LearningPathLinear = () => import('./pages/LearningPathLinear.vue')
+const LearningPathEdit = () => import('./pages/LearningPathEdit.vue')
 const Login = () => import('./pages/Login.vue')
 const Register = () => import('./pages/Register.vue')
 const ResourceLibrary = () => import('./pages/ResourceLibrary.vue')
@@ -20,14 +24,13 @@ const ParticalImage = () => import('./pages/ParticalImage.vue')
 const ParticalFlashedIdeas = () => import('./pages/ParticalFlashedIdeas.vue')
 const MyPartical = () => import('./pages/MyPartical.vue')
 const MyParticalHome = () => import('./pages/MyParticalHome.vue')
-const LearningPathDetail = () => import('./pages/LearningPathDetail.vue')
-const LearningPathLinear = () => import('./pages/LearningPathLinear.vue')
 const LearningPoolCategory = () => import('./pages/LearningPoolCategory.vue')
 const CreatePath = () => import('./pages/CreatePath.vue')
-const LearningPathEdit = () => import('./pages/LearningPathEdit.vue')
 const Notification = () => import('./pages/Notification.vue')
 const Creator = () => import('./pages/Creator.vue')
 const Deck = () => import('./pages/Deck.vue')
+const AIPath = () => import('./pages/AIPath.vue')
+const AIPathDetail = () => import('./pages/AIPathDetail.vue')
 
 const UiUxProMax = () => import('./pages/UiUxProMax.vue')
 
@@ -47,6 +50,14 @@ const Tool = () => import('./pages/Tool.vue')
 const Stack = () => import('./pages/stackUI/Stack.vue')
 const CardUI = () => import('./pages/CardUI.vue')
 
+// Admin pages
+const AdminLayout = () => import('./pages/admin/AdminLayout.vue')
+const AdminDashboard = () => import('./pages/admin/Dashboard.vue')
+const AdminUserManagement = () => import('./pages/admin/UserManagement.vue')
+const AdminResourceManagement = () => import('./pages/admin/ResourceManagement.vue')
+const AdminLearningPathManagement = () => import('./pages/admin/LearningPathManagement.vue')
+const AdminAnalytics = () => import('./pages/admin/Analytics.vue')
+
 const routes: RouteRecordRaw[] = [
   // Canonical routes
   { path: '/', redirect: { name: 'home' } },
@@ -54,7 +65,9 @@ const routes: RouteRecordRaw[] = [
   { path: '/notification', name: 'notification', component: Notification },
   { path: '/creator', name: 'creator', component: Creator },
   { path: '/deck', name: 'deck', component: Deck },
-  { path: '/learningpool', name: 'learningpool', component: LearningPath },
+  { path: '/ai-path', name: 'ai-path', component: AIPath },
+  { path: '/ai-path-detail', name: 'ai-path-detail', component: AIPathDetail },
+  { path: '/learningpool', name: 'learningpool', component: LearningPool },
   { path: '/learningpool/category/:category', name: 'learningpool-category', component: LearningPoolCategory },
   { path: '/my-paths', name: 'my-paths', component: LearningPathsList },
   { path: '/createpath', name: 'createpath', component: CreatePath },
@@ -128,11 +141,50 @@ const routes: RouteRecordRaw[] = [
   { path: '/about/resources', name: 'about-resources', component: AboutResources },
   { path: '/about/learning-paths', name: 'about-learning-paths', component: AboutLearningPaths },
   { path: '/about/progress', name: 'about-progress', component: AboutProgress },
+
+  // Admin routes
+  {
+    path: '/admin',
+    component: AdminLayout,
+    meta: { requiresAdmin: true },
+    children: [
+      { path: '', redirect: { name: 'admin-dashboard' } },
+      { path: 'dashboard', name: 'admin-dashboard', component: AdminDashboard },
+      { path: 'users', name: 'admin-users', component: AdminUserManagement },
+      { path: 'resources', name: 'admin-resources', component: AdminResourceManagement },
+      { path: 'paths', name: 'admin-paths', component: AdminLearningPathManagement },
+      { path: 'analytics', name: 'admin-analytics', component: AdminAnalytics },
+    ],
+  },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+// Admin route guard
+router.beforeEach(async (to, _from, next) => {
+  if (to.meta?.requiresAdmin) {
+    const authStore = useAuthStore()
+    // Ensure auth state is loaded
+    if (authStore.isAuthed && !authStore.user) {
+      try {
+        await authStore.fetchProfile()
+      } catch {
+        authStore.logout()
+        next({ name: 'login' })
+        return
+      }
+    }
+    const user = authStore.user as any
+    if (!user?.is_superuser) {
+      // Redirect non-admins to home
+      next({ name: 'home' })
+      return
+    }
+  }
+  next()
 })
 
 export default router

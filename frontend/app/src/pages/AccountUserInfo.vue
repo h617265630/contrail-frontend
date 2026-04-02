@@ -1,95 +1,105 @@
 <template>
-  <div class="space-y-6">
-    <Card as="section" :hoverable="false" class="rounded-md">
-      <div class="p-6">
-        <div class="flex items-center gap-4">
-          <div class="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-border bg-muted/30">
-            <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" referrerpolicy="no-referrer" class="h-full w-full rounded-full object-cover" />
-            <div v-else class="flex h-full w-full items-center justify-center text-foreground font-semibold">
-              {{ initials }}
-            </div>
-          </div>
+  <div>
+    <!-- Section header -->
+    <div class="mb-6">
+      <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-stone-400 mb-1.5">Account</p>
+      <h2 class="text-2xl font-black text-stone-900 font-serif tracking-tight">User Info.</h2>
+    </div>
 
-          <div class="min-w-0">
-            <p class="text-base font-semibold text-foreground truncate">{{ displayName }}</p>
-            <p class="text-sm text-muted-foreground truncate">{{ email || '—' }}</p>
-          </div>
+    <!-- Avatar + identity block -->
+    <div class="mb-8 p-6 bg-white rounded-xl border border-stone-100 shadow-sm">
+      <div class="flex items-center gap-4 mb-5">
+        <div class="w-16 h-16 shrink-0 overflow-hidden rounded-full border-2 border-stone-100">
+          <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" referrerpolicy="no-referrer" class="h-full w-full rounded-full object-cover" />
+          <div v-else class="h-full w-full flex items-center justify-center bg-amber-500 text-white text-lg font-bold">{{ initials }}</div>
         </div>
-
-        <div class="mt-5 grid gap-3 sm:grid-cols-2">
-          <div class="rounded-md border border-border bg-muted/30 p-4">
-            <p class="text-xs font-semibold text-muted-foreground">Username</p>
-            <p class="mt-1 text-sm font-semibold text-foreground break-all">{{ username || '—' }}</p>
-          </div>
-          <div class="rounded-md border border-border bg-muted/30 p-4">
-            <p class="text-xs font-semibold text-muted-foreground">Email</p>
-            <p class="mt-1 text-sm font-semibold text-foreground break-all">{{ email || '—' }}</p>
-          </div>
-        </div>
-
-        <div class="mt-5 space-y-4">
-          <div>
-            <label class="block text-sm font-semibold text-foreground mb-2">Display name</label>
-            <Input v-model="form.display_name" type="text" class="h-10 rounded-md" placeholder="Your name" />
-          </div>
-
-          <div>
-            <label class="block text-sm font-semibold text-foreground mb-2">Bio</label>
-            <textarea
-              v-model="form.bio"
-              rows="4"
-              class="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-              placeholder="A short bio"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-semibold text-foreground mb-2">Avatar</label>
-            <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
-              <input
-                ref="fileInputRef"
-                type="file"
-                accept="image/*"
-                class="hidden"
-                @change="onPickFile"
-              />
-              <Button type="button" variant="outline" size="sm" class="rounded-md" @click="openFilePicker">
-                Choose image
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                class="rounded-md bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="!pickedFile || avatarUploading"
-                @click="uploadAvatar"
-              >
-                {{ avatarUploading ? 'Uploading…' : 'Upload' }}
-              </Button>
-              <p v-if="pickedFileName" class="text-xs text-muted-foreground break-all">{{ pickedFileName }}</p>
-            </div>
-          </div>
-
-          <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
-
-          <div class="flex justify-end gap-2">
-            <Button type="button" variant="outline" size="sm" class="rounded-md" :disabled="saving" @click="resetForm">
-              Reset
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              class="rounded-md bg-[#8ecbff] text-white hover:bg-[#8ecbff]/90 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              :disabled="saving"
-              @click="save"
-            >
-              {{ saving ? 'Saving…' : 'Save changes' }}
-            </Button>
-          </div>
+        <div class="min-w-0">
+          <p class="text-base font-bold text-stone-900 truncate">{{ displayName }}</p>
+          <p class="text-sm text-stone-400 truncate">{{ email || '—' }}</p>
         </div>
       </div>
-    </Card>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div class="px-4 py-3 bg-stone-50 rounded-lg border border-stone-100">
+          <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 mb-1">Username</p>
+          <p class="text-sm font-semibold text-stone-900 break-all">{{ username || '—' }}</p>
+        </div>
+        <div class="px-4 py-3 bg-stone-50 rounded-lg border border-stone-100">
+          <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 mb-1">Email</p>
+          <p class="text-sm font-semibold text-stone-900 break-all">{{ email || '—' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit form -->
+    <div class="p-6 bg-white rounded-xl border border-stone-100 shadow-sm">
+      <div class="space-y-5">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-[0.15em] text-stone-500 mb-2.5">Display name</label>
+          <input
+            v-model="form.display_name"
+            type="text"
+            class="w-full px-4 py-3 bg-white border border-stone-200 text-stone-900 text-sm placeholder:text-stone-400 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all"
+            placeholder="Your display name"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-[0.15em] text-stone-500 mb-2.5">Bio</label>
+          <textarea
+            v-model="form.bio"
+            rows="4"
+            class="w-full px-4 py-3 bg-white border border-stone-200 text-stone-900 text-sm placeholder:text-stone-400 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all resize-none"
+            placeholder="A short bio about yourself"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-[0.15em] text-stone-500 mb-2.5">Avatar</label>
+          <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+            <input ref="fileInputRef" type="file" accept="image/*" class="hidden" @change="onPickFile" />
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 px-4 py-2 border border-stone-200 text-stone-600 text-xs font-semibold hover:border-stone-300 hover:bg-stone-50 transition-all rounded-lg"
+              @click="openFilePicker"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Choose image
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-xs font-semibold hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all rounded-lg"
+              :disabled="!pickedFile || avatarUploading"
+              @click="uploadAvatar"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              {{ avatarUploading ? 'Uploading…' : 'Upload' }}
+            </button>
+            <p v-if="pickedFileName" class="text-xs text-stone-400 break-all">{{ pickedFileName }}</p>
+          </div>
+        </div>
+
+        <p v-if="error" class="text-xs text-red-500 py-2 px-3 border border-red-100 bg-red-50 rounded-lg">{{ error }}</p>
+
+        <div class="flex items-center gap-3 pt-2">
+          <button
+            type="button"
+            class="px-5 py-2.5 border border-stone-200 text-stone-600 text-xs font-semibold hover:border-stone-300 hover:bg-stone-50 transition-all rounded-lg"
+            :disabled="saving"
+            @click="resetForm"
+          >
+            Reset
+          </button>
+          <button
+            type="button"
+            class="px-5 py-2.5 bg-stone-900 text-white text-xs font-bold hover:bg-stone-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:-translate-y-px active:translate-y-0 rounded-lg"
+            :disabled="saving"
+            @click="save"
+          >
+            {{ saving ? 'Saving…' : 'Save Changes' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -98,9 +108,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '../stores/auth'
 import { getOrCreateDefaultAvatarForUser } from '../utils/avatars'
-import Card from '../components/ui/Card.vue'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
+import { toBackendAbsoluteUrl } from '../utils/backendUrl'
 import { updateCurrentUser, uploadMyAvatar } from '../api/user'
 
 const authStore = useAuthStore()
@@ -117,9 +125,7 @@ const initials = computed(() => displayName.value.slice(0, 2).toUpperCase())
 const avatarUrl = computed(() => {
   const explicit = String((user.value as any)?.avatar_url || '').trim()
   if (explicit) {
-    const abs = explicit.startsWith('http://') || explicit.startsWith('https://')
-      ? explicit
-      : `http://localhost:8000${explicit.startsWith('/') ? '' : '/'}${explicit}`
+    const abs = toBackendAbsoluteUrl(explicit)
     const sep = abs.includes('?') ? '&' : '?'
     return `${abs}${sep}v=${avatarBuster.value}`
   }
@@ -127,15 +133,10 @@ const avatarUrl = computed(() => {
   return uid ? getOrCreateDefaultAvatarForUser(uid) : ''
 })
 
-const form = ref({
-  display_name: '' as string,
-  bio: '' as string,
-})
-
+const form = ref({ display_name: '', bio: '' })
 const saving = ref(false)
 const avatarUploading = ref(false)
 const error = ref('')
-
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const pickedFile = ref<File | null>(null)
 const pickedFileName = computed(() => pickedFile.value?.name || '')
@@ -159,8 +160,7 @@ function openFilePicker() {
 
 function onPickFile(e: Event) {
   const input = e.target as HTMLInputElement
-  const file = input.files?.[0] || null
-  pickedFile.value = file
+  pickedFile.value = input.files?.[0] || null
 }
 
 async function uploadAvatar() {
@@ -187,11 +187,7 @@ async function save() {
       display_name: form.value.display_name,
       bio: form.value.bio,
     })
-    // updateCurrentUser may return partial payload; merge to avoid wiping avatar_url
-    authStore.setUser({
-      ...(user.value as any),
-      ...(next as any),
-    })
+    authStore.setUser({ ...(user.value as any), ...(next as any) })
     authStore.bumpAvatarBuster()
     await authStore.fetchProfile(true)
   } catch (e: any) {
@@ -203,9 +199,7 @@ async function save() {
 
 watch(
   () => user.value,
-  () => {
-    syncFormFromUser()
-  },
+  () => { syncFormFromUser() },
   { immediate: true },
 )
 </script>

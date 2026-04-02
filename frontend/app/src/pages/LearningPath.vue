@@ -39,7 +39,7 @@
           >
             <Card as="article" :hoverable="true">
               <div class="relative h-36 bg-muted">
-                <img :src="p.thumbnail" :alt="p.title" class="w-full h-full object-cover" />
+                <img :src="p.thumbnail" :alt="p.title" loading="lazy" decoding="async" width="320" height="144" class="w-full h-full object-cover" />
                 <span
                   v-if="p.lpType"
                   class="absolute right-3 top-3 px-2 py-1 rounded-full border border-border bg-background text-[10px] font-semibold tracking-[0.14em] uppercase text-foreground"
@@ -67,8 +67,7 @@
       <section class="space-y-4">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Linear path</h2>
-            <p class="text-sm text-muted-foreground">linear path</p>
+            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Linear Path</h2>
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -80,7 +79,7 @@
           >
             <Card as="article" :hoverable="true">
               <div class="relative h-36 bg-muted">
-                <img :src="p.thumbnail" :alt="p.title" class="w-full h-full object-cover" />
+                <img :src="p.thumbnail" :alt="p.title" loading="lazy" decoding="async" width="320" height="144" class="w-full h-full object-cover" />
                 <span
                   v-if="p.lpType"
                   class="absolute right-3 top-3 px-2 py-1 rounded-full border border-border bg-background text-[10px] font-semibold tracking-[0.14em] uppercase text-foreground"
@@ -108,8 +107,7 @@
       <section class="space-y-4">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Structured path</h2>
-            <p class="text-sm text-muted-foreground">structured path</p>
+            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Structured Path</h2>
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -121,7 +119,7 @@
           >
             <Card as="article" :hoverable="true">
               <div class="relative h-36 bg-muted">
-                <img :src="p.thumbnail" :alt="p.title" class="w-full h-full object-cover" />
+                <img :src="p.thumbnail" :alt="p.title" loading="lazy" decoding="async" width="320" height="144" class="w-full h-full object-cover" />
                 <span
                   v-if="p.lpType"
                   class="absolute right-3 top-3 px-2 py-1 rounded-full border border-border bg-background text-[10px] font-semibold tracking-[0.14em] uppercase text-foreground"
@@ -149,8 +147,7 @@
       <section class="space-y-4">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Partical pool</h2>
-            <p class="text-sm text-muted-foreground">partical pool</p>
+            <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-foreground">Partical Pool</h2>
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -162,7 +159,7 @@
           >
             <Card as="article" :hoverable="true">
               <div class="relative h-36 bg-muted">
-                <img :src="p.thumbnail" :alt="p.title" class="w-full h-full object-cover" />
+                <img :src="p.thumbnail" :alt="p.title" loading="lazy" decoding="async" width="320" height="144" class="w-full h-full object-cover" />
                 <span
                   v-if="p.lpType"
                   class="absolute right-3 top-3 px-2 py-1 rounded-full border border-border bg-background text-[10px] font-semibold tracking-[0.14em] uppercase text-foreground"
@@ -242,7 +239,7 @@
           >
             <Card as="article" :hoverable="true">
               <div class="relative h-32 bg-muted">
-                <img :src="p.thumbnail" :alt="p.title" class="w-full h-full object-cover" />
+                <img :src="p.thumbnail" :alt="p.title" loading="lazy" decoding="async" width="320" height="128" class="w-full h-full object-cover" />
                 <span
                   v-if="p.lpType"
                   class="absolute right-3 top-3 px-2 py-1 rounded-full border border-border bg-background text-[10px] font-semibold tracking-[0.14em] uppercase text-foreground"

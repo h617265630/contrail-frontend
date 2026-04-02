@@ -2,12 +2,12 @@ import { ref } from 'vue'
 
 export type AppLang = 'en' | 'zh-CN'
 
-const STORAGE_KEY = 'contrail_lang'
+const STORAGE_KEY = 'learnpathly_lang'
 
 function readInitialLang(): AppLang {
   try {
     const stored = (globalThis as any)?.localStorage?.getItem(STORAGE_KEY)
-    if (stored === 'en' || stored === 'zh-CN') return stored
+    if (stored === 'en') return stored
   } catch {
     // ignore
   }
@@ -44,7 +44,7 @@ const zhCN: Record<string, string> = {
   'Search...': '搜索…',
   'User menu': '用户菜单',
   'My Paths': '我的学习路径',
-  'My Collection': '我的收藏',
+  'My Resources': '我的资源',
   'Creator Center': '创作中心',
   'Log out': '退出登录',
   'CreatePath': '创建路径',
@@ -53,8 +53,8 @@ const zhCN: Record<string, string> = {
   'View all paths': '查看全部路径',
   'Start now': '立即开始',
   'Create path': '创建路径',
-  'Contrail': 'linktopath',
-  'linktopath': 'linktopath',
+  'Uncategorized': '未分类',
+  'Learnpathly': 'Learnpathly',
   'Learning Path Platform': '学习路径平台',
   'Build system-level skills with structured learning paths': '用路径化、结构化学习，构建体系化能力',
   'This is a Learning Path Platform: create and discover great learning paths, turn scattered knowledge into an actionable plan, and track progress as you improve over time.':
@@ -74,7 +74,6 @@ export function useI18n() {
     t,
     languages: [
       { code: 'en' as const, label: 'English' },
-      { code: 'zh-CN' as const, label: '中文' },
     ],
   }
 }
