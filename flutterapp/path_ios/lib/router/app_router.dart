@@ -48,7 +48,7 @@ GoRouter createAppRouter(AuthState auth) {
       GoRoute(
         path: '/login',
         name: 'login',
-        builder: (context, state) => LoginPage(redirectTo: state.uri.queryParameters['from']),
+        builder: (context, state) => const LoginPage(),
       ),
       GoRoute(
         path: '/register',
@@ -56,7 +56,7 @@ GoRouter createAppRouter(AuthState auth) {
         builder: (context, state) => const RegisterPage(),
       ),
       ShellRoute(
-        builder: (context, state, child) => AppShell(child: child, location: state.uri.path),
+        builder: (context, state, child) => AppShell(location: state.uri.path, child: child),
         routes: [
           GoRoute(
             path: '/home',

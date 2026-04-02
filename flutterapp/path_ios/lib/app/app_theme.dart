@@ -19,8 +19,6 @@ class AppTheme {
       onSecondary: Colors.white,
       surface: card,
       onSurface: foreground,
-      background: background,
-      onBackground: foreground,
       outline: border,
     );
 
