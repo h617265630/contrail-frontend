@@ -15,7 +15,7 @@
 
     <!-- Stats Grid -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-      <div v-for="stat in statCards" :key="stat.label" class="p-4 bg-stone-900 rounded-xl">
+      <div v-for="stat in statCards" :key="stat.label" class="p-4 bg-stone-900 rounded-md">
         <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400 mb-2">{{ stat.label }}</p>
         <p class="text-2xl font-black text-white">{{ stat.value }}</p>
       </div>
@@ -27,7 +27,7 @@
         v-for="tab in tabs"
         :key="tab.key"
         @click="activeTab = tab.key"
-        class="px-4 py-2 text-xs font-semibold rounded-md transition-all"
+        class="px-4 py-2 text-xs font-semibold rounded-sm transition-all"
         :class="activeTab === tab.key ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'"
       >
         {{ tab.label }}
@@ -40,7 +40,7 @@
     <div v-else>
 
       <!-- Users Tab -->
-      <div v-if="activeTab === 'users'" class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+      <div v-if="activeTab === 'users'" class="bg-white rounded-md border border-stone-200 overflow-hidden">
         <table class="w-full text-sm">
           <thead>
             <tr class="bg-stone-50 border-b border-stone-200">
@@ -55,7 +55,7 @@
             <tr v-for="user in users" :key="user.id" class="border-b border-stone-100 hover:bg-stone-50">
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2">
-                  <div class="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 text-xs font-bold">
+                  <div class="w-7 h-7 rounded-none bg-amber-100 flex items-center justify-center text-amber-700 text-xs font-bold">
                     {{ user.display_name?.[0] || user.username[0] }}
                   </div>
                   <span class="font-medium text-stone-900">{{ user.display_name || user.username }}</span>
@@ -79,7 +79,7 @@
       </div>
 
       <!-- Learning Paths Tab -->
-      <div v-if="activeTab === 'paths'" class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+      <div v-if="activeTab === 'paths'" class="bg-white rounded-md border border-stone-200 overflow-hidden">
         <table class="w-full text-sm">
           <thead>
             <tr class="bg-stone-50 border-b border-stone-200">
@@ -104,7 +104,7 @@
       </div>
 
       <!-- Resources Tab -->
-      <div v-if="activeTab === 'resources'" class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+      <div v-if="activeTab === 'resources'" class="bg-white rounded-md border border-stone-200 overflow-hidden">
         <table class="w-full text-sm">
           <thead>
             <tr class="bg-stone-50 border-b border-stone-200">

@@ -11,15 +11,15 @@
           </p>
 
           <div class="grid gap-3 sm:grid-cols-3">
-            <div class="rounded-xl border border-border bg-white p-4">
+            <div class="rounded-md border border-border bg-white p-4">
               <p class="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">Mode A</p>
               <p class="mt-1 text-sm font-medium text-foreground">AI generated path</p>
             </div>
-            <div class="rounded-xl border border-border bg-white p-4">
+            <div class="rounded-md border border-border bg-white p-4">
               <p class="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">Mode B</p>
               <p class="mt-1 text-sm font-medium text-foreground">Manual resource editing</p>
             </div>
-            <div class="rounded-xl border border-border bg-white p-4">
+            <div class="rounded-md border border-border bg-white p-4">
               <p class="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">Outcome</p>
               <p class="mt-1 text-sm font-medium text-foreground">Track progress to completion</p>
             </div>
@@ -27,7 +27,7 @@
         </div>
 
         <div class="md:col-span-4">
-          <Card as="article" :hoverable="false" className="h-full rounded-2xl border-border bg-white">
+          <Card as="article" :hoverable="false" className="h-full rounded-md border-border bg-white">
             <form class="space-y-4 p-5" @submit.prevent="handleGeneratePath">
               <label for="navigator-topic" class="block text-sm font-medium text-foreground">What do you want to learn?</label>
               <Input
@@ -125,7 +125,7 @@
       </div>
     </section>
 
-    <section class="space-y-4 rounded-2xl border border-border bg-slate-950 p-6 text-white md:p-8">
+    <section class="space-y-4 rounded-md border border-border bg-slate-950 p-6 text-white md:p-8">
       <h2 class="text-2xl font-semibold tracking-tight">Social proof</h2>
       <div class="grid gap-3 md:grid-cols-3">
         <div class="rounded-xl border border-white/20 bg-white/5 p-4 text-sm text-white/85">{{ socialProofCount }}+ learning paths generated</div>

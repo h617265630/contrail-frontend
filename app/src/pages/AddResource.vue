@@ -51,7 +51,7 @@
         <!-- Left: form -->
         <div class="col-span-12 lg:col-span-7 space-y-6">
           <!-- Platform + URL input -->
-          <div class="bg-white rounded-xl border border-stone-100 p-5 space-y-4">
+          <div class="bg-white rounded-md border border-stone-100 p-5 space-y-4">
             <div class="flex items-center gap-2 mb-1">
               <div class="w-1 h-5 bg-violet-600 rounded-full"></div>
               <h2 class="text-sm font-bold uppercase tracking-widest text-stone-700">Source</h2>
@@ -96,7 +96,7 @@
           </div>
 
           <!-- Metadata preview -->
-          <div v-if="extractedMeta" class="bg-white rounded-xl border border-stone-100 p-5 space-y-4">
+          <div v-if="extractedMeta" class="bg-white rounded-md border border-stone-100 p-5 space-y-4">
             <div class="flex items-center gap-2 mb-1">
               <div class="w-1 h-5 bg-emerald-500 rounded-full"></div>
               <h2 class="text-sm font-bold uppercase tracking-widest text-stone-700">Metadata</h2>
@@ -145,7 +145,7 @@
           </div>
 
           <!-- Options -->
-          <div class="bg-white rounded-xl border border-stone-100 p-5 space-y-4">
+          <div class="bg-white rounded-md border border-stone-100 p-5 space-y-4">
             <div class="flex items-center gap-2 mb-1">
               <div class="w-1 h-5 bg-stone-300 rounded-full"></div>
               <h2 class="text-sm font-bold uppercase tracking-widest text-stone-700">Options</h2>
@@ -279,7 +279,7 @@
 
       <!-- MD MODE -->
       <div v-else class="space-y-6">
-        <div class="bg-white rounded-xl border border-stone-100 p-5">
+        <div class="bg-white rounded-md border border-stone-100 p-5">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2">
               <div class="w-1 h-5 bg-violet-600 rounded-full"></div>
@@ -359,7 +359,7 @@
           <div
             v-for="u in mdExtractedUrls"
             :key="u"
-            class="rounded-xl border border-stone-100 bg-white overflow-hidden hover:shadow-md transition-all cursor-pointer group"
+            class="rounded-md border border-stone-100 bg-white overflow-hidden hover:shadow-md transition-all cursor-pointer group"
             @mouseenter="ensureMdUrlMeta(u)"
             @click="useMdUrl(u)"
           >

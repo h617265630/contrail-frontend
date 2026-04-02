@@ -3,25 +3,25 @@
     <!-- Loading -->
     <div v-if="loading" class="py-20 text-center">
       <div class="inline-flex items-center gap-2 text-sm text-stone-400">
-        <div class="w-4 h-4 rounded-full border-2 border-stone-300 border-t-amber-500 animate-spin" />
+        <div class="w-4 h-4 rounded-sm border-2 border-stone-300 border-t-amber-500 animate-spin" />
         Loading…
       </div>
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="filtered.length === 0" class="py-16 text-center bg-white rounded-xl border border-stone-100">
+    <div v-else-if="filtered.length === 0" class="py-16 text-center bg-white rounded-md border border-stone-100">
       <div class="text-4xl mb-3">🛤️</div>
       <h3 class="text-sm font-bold text-stone-700 mb-1">No paths yet</h3>
       <p class="text-xs text-stone-400 mb-5">Build your first structured learning path.</p>
       <div class="flex items-center justify-center gap-2">
         <button
-          class="inline-flex items-center gap-2 px-5 py-2.5 bg-stone-900 text-white text-xs font-bold hover:bg-stone-800 transition-all rounded-lg"
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-stone-900 text-white text-xs font-bold hover:bg-stone-800 transition-all rounded-sm"
           @click="router.push('/createpath')"
         >
           Create Path
         </button>
         <button
-          class="inline-flex items-center gap-2 px-5 py-2.5 border border-stone-200 text-stone-600 text-xs font-semibold hover:border-stone-300 hover:bg-stone-50 transition-all rounded-lg"
+          class="inline-flex items-center gap-2 px-5 py-2.5 border border-stone-200 text-stone-600 text-xs font-semibold hover:border-stone-300 hover:bg-stone-50 transition-all rounded-sm"
           @click="router.push('/learningpool')"
         >
           Browse Pool
@@ -39,11 +39,11 @@
             v-model="q"
             type="text"
             placeholder="Search my paths…"
-            class="w-full pl-10 pr-4 py-3 bg-white border border-stone-200 text-stone-900 text-sm placeholder:text-stone-400 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all rounded-xl"
+            class="w-full pl-10 pr-4 py-3 bg-white border border-stone-200 text-stone-900 text-sm placeholder:text-stone-400 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all rounded-sm"
           />
         </div>
         <button
-          class="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition-all hover:-translate-y-px active:translate-y-0 rounded-lg shrink-0"
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition-all hover:-translate-y-px active:translate-y-0 rounded-sm shrink-0"
           @click="router.push('/createpath')"
         >
           + New Path
@@ -55,7 +55,7 @@
         <article
           v-for="p in filtered"
           :key="p.id"
-          class="group bg-white rounded-xl border border-stone-100 hover:border-stone-200 hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
+          class="group bg-white rounded-md border border-stone-100 hover:border-stone-200 hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
           @click="open(p.id)"
         >
           <div class="relative aspect-video bg-stone-100 overflow-hidden">
@@ -66,10 +66,10 @@
               loading="lazy"
             />
             <div class="absolute bottom-2.5 left-2.5 flex flex-wrap gap-1.5">
-              <span class="inline-flex items-center rounded-full border border-white/20 bg-black/30 backdrop-blur-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
+              <span class="inline-flex items-center rounded-sm border border-white/20 bg-black/30 backdrop-blur-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
                 {{ p.category || '—' }}
               </span>
-              <span v-if="p.type" class="inline-flex items-center rounded-full border border-white/20 bg-black/30 backdrop-blur-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
+              <span v-if="p.type" class="inline-flex items-center rounded-sm border border-white/20 bg-black/30 backdrop-blur-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
                 {{ p.type }}
               </span>
             </div>

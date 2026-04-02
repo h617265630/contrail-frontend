@@ -231,7 +231,7 @@ async function handleGenerate() {
         <textarea
           v-model="topic"
           placeholder="请输入你想学习的内容...&#10;&#10;例如：Python 编程、机器学习入门、React 开发等"
-          class="w-full h-32 px-5 py-4 text-lg border-2 border-gray-200 rounded-xl bg-background disabled:opacity-50 resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200"
+          class="w-full h-32 px-5 py-4 text-lg border-2 border-gray-200 rounded-sm bg-background disabled:opacity-50 resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200"
           :disabled="isLoading"
           @keydown.enter.ctrl="handleGenerate"
         />

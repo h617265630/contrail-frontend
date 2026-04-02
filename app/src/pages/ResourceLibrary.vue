@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-stone-50">
+  <div class="min-h-screen bg-white">
 
     <!-- Masthead header -->
     <header class="border-b border-stone-200 bg-white">

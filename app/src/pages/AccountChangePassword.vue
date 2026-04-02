@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Success -->
-    <div v-if="success" class="mb-5 p-4 flex items-start gap-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+    <div v-if="success" class="mb-5 p-4 flex items-start gap-3 bg-emerald-50 border border-emerald-200 rounded-md">
       <div class="w-5 h-5 shrink-0 rounded-full bg-emerald-500 flex items-center justify-center mt-0.5">
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
@@ -12,7 +12,7 @@
     </div>
 
     <!-- Error -->
-    <div v-if="error" class="mb-5 p-4 flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl">
+    <div v-if="error" class="mb-5 p-4 flex items-start gap-3 bg-red-50 border border-red-200 rounded-md">
       <div class="w-5 h-5 shrink-0 rounded-full bg-red-500 flex items-center justify-center mt-0.5">
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </div>
@@ -20,7 +20,7 @@
     </div>
 
     <!-- Form -->
-    <div class="p-6 bg-white rounded-xl border border-stone-100 shadow-sm">
+    <div class="p-6 bg-white rounded-md border border-stone-100 shadow-sm">
       <div class="space-y-5">
         <div>
           <label class="block text-xs font-bold uppercase tracking-[0.15em] text-stone-500 mb-2.5">Current password</label>
@@ -74,7 +74,7 @@
         <div class="flex items-center gap-3 pt-2">
           <button
             type="button"
-            class="px-5 py-2.5 border border-stone-200 text-stone-600 text-xs font-semibold hover:border-stone-300 hover:bg-stone-50 transition-all rounded-lg"
+            class="px-5 py-2.5 border border-stone-200 text-stone-600 text-xs font-semibold hover:border-stone-300 hover:bg-stone-50 transition-all rounded-sm"
             :disabled="submitting"
             @click="reset"
           >
@@ -82,7 +82,7 @@
           </button>
           <button
             type="button"
-            class="px-5 py-2.5 bg-stone-900 text-white text-xs font-bold hover:bg-stone-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:-translate-y-px active:translate-y-0 rounded-lg"
+            class="px-5 py-2.5 bg-stone-900 text-white text-xs font-bold hover:bg-stone-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:-translate-y-px active:translate-y-0 rounded-sm"
             :disabled="submitting || !isValid"
             @click="onSubmit"
           >

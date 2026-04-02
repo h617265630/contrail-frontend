@@ -20,10 +20,10 @@
       <!-- Sidebar: editorial nav -->
       <aside class="lg:col-span-3">
         <!-- User profile card -->
-        <div class="mb-5 p-5 bg-stone-900 rounded-xl">
+        <div class="mb-5 p-5 bg-stone-900 rounded-none">
           <div class="flex items-center gap-3 mb-4">
-            <div class="w-11 h-11 shrink-0 overflow-hidden rounded-full border-2 border-amber-500/30">
-              <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" referrerpolicy="no-referrer" class="h-full w-full rounded-full object-cover" />
+            <div class="w-11 h-11 shrink-0 overflow-hidden rounded-none border-2 border-amber-500/30">
+              <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" referrerpolicy="no-referrer" class="h-full w-full rounded-none object-cover" />
               <div v-else class="h-full w-full flex items-center justify-center bg-amber-500 text-white text-sm font-bold">{{ initials }}</div>
             </div>
             <div class="min-w-0">

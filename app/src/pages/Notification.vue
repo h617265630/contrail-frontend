@@ -49,7 +49,7 @@
             <div class="relative">
               <div class="flex items-center gap-3 mb-2">
                 <time class="text-xs text-stone-400 font-medium">{{ n.date }}</time>
-                <span class="inline-flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-600">
+                <span class="inline-flex items-center gap-1 rounded-sm border border-blue-100 bg-blue-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-600">
                   New
                 </span>
               </div>
@@ -83,7 +83,7 @@
             <div class="relative">
               <div class="flex items-center gap-3 mb-2">
                 <time class="text-xs text-stone-400 font-medium">{{ n.date }}</time>
-                <span class="inline-flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-600">
+                <span class="inline-flex items-center gap-1 rounded-sm border border-amber-100 bg-amber-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-600">
                   Policy
                 </span>
               </div>
@@ -123,7 +123,7 @@
               <div class="flex items-center gap-3 mb-2">
                 <time class="text-xs text-stone-400 font-medium">{{ s.date }}</time>
                 <span
-                  class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+                  class="inline-flex items-center gap-1.5 rounded-sm px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider"
                   :class="statusClasses(s.status)"
                 >
                   <span class="h-1.5 w-1.5 rounded-full" :class="statusDotClass(s.status)"></span>
@@ -152,7 +152,7 @@
           <Button
             :as="RouterLinkComp"
             to="/login"
-            class="rounded-full bg-stone-900 text-white hover:bg-stone-800 font-semibold text-sm px-8 py-2.5 transition-all hover:-translate-y-px"
+            class="rounded-sm bg-stone-900 text-white hover:bg-stone-800 font-semibold text-sm px-8 py-2.5 transition-all hover:-translate-y-px"
           >
             Sign in
           </Button>

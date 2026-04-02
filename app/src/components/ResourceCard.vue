@@ -1,10 +1,10 @@
 <template>
   <article
     v-if="variant === 'hero'"
-    class="group relative flex gap-0 rounded-xl overflow-hidden bg-white border border-stone-100 hover:border-stone-200 hover:shadow-lg transition-all duration-300 cursor-pointer"
+    class="group relative flex gap-0 rounded-md overflow-hidden bg-white border border-stone-100 shadow-sm hover:border-stone-200 hover:shadow-2xl transition-all duration-300 cursor-pointer"
     @click="$emit('open')"
   >
-    <div class="shrink-0 bg-stone-100 relative transition-transform duration-500 group-hover:scale-105" style="width: 256px; flex-shrink: 0;">
+    <div class="shrink-0 bg-stone-100 relative" style="width: 256px; flex-shrink: 0;">
       <img
         :src="thumbnail"
         :alt="title"
@@ -46,7 +46,7 @@
 
   <article
     v-else
-    class="h-full rounded-xl overflow-hidden bg-white border border-stone-100 hover:border-stone-200 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col"
+    class="h-full rounded-md overflow-hidden bg-white border border-stone-100 shadow-sm hover:border-stone-200 hover:shadow-2xl transition-all duration-200 cursor-pointer flex flex-col"
     @click="$emit('open')"
   >
     <div class="flex items-center justify-between gap-2 px-3.5 py-2">
@@ -62,7 +62,7 @@
     </div>
 
     <div
-      class="card-image bg-stone-100 transition-transform duration-500 group-hover:scale-105"
+      class="card-image bg-stone-100 border-y border-stone-200"
     >
       <img
         :src="thumbnail"
@@ -132,15 +132,13 @@ const savedLabel = props.savedLabel ?? 'Saved'
 <style scoped>
 .card-image {
   width: 100%;
-  padding: 8px;
   aspect-ratio: 16 / 9;
-  background: #f5f5f5;
+  overflow: hidden;
 }
 
 .card-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 8px;
 }
 </style>

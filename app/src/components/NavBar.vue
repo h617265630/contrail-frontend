@@ -48,7 +48,7 @@
       <div class="h-16 flex items-center justify-between gap-8">
         <!-- Logo -->
         <RouterLink to="/home" class="flex items-center gap-3 shrink-0 group">
-          <img src="/favicon.svg" alt="Learnpathly" class="h-10 w-10 rounded-xl shadow-sm" />
+          <img src="/favicon.svg" alt="Learnpathly" class="h-10 w-10 rounded-sm shadow-sm" />
           <div class="flex flex-col leading-none">
             <span class="text-base font-black tracking-tight text-stone-900 group-hover:text-blue-600 transition-colors">
               Learnpathly
@@ -130,7 +130,7 @@
             <div
               v-if="desktopMenuOpen"
               role="menu"
-              class="absolute right-0 top-full mt-2 w-56 rounded-xl border border-slate-100 bg-white shadow-xl z-50 py-1"
+              class="absolute right-0 top-full mt-2 w-56 rounded-md border border-slate-100 bg-white shadow-xl z-50 py-1"
               @mouseenter="openDesktopMenu"
               @mouseleave="scheduleDesktopMenuClose"
             >
@@ -198,7 +198,7 @@
             </Button>
             <div
               v-if="createMenuOpen"
-              class="absolute right-0 top-full mt-2 w-48 rounded-xl border border-slate-100 bg-white shadow-xl z-50 py-1"
+              class="absolute right-0 top-full mt-2 w-48 rounded-md border border-slate-100 bg-white shadow-xl z-50 py-1"
             >
               <RouterLink
                 v-for="item in createMenuItems"

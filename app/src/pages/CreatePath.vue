@@ -24,7 +24,7 @@
     <main class="mx-auto max-w-7xl px-4 py-8">
 
       <!-- Top meta panel -->
-      <section class="bg-white rounded-xl border border-stone-100 p-6 mb-6">
+      <section class="bg-white rounded-md border border-stone-100 p-6 mb-6">
         <div class="flex items-center gap-3 mb-6">
           <div class="w-1 h-6 bg-sky-600 rounded-full"></div>
           <h2 class="text-sm font-bold uppercase tracking-widest text-stone-700">Path Details</h2>
@@ -40,7 +40,7 @@
               <div class="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  class="rounded-lg border p-3.5 text-left transition-all"
+                  class="rounded-sm border p-3.5 text-left transition-all"
                   :class="selectedTemplate === 'github_trends'
                     ? 'border-sky-500 bg-sky-50 ring-1 ring-sky-500'
                     : 'border-stone-200 bg-white hover:border-stone-300 hover:bg-stone-50'"
@@ -51,7 +51,7 @@
                 </button>
                 <button
                   type="button"
-                  class="rounded-lg border p-3.5 text-left transition-all"
+                  class="rounded-sm border p-3.5 text-left transition-all"
                   :class="selectedTemplate === 'social_news'
                     ? 'border-sky-500 bg-sky-50 ring-1 ring-sky-500'
                     : 'border-stone-200 bg-white hover:border-stone-300 hover:bg-stone-50'"
@@ -208,7 +208,7 @@
                 />
                 <button
                   type="button"
-                  class="w-full h-9 rounded-lg border border-dashed border-stone-300 bg-white text-xs font-semibold text-stone-500 hover:border-stone-400 hover:text-stone-700 transition-all flex items-center justify-center gap-1.5"
+                  class="w-full h-9 rounded-sm border border-dashed border-stone-300 bg-white text-xs font-semibold text-stone-500 hover:border-stone-400 hover:text-stone-700 transition-all flex items-center justify-center gap-1.5"
                   @click="openCoverFilePicker"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -225,7 +225,7 @@
 
         <!-- Left: available resources -->
         <div class="col-span-12 lg:col-span-6">
-          <div class="bg-white rounded-xl border border-stone-100 p-5 h-full">
+          <div class="bg-white rounded-md border border-stone-100 p-5 h-full">
             <div class="flex items-center justify-between mb-4">
               <div class="flex items-center gap-2">
                 <div class="w-1 h-5 bg-emerald-500 rounded-full"></div>
@@ -257,7 +257,7 @@
                 />
                 <button
                   type="button"
-                  class="h-9 px-3 rounded-lg bg-stone-800 text-white text-xs font-semibold hover:bg-stone-700 transition-colors disabled:opacity-50"
+                  class="h-9 px-3 rounded-sm bg-stone-800 text-white text-xs font-semibold hover:bg-stone-700 transition-colors disabled:opacity-50"
                   :disabled="!newResourceUrl.trim() || newResourceLoading"
                   @click="createResourceFromUrl"
                 >
@@ -278,7 +278,7 @@
                 @click="addResource(r)"
               >
                 <div class="flex gap-3 p-3">
-                  <div class="w-20 h-14 shrink-0 rounded-lg overflow-hidden bg-stone-100">
+                  <div class="w-20 h-14 shrink-0 rounded-none overflow-hidden bg-stone-100">
                     <img
                       :src="r.thumbnail"
                       :alt="r.title"
@@ -304,7 +304,7 @@
         <!-- Right: selected resources -->
         <div class="col-span-12 lg:col-span-6">
           <div
-            class="bg-white rounded-xl border-2 p-5 min-h-[400px]"
+            class="bg-white rounded-md border-2 p-5 min-h-[400px]"
             :class="selected.length > 0 ? 'border-stone-200' : 'border-dashed border-stone-200'"
             @dragover.prevent
             @drop="onDrop"
@@ -345,7 +345,7 @@
                   <div class="w-8 h-full shrink-0 flex items-center justify-center bg-stone-50 rounded-l-lg">
                     <span class="text-xs font-black text-stone-400">{{ idx + 1 }}</span>
                   </div>
-                  <div class="w-16 h-14 shrink-0 rounded-lg overflow-hidden bg-stone-100 my-2">
+                  <div class="w-16 h-14 shrink-0 rounded-none overflow-hidden bg-stone-100 my-2">
                     <img
                       :src="r.thumbnail"
                       :alt="r.title"

@@ -63,7 +63,7 @@
       </div>
 
       <!-- Error -->
-      <div v-else-if="error" class="py-12 rounded-xl border border-red-100 bg-red-50/50 p-6 text-center">
+      <div v-else-if="error" class="py-12 rounded-md border border-red-100 bg-red-50/50 p-6 text-center">
         <p class="text-sm text-red-600 font-semibold">{{ error }}</p>
       </div>
 
@@ -96,7 +96,7 @@
             <article
               v-for="path in linearPaths"
               :key="path.id"
-              class="group rounded-xl overflow-hidden bg-white border border-stone-100 hover:border-stone-200 hover:shadow-lg transition-all duration-200 cursor-pointer"
+              class="group rounded-md overflow-hidden bg-white border border-stone-100 hover:border-stone-200 hover:shadow-lg transition-all duration-200 cursor-pointer"
               @click="openDetail(path.id)"
             >
               <!-- Cover -->
@@ -170,7 +170,7 @@
             <article
               v-for="path in structuredPaths"
               :key="path.id"
-              class="group rounded-xl overflow-hidden bg-white border border-stone-100 hover:border-stone-200 hover:shadow-lg transition-all duration-200 cursor-pointer"
+              class="group rounded-md overflow-hidden bg-white border border-stone-100 hover:border-stone-200 hover:shadow-lg transition-all duration-200 cursor-pointer"
               @click="openDetail(path.id)"
             >
               <div
@@ -240,7 +240,7 @@
             <article
               v-for="path in particalPoolPaths"
               :key="path.id"
-              class="group rounded-xl overflow-hidden bg-white border border-stone-100 hover:border-stone-200 hover:shadow-lg transition-all duration-200 cursor-pointer"
+              class="group rounded-md overflow-hidden bg-white border border-stone-100 hover:border-stone-200 hover:shadow-lg transition-all duration-200 cursor-pointer"
               @click="openDetail(path.id)"
             >
               <div
@@ -310,7 +310,7 @@
             <article
               v-for="path in linearPaths"
               :key="path.id"
-              class="group flex items-center gap-4 rounded-xl bg-white border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all cursor-pointer p-3"
+              class="group flex items-center gap-4 rounded-md bg-white border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all cursor-pointer p-3"
               @click="openDetail(path.id)"
             >
               <div class="w-24 h-14 shrink-0 rounded-lg overflow-hidden bg-stone-100 relative">
@@ -361,7 +361,7 @@
             <article
               v-for="path in structuredPaths"
               :key="path.id"
-              class="group flex items-center gap-4 rounded-xl bg-white border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all cursor-pointer p-3"
+              class="group flex items-center gap-4 rounded-md bg-white border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all cursor-pointer p-3"
               @click="openDetail(path.id)"
             >
               <div class="w-24 h-14 shrink-0 rounded-lg overflow-hidden bg-stone-100 relative">
@@ -412,7 +412,7 @@
             <article
               v-for="path in particalPoolPaths"
               :key="path.id"
-              class="group flex items-center gap-4 rounded-xl bg-white border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all cursor-pointer p-3"
+              class="group flex items-center gap-4 rounded-md bg-white border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all cursor-pointer p-3"
               @click="openDetail(path.id)"
             >
               <div class="w-24 h-14 shrink-0 rounded-lg overflow-hidden bg-stone-100 relative">

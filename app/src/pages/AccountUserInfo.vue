@@ -7,10 +7,10 @@
     </div>
 
     <!-- Avatar + identity block -->
-    <div class="mb-8 p-6 bg-white rounded-xl border border-stone-100 shadow-sm">
+    <div class="mb-8 p-6 bg-white rounded-md border border-stone-100 shadow-sm">
       <div class="flex items-center gap-4 mb-5">
-        <div class="w-16 h-16 shrink-0 overflow-hidden rounded-full border-2 border-stone-100">
-          <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" referrerpolicy="no-referrer" class="h-full w-full rounded-full object-cover" />
+        <div class="w-16 h-16 shrink-0 overflow-hidden rounded-none border-2 border-stone-100">
+          <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" referrerpolicy="no-referrer" class="h-full w-full rounded-none object-cover" />
           <div v-else class="h-full w-full flex items-center justify-center bg-amber-500 text-white text-lg font-bold">{{ initials }}</div>
         </div>
         <div class="min-w-0">
@@ -19,11 +19,11 @@
         </div>
       </div>
       <div class="grid gap-3 sm:grid-cols-2">
-        <div class="px-4 py-3 bg-stone-50 rounded-lg border border-stone-100">
+        <div class="px-4 py-3 bg-stone-50 rounded-sm border border-stone-100">
           <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 mb-1">Username</p>
           <p class="text-sm font-semibold text-stone-900 break-all">{{ username || '—' }}</p>
         </div>
-        <div class="px-4 py-3 bg-stone-50 rounded-lg border border-stone-100">
+        <div class="px-4 py-3 bg-stone-50 rounded-sm border border-stone-100">
           <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 mb-1">Email</p>
           <p class="text-sm font-semibold text-stone-900 break-all">{{ email || '—' }}</p>
         </div>
@@ -31,7 +31,7 @@
     </div>
 
     <!-- Edit form -->
-    <div class="p-6 bg-white rounded-xl border border-stone-100 shadow-sm">
+    <div class="p-6 bg-white rounded-md border border-stone-100 shadow-sm">
       <div class="space-y-5">
         <div>
           <label class="block text-xs font-bold uppercase tracking-[0.15em] text-stone-500 mb-2.5">Display name</label>
@@ -59,7 +59,7 @@
             <input ref="fileInputRef" type="file" accept="image/*" class="hidden" @change="onPickFile" />
             <button
               type="button"
-              class="inline-flex items-center gap-2 px-4 py-2 border border-stone-200 text-stone-600 text-xs font-semibold hover:border-stone-300 hover:bg-stone-50 transition-all rounded-lg"
+              class="inline-flex items-center gap-2 px-4 py-2 border border-stone-200 text-stone-600 text-xs font-semibold hover:border-stone-300 hover:bg-stone-50 transition-all rounded-sm"
               @click="openFilePicker"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -67,7 +67,7 @@
             </button>
             <button
               type="button"
-              class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-xs font-semibold hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all rounded-lg"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-xs font-semibold hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all rounded-sm"
               :disabled="!pickedFile || avatarUploading"
               @click="uploadAvatar"
             >
@@ -78,12 +78,12 @@
           </div>
         </div>
 
-        <p v-if="error" class="text-xs text-red-500 py-2 px-3 border border-red-100 bg-red-50 rounded-lg">{{ error }}</p>
+        <p v-if="error" class="text-xs text-red-500 py-2 px-3 border border-red-100 bg-red-50 rounded-sm">{{ error }}</p>
 
         <div class="flex items-center gap-3 pt-2">
           <button
             type="button"
-            class="px-5 py-2.5 border border-stone-200 text-stone-600 text-xs font-semibold hover:border-stone-300 hover:bg-stone-50 transition-all rounded-lg"
+            class="px-5 py-2.5 border border-stone-200 text-stone-600 text-xs font-semibold hover:border-stone-300 hover:bg-stone-50 transition-all rounded-sm"
             :disabled="saving"
             @click="resetForm"
           >
@@ -91,7 +91,7 @@
           </button>
           <button
             type="button"
-            class="px-5 py-2.5 bg-stone-900 text-white text-xs font-bold hover:bg-stone-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:-translate-y-px active:translate-y-0 rounded-lg"
+            class="px-5 py-2.5 bg-stone-900 text-white text-xs font-bold hover:bg-stone-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:-translate-y-px active:translate-y-0 rounded-sm"
             :disabled="saving"
             @click="save"
           >

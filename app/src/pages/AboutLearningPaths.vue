@@ -1,65 +1,178 @@
 <template>
-  <div class="mx-auto max-w-7xl space-y-10 px-4 py-8">
-    <section class="relative overflow-hidden rounded-xl border border-l-4 border-l-sky-500 border-border bg-gradient-to-r from-sky-50/60 via-white to-sky-50/30 pb-8">
-      <div class="absolute right-6 top-6 opacity-30">
-        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="hsl(197 94% 53%)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+  <div class="min-h-screen">
+
+    <!-- Editorial hero -->
+    <section class="relative overflow-hidden bg-stone-50 border-b border-stone-200">
+      <!-- Decorative large background text -->
+      <div class="absolute inset-0 flex items-center justify-end pr-8 pointer-events-none select-none" aria-hidden="true">
+        <span class="text-[20vw] font-black text-stone-100 leading-none tracking-tighter">LP</span>
       </div>
-      <div class="grid gap-6 md:grid-cols-12 md:items-end px-6 pt-6">
-        <div class="md:col-span-8">
-          <div class="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 mb-3">
-            <span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
-            <span class="text-xs font-medium text-sky-600">Learning Paths</span>
+
+      <div class="relative mx-auto max-w-7xl px-4 py-16 md:py-24">
+        <div class="max-w-2xl">
+          <div class="flex items-center gap-3 mb-8">
+            <span class="h-px w-12 bg-sky-600"></span>
+            <span class="text-[11px] font-bold uppercase tracking-[0.25em] text-stone-400">About</span>
           </div>
-          <h1 class="text-xl font-semibold tracking-tight text-foreground md:text-2xl">Learning Paths</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600">
-            Learning paths turn resources into a sequence: what to learn, in what order, and why.
-            Build a path that matches your goal and keep it iterative.
+
+          <h1 class="text-5xl md:text-7xl font-black tracking-tight text-stone-900 leading-[0.92] mb-8">
+            Learning<br/>
+            <span class="text-sky-600">paths</span><br/>
+            that work.
+          </h1>
+
+          <p class="text-base leading-relaxed text-stone-600 max-w-lg">
+            Learning paths turn resources into a sequence: what to learn, in what order, and why. Build a path that matches your goal and keep it iterative.
           </p>
-        </div>
-        <div class="md:col-span-4 md:flex md:justify-end md:items-end">
-          <Button :as="RouterLinkComp" to="/createpath" variant="outline" size="sm" class="rounded-none border-sky-200 text-sky-700 hover:bg-sky-50">Create a path</Button>
         </div>
       </div>
     </section>
 
-    <section class="grid gap-6 md:grid-cols-2">
-      <Card as="section" :hoverable="false" class="rounded-none border-t-4 border-t-sky-500">
-        <div class="p-6 space-y-3">
-          <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-sky-700">How it works</h2>
-          <ul class="space-y-2 text-sm leading-relaxed list-disc list-inside text-slate-600">
-            <li>Select resources from your library.</li>
-            <li>Arrange them into a sequence.</li>
-            <li>Attach them to categories and set visibility.</li>
-          </ul>
+    <!-- How it works: asymmetric 2-col -->
+    <section class="mx-auto max-w-7xl px-4 py-16 md:py-20">
+      <div class="grid grid-cols-12 gap-8 md:gap-12">
+
+        <!-- Left: introduction -->
+        <div class="col-span-12 md:col-span-5">
+          <div class="sticky top-24">
+            <span class="text-[11px] font-bold uppercase tracking-[0.25em] text-sky-600 mb-4 block">How it works</span>
+            <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-stone-900 leading-tight mb-6">
+              From collection to completion.
+            </h2>
+            <p class="text-sm leading-relaxed text-stone-500 mb-6">
+              A learning path is more than a list of links. It's a intentional sequence that respects the dependencies between concepts—learning X before Y because that's how understanding actually builds.
+            </p>
+            <RouterLink to="/createpath" class="inline-flex items-center gap-2 text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors group">
+              Create a path
+              <span class="transition-transform group-hover:translate-x-1">→</span>
+            </RouterLink>
+          </div>
         </div>
-      </Card>
-      <Card as="section" :hoverable="false" class="rounded-none border-t-4 border-t-sky-500">
-        <div class="p-6 space-y-3">
-          <h2 class="text-sm font-medium tracking-[0.14em] uppercase text-sky-700">Path types</h2>
-          <ul class="space-y-2 text-sm leading-relaxed list-disc list-inside text-slate-600">
-            <li>
-              <span class="inline-flex items-center gap-1 rounded bg-sky-50 px-1.5 py-0.5 text-xs text-sky-600 font-medium">Linear</span>
-              step-by-step progression.
-            </li>
-            <li>
-              <span class="inline-flex items-center gap-1 rounded bg-indigo-50 px-1.5 py-0.5 text-xs text-indigo-600 font-medium">Structured</span>
-              modules with a stronger framework.
-            </li>
-            <li>
-              <span class="inline-flex items-center gap-1 rounded bg-violet-50 px-1.5 py-0.5 text-xs text-violet-600 font-medium">Pool</span>
-              a curated pool you can explore freely.
-            </li>
-          </ul>
+
+        <!-- Right: steps -->
+        <div class="col-span-12 md:col-span-7">
+          <div class="space-y-8">
+            <!-- Step 1 -->
+            <div class="relative">
+              <div class="flex items-start gap-6">
+                <div class="flex flex-col items-center">
+                  <div class="h-12 w-12 rounded-full bg-stone-900 text-white flex items-center justify-center text-lg font-semibold">1</div>
+                  <div class="w-px h-full bg-stone-200 mt-3"></div>
+                </div>
+                <div class="flex-1 pb-8">
+                  <h3 class="text-lg font-semibold text-stone-900 mb-2">Select resources</h3>
+                  <p class="text-sm leading-relaxed text-stone-500">Choose items from your library to include in the path. You can add more or remove items later as your understanding evolves.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="relative">
+              <div class="flex items-start gap-6">
+                <div class="flex flex-col items-center">
+                  <div class="h-12 w-12 rounded-full bg-stone-900 text-white flex items-center justify-center text-lg font-semibold">2</div>
+                  <div class="w-px h-full bg-stone-200 mt-3"></div>
+                </div>
+                <div class="flex-1 pb-8">
+                  <h3 class="text-lg font-semibold text-stone-900 mb-2">Arrange into sequence</h3>
+                  <p class="text-sm leading-relaxed text-stone-500">Drag and drop to define the order. Think about what needs to come first, what builds on what, and where transitions make sense.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="relative">
+              <div class="flex items-start gap-6">
+                <div class="flex flex-col items-center">
+                  <div class="h-12 w-12 rounded-full bg-stone-900 text-white flex items-center justify-center text-lg font-semibold">3</div>
+                  <div class="w-px h-full bg-stone-200 mt-3"></div>
+                </div>
+                <div class="flex-1 pb-8">
+                  <h3 class="text-lg font-semibold text-stone-900 mb-2">Set visibility and categories</h3>
+                  <p class="text-sm leading-relaxed text-stone-500">Choose who can see your path. Keep work-in-progress private, share completed paths with the community, or keep certain paths just for yourself.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="relative">
+              <div class="flex items-start gap-6">
+                <div class="flex flex-col items-center">
+                  <div class="h-12 w-12 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </div>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold text-stone-900 mb-2">Track progress as you go</h3>
+                  <p class="text-sm leading-relaxed text-stone-500">Mark items complete, see your overall progress, and pick up exactly where you left off. Learning stays continuous.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </Card>
+      </div>
     </section>
+
+    <!-- Divider with label -->
+    <div class="border-t border-stone-200 mx-auto max-w-7xl px-4">
+      <div class="flex items-center gap-6 py-6">
+        <span class="h-px flex-1 bg-gradient-to-r from-stone-200 to-transparent"></span>
+        <span class="text-[11px] font-bold uppercase tracking-[0.25em] text-stone-400">Path types</span>
+        <span class="h-px flex-1 bg-gradient-to-l from-stone-200 to-transparent"></span>
+      </div>
+    </div>
+
+    <!-- Path types -->
+    <section class="mx-auto max-w-7xl px-4 py-12">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Linear -->
+        <div class="border border-stone-200 rounded-lg p-6 hover:border-stone-300 transition-colors">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="h-10 w-10 rounded-full bg-sky-50 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </div>
+            <h3 class="text-lg font-semibold text-stone-900">Linear</h3>
+          </div>
+          <p class="text-sm leading-relaxed text-stone-500">Step-by-step progression. Each item leads naturally to the next, like chapters in a book. Best for sequential skills.</p>
+        </div>
+
+        <!-- Structured -->
+        <div class="border border-stone-200 rounded-lg p-6 hover:border-stone-300 transition-colors">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            </div>
+            <h3 class="text-lg font-semibold text-stone-900">Structured</h3>
+          </div>
+          <p class="text-sm leading-relaxed text-stone-500">Modules with a stronger framework. Group items into sections that can be approached somewhat independently. Best for broader topics.</p>
+        </div>
+
+        <!-- Pool -->
+        <div class="border border-stone-200 rounded-lg p-6 hover:border-stone-300 transition-colors">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="h-10 w-10 rounded-full bg-violet-50 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-violet-600"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            </div>
+            <h3 class="text-lg font-semibold text-stone-900">Pool</h3>
+          </div>
+          <p class="text-sm leading-relaxed text-stone-500">A curated collection you can explore freely. Items are related but don't require a strict order. Best for reference material.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quote -->
+    <section class="mx-auto max-w-7xl px-4 py-12 pb-20">
+      <div class="max-w-3xl">
+        <blockquote class="text-2xl md:text-3xl font-light leading-snug text-stone-700">
+          "A learning path isn't a rigid curriculum; it's a
+          <span class="font-semibold text-emerald-700">map</span> that keeps you oriented when the terrain gets steep."
+        </blockquote>
+      </div>
+    </section>
+
   </div>
 </template>
 
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
-import Card from '../components/ui/Card.vue'
-import { Button } from '../components/ui/button'
-
-const RouterLinkComp = RouterLink
 </script>

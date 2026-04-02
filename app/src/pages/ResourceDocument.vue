@@ -39,14 +39,14 @@
                 <span>文档预览</span>
               </div>
               <div class="flex items-center gap-2">
-                <Button type="button" size="sm" class="rounded-md" @click="openSource">
+                <Button type="button" size="sm" class="rounded-sm" @click="openSource">
                   在新标签页打开
                 </Button>
                 <Button
                   v-if="pathItemId != null"
                   type="button"
                   size="sm"
-                  class="rounded-md"
+                  class="rounded-sm"
                   :disabled="progressUpdating"
                   @click="markComplete"
                 >
@@ -109,14 +109,14 @@
               <div class="flex items-center justify-between px-4 py-3 bg-muted/30 border-b border-border">
                 <div class="text-sm font-semibold text-foreground">Reader Mode</div>
                 <div class="flex items-center gap-2">
-                  <Button type="button" size="sm" class="rounded-md" :disabled="!resource.source_url" @click="openSource(true)">
+                  <Button type="button" size="sm" class="rounded-sm" :disabled="!resource.source_url" @click="openSource(true)">
                     Open Original
                   </Button>
                   <Button
                     v-if="pathItemId != null"
                     type="button"
                     size="sm"
-                    class="rounded-md"
+                    class="rounded-sm"
                     :disabled="progressUpdating"
                     @click="markComplete"
                   >
@@ -138,7 +138,7 @@
                         {{ readerError || '当前链接暂时无法抽取正文。你仍可以打开原文，并在返回后记录进度。' }}
                       </p>
                       <div class="flex items-center gap-3">
-                        <Button type="button" class="rounded-md" :disabled="!resource.source_url" @click="openSource(true)">
+                        <Button type="button" class="rounded-sm" :disabled="!resource.source_url" @click="openSource(true)">
                           <span>View on {{ formatPlatform(resource.platform) || 'Original site' }}</span>
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -147,7 +147,7 @@
                         <Button
                           v-if="pathItemId != null"
                           type="button"
-                          class="rounded-md"
+                          class="rounded-sm"
                           :disabled="progressUpdating"
                           @click="markComplete"
                         >
@@ -197,13 +197,13 @@
                 v-if="pathItemId != null"
                 type="button"
                 variant="outline"
-                class="rounded-md"
+                class="rounded-sm"
                 :disabled="progressUpdating"
                 @click="markComplete"
               >
                 Mark as complete
               </Button>
-              <Button type="button" variant="outline" class="rounded-md" @click="openSource" :disabled="!resource.source_url">Open</Button>
+              <Button type="button" variant="outline" class="rounded-sm" @click="openSource" :disabled="!resource.source_url">Open</Button>
             </div>
           </Card>
         </div>

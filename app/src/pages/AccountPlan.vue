@@ -1,13 +1,13 @@
 <template>
   <div>
     <!-- Plan card -->
-    <div class="mb-5 p-6 bg-white rounded-xl border border-stone-100 shadow-sm">
+    <div class="mb-5 p-6 bg-white rounded-md border border-stone-100 shadow-sm">
       <div class="flex items-start justify-between mb-6">
         <div>
           <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400 mb-2">Current plan</p>
           <p class="text-3xl font-black text-stone-900 font-serif tracking-tight">{{ effectivePlan }}</p>
         </div>
-        <span class="inline-flex items-center px-3 py-1.5 rounded-full border border-stone-200 bg-stone-50 text-xs font-bold text-stone-600 uppercase tracking-wider">
+        <span class="inline-flex items-center px-3 py-1.5 rounded-sm border border-stone-200 bg-stone-50 text-xs font-bold text-stone-600 uppercase tracking-wider">
           {{ effectivePlan }}
         </span>
       </div>
@@ -46,11 +46,11 @@
     </div>
 
     <!-- Upgrade prompt -->
-    <div v-if="effectivePlan === 'Free'" class="p-5 bg-amber-50 border border-amber-200 rounded-xl">
+    <div v-if="effectivePlan === 'Free'" class="p-5 bg-amber-50 border border-amber-200 rounded-md">
       <p class="text-xs font-bold uppercase tracking-[0.15em] text-amber-600 mb-1">Upgrade available</p>
       <p class="text-sm text-stone-700 mb-3">Unlock team collaboration, custom paths, and priority support.</p>
       <button
-        class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition-all rounded-lg"
+        class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition-all rounded-sm"
         @click="router.push('/plan')"
       >
         View Plans →

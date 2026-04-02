@@ -266,7 +266,7 @@
           <div
             v-for="signal in trustSignals"
             :key="signal.label"
-            class="rounded-xl border border-stone-100 bg-white p-5 text-center hover:border-stone-200 hover:shadow-sm transition-all"
+            class="rounded-md border border-stone-100 bg-white p-5 text-center hover:border-stone-200 hover:shadow-sm transition-all"
           >
             <div class="text-2xl mb-2">{{ signal.icon }}</div>
             <div class="text-sm font-bold text-stone-800">{{ signal.label }}</div>

@@ -182,9 +182,9 @@
                                   :href="resource.url"
                                   target="_blank"
                                   rel="noreferrer"
-                                  class="group flex items-start gap-3 rounded-2xl border border-stone-100 bg-stone-50 p-3 transition-colors hover:border-stone-200 hover:bg-white"
+                                  class="group flex items-start gap-3 rounded-md border border-stone-100 bg-stone-50 p-3 transition-colors hover:border-stone-200 hover:bg-white"
                                 >
-                                  <div class="h-10 w-10 shrink-0 rounded-xl bg-stone-100 bg-cover bg-center" :style="{ backgroundImage: `url(${resourceThumbnail(resource.url)})` }"></div>
+                                  <div class="h-10 w-10 shrink-0 rounded-none bg-stone-100 bg-cover bg-center" :style="{ backgroundImage: `url(${resourceThumbnail(resource.url)})` }"></div>
                                   <div class="min-w-0">
                                     <div class="text-[10px] font-semibold uppercase tracking-wider" :style="{ color: getCategoryColor(resourceHost(resource.url)) }">
                                       {{ resourceTypeLabel(resource.url) }} · {{ resourceHost(resource.url) }}

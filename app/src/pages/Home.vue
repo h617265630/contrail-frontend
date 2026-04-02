@@ -3,7 +3,7 @@
 
     <!-- Hero Banner -->
     <section
-      class="relative overflow-hidden rounded-2xl mb-16 min-h-[380px] md:min-h-[440px]"
+      class="relative overflow-hidden rounded-none mb-16 min-h-[380px] md:min-h-[440px]"
       @mouseenter="pauseCarousel"
       @mouseleave="resumeCarousel"
     >
@@ -113,7 +113,7 @@
           to="/my-paths"
           variant="ghost"
           size="sm"
-          class="rounded-none text-slate-500 hover:text-slate-800 text-xs font-semibold uppercase tracking-widest"
+          class="rounded-sm text-slate-500 hover:text-slate-800 text-xs font-semibold uppercase tracking-widest"
         >
           View all →
         </Button>
@@ -121,10 +121,10 @@
 
       <!-- Loading skeleton -->
       <div v-if="featuredPaths.length === 0 && loading" class="grid grid-cols-12 gap-4">
-        <div class="col-span-8 rounded-xl bg-slate-100 animate-pulse h-48"></div>
+        <div class="col-span-8 rounded-md bg-slate-100 animate-pulse h-48"></div>
         <div class="col-span-4 space-y-4">
-          <div class="rounded-xl bg-slate-100 animate-pulse h-20"></div>
-          <div class="rounded-xl bg-slate-100 animate-pulse h-20"></div>
+          <div class="rounded-md bg-slate-100 animate-pulse h-20"></div>
+          <div class="rounded-md bg-slate-100 animate-pulse h-20"></div>
         </div>
       </div>
 
@@ -134,14 +134,14 @@
           :to="{ name: 'learningpath', params: { id: featuredPaths[0].id } }"
           class="col-span-12 md:col-span-8 group block"
         >
-          <div class="relative rounded-xl overflow-hidden bg-slate-100 aspect-[16/7]">
+          <div class="relative rounded-md overflow-hidden bg-slate-100 aspect-[16/7]">
             <img
               :src="featuredPaths[0].thumbnail || fallbackThumb"
               :alt="featuredPaths[0].title"
               loading="lazy"
               decoding="async"
-              class="block w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-              style="width: 100%; height: 100%; object-fit: contain; background-color: #f7f7f7;"
+              class="block w-full h-full object-cover"
+              style="width: 100%; height: 100%; object-fit: cover;"
             />
             <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
             <div class="absolute bottom-0 left-0 p-6 md:p-8">
@@ -158,15 +158,14 @@
             v-for="path in featuredPaths.slice(1, 4)"
             :key="path.id"
             :to="{ name: 'learningpath', params: { id: path.id } }"
-            class="group flex gap-3 items-center bg-white rounded-xl border border-slate-100 p-3 hover:border-slate-200 hover:shadow-sm transition-all"
+            class="group flex gap-3 items-center bg-white rounded-md border border-slate-100 p-3 hover:border-slate-200 hover:shadow-sm transition-all"
           >
-            <div class="w-16 h-16 rounded-lg overflow-hidden bg-slate-100 shrink-0">
+            <div class="w-16 h-16 rounded-[12px] overflow-hidden bg-slate-100 shrink-0">
               <img
                 :src="path.thumbnail || fallbackThumb"
                 :alt="path.title"
                 loading="lazy"
-                class="block w-full h-full object-contain"
-                style="width: 100%; height: 100%; object-fit: contain; background-color: #f7f7f7;"
+                class="block w-full h-full object-cover"
               />
             </div>
             <div class="min-w-0">
@@ -177,12 +176,12 @@
         </div>
       </div>
 
-      <div v-else class="rounded-xl border border-dashed border-slate-200 py-16 text-center">
+      <div v-else class="rounded-md border border-dashed border-slate-200 py-16 text-center">
         <p class="text-sm text-slate-400">No paths published yet.</p>
         <Button
           :as="RouterLinkComp"
           to="/createpath"
-          class="mt-3 rounded-none text-xs font-semibold"
+          class="mt-3 rounded-sm text-xs font-semibold"
         >
           Be the first to create one →
         </Button>
@@ -202,7 +201,7 @@
           to="/learningpool"
           variant="ghost"
           size="sm"
-          class="rounded-none text-slate-500 hover:text-slate-800 text-xs font-semibold uppercase tracking-widest"
+          class="rounded-sm text-slate-500 hover:text-slate-800 text-xs font-semibold uppercase tracking-widest"
         >
           Open pool →
         </Button>
@@ -216,44 +215,42 @@
           :to="{ name: 'learningpath', params: { id: path.id } }"
           class="group block w-full min-w-0"
         >
-          <div class="rounded-xl overflow-hidden border border-slate-100 bg-white hover:border-slate-200 hover:shadow-md transition-all duration-200">
-            <div class="relative bg-slate-100 overflow-hidden" style="aspect-ratio: 16/9; width: 100%;">
+          <div class="rounded-md overflow-hidden border border-slate-100 bg-white hover:border-slate-200 hover:shadow-md transition-all duration-200">
+            <div class="card-image bg-slate-100">
               <img
                 :src="path.thumbnail || fallbackThumb"
                 :alt="path.title"
                 loading="lazy"
                 decoding="async"
-                class="block w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-                style="width: 100%; height: 100%; object-fit: contain; background-color: #f7f7f7;"
+                class="block w-full h-full"
               />
-              <!-- Type badge -->
-              <div class="absolute top-2.5 left-2.5">
-                <span class="inline-flex items-center rounded-full border border-white/20 bg-black/30 backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
-                  {{ path.typeLabel }}
-                </span>
-              </div>
             </div>
             <div class="p-4">
               <h3 class="text-sm font-semibold text-slate-800 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors" :title="path.title">
                 {{ path.title }}
               </h3>
-              <p class="text-xs text-slate-400 mt-1.5 line-clamp-2">{{ path.description }}</p>
-              <div class="flex items-center gap-2 mt-3">
-                <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{{ path.category }}</span>
-                <span class="text-slate-200">·</span>
-                <span class="text-[10px] text-slate-400">{{ path.level }}</span>
+              <p class="text-xs text-slate-400 mt-1 line-clamp-2">{{ path.description }}</p>
+              <div class="flex items-center justify-between gap-3 mt-3">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{{ path.category }}</span>
+                  <span class="text-slate-200">·</span>
+                  <span class="text-[10px] text-slate-400">{{ path.level }}</span>
+                </div>
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-600 shrink-0">
+                  {{ path.typeLabel }}
+                </span>
               </div>
             </div>
           </div>
         </RouterLink>
       </div>
 
-      <div v-else-if="!loadingPool" class="rounded-xl border border-dashed border-slate-200 py-16 text-center">
+      <div v-else-if="!loadingPool" class="rounded-md border border-dashed border-slate-200 py-16 text-center">
         <p class="text-sm text-slate-400">Nothing in the pool yet.</p>
       </div>
 
       <div v-else class="grid grid-cols-4 gap-4">
-        <div v-for="i in 8" :key="i" class="rounded-xl bg-slate-100 animate-pulse aspect-[4/5]"></div>
+        <div v-for="i in 8" :key="i" class="rounded-md bg-slate-100 animate-pulse aspect-[4/5]"></div>
       </div>
     </section>
 
@@ -377,3 +374,18 @@ onBeforeUnmount(() => {
   stopCarousel()
 })
 </script>
+
+<style scoped>
+.card-image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 0.375rem;
+}
+
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+</style>

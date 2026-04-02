@@ -75,13 +75,12 @@
           :to="{ name: 'learningpath', params: { id: p.id } }"
           class="group shrink-0 w-56 block"
         >
-          <div class="relative rounded-xl overflow-hidden bg-slate-100 w-56 mb-3" style="aspect-ratio: 16/9;">
+          <div class="card-image rounded-none bg-slate-100 w-56 mb-3">
             <img
               :src="p.thumbnail || fallbackThumb"
               :alt="p.title"
               loading="lazy"
-              class="block w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
-              style="width: 100%; height: 100%; object-fit: contain; background-color: #f7f7f7;"
+              class="block w-full h-full"
             />
           </div>
           <div class="space-y-1">
@@ -130,23 +129,22 @@
           :to="{ name: 'learningpath', params: { id: p.id } }"
           class="group block"
         >
-          <div class="rounded-xl overflow-hidden border border-slate-100 bg-white hover:border-slate-200 hover:shadow-md transition-all duration-200">
-            <div class="relative bg-slate-100 overflow-hidden" style="aspect-ratio: 16/9; width: 100%;">
+          <div class="rounded-md overflow-hidden border border-slate-100 bg-white hover:border-slate-200 hover:shadow-md transition-all duration-200">
+            <div class="card-image bg-slate-100">
               <img
                 :src="p.thumbnail || fallbackThumb"
                 :alt="p.title"
                 loading="lazy"
                 decoding="async"
-                class="block w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-                style="width: 100%; height: 100%; object-fit: contain; background-color: #f7f7f7;"
+                class="block w-full h-full"
               />
-              <div class="absolute top-2.5 left-2.5">
-                <span class="inline-flex items-center rounded-full border border-white/20 bg-black/30 backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+            </div>
+            <div class="p-4">
+              <div class="flex items-center justify-between gap-2 mb-1">
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
                   {{ p.typeLabel }}
                 </span>
               </div>
-            </div>
-            <div class="p-4">
               <h3 class="text-sm font-semibold text-slate-800 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">{{ p.title }}</h3>
               <p class="text-xs text-slate-400 mt-1 line-clamp-2">{{ p.description }}</p>
               <div class="flex items-center gap-2 mt-3">
@@ -167,23 +165,22 @@
           :to="{ name: 'learningpath', params: { id: p.id } }"
           class="group block"
         >
-          <div class="rounded-xl overflow-hidden border border-slate-100 bg-white hover:border-slate-200 hover:shadow-lg transition-all duration-200">
-            <div class="relative bg-slate-100 overflow-hidden" style="aspect-ratio: 16/9; width: 100%;">
+          <div class="rounded-md overflow-hidden border border-slate-100 bg-white hover:border-slate-200 hover:shadow-lg transition-all duration-200">
+            <div class="card-image bg-slate-100">
               <img
                 :src="p.thumbnail || fallbackThumb"
                 :alt="p.title"
                 loading="lazy"
                 decoding="async"
-                class="block w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-                style="width: 100%; height: 100%; object-fit: contain; background-color: #f7f7f7;"
+                class="block w-full h-full"
               />
-              <div class="absolute top-2.5 left-2.5">
-                <span class="inline-flex items-center rounded-full border border-white/20 bg-black/30 backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+            </div>
+            <div class="p-5">
+              <div class="flex items-center justify-between gap-2 mb-1">
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
                   {{ p.typeLabel }}
                 </span>
               </div>
-            </div>
-            <div class="p-5">
               <h3 class="text-sm font-semibold text-slate-800 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors mb-1">{{ p.title }}</h3>
               <p class="text-xs text-slate-400 line-clamp-2">{{ p.description }}</p>
               <div class="flex items-center gap-2 mt-3">
@@ -316,3 +313,19 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped>
+.card-image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 12px;
+  position: relative;
+}
+
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+</style>
