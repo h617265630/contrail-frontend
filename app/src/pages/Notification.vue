@@ -169,7 +169,7 @@
             </div>
             <div class="flex-1 h-px bg-stone-200"></div>
           </div>
-          <div class="rounded-xl border border-dashed border-stone-200 bg-stone-50/50 py-12 text-center">
+          <div class="rounded-md border border-dashed border-stone-200 bg-stone-50/50 py-12 text-center">
             <p class="text-sm text-stone-400">Social and collaboration features coming soon.</p>
           </div>
         </section>
@@ -183,7 +183,7 @@
             </div>
             <div class="flex-1 h-px bg-stone-200"></div>
           </div>
-          <div class="rounded-xl border border-dashed border-stone-200 bg-stone-50/50 py-12 text-center">
+          <div class="rounded-md border border-dashed border-stone-200 bg-stone-50/50 py-12 text-center">
             <p class="text-sm text-stone-400">Progress tracking and milestone notifications coming soon.</p>
           </div>
         </section>

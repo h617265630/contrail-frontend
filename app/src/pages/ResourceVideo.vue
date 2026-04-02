@@ -78,7 +78,7 @@
                 v-model.number="manualProgress"
                 min="0"
                 max="100"
-                class="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer"
+                class="w-full h-2 bg-muted rounded-sm appearance-none cursor-pointer"
                 style="accent-color: hsl(var(--foreground))"
               />
               <div class="mt-1 flex justify-between text-xs text-muted-foreground">

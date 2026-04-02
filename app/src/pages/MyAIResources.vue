@@ -96,7 +96,7 @@ function openResource(url: string) {
         <div 
           v-for="path in myPaths" 
           :key="path.id"
-          class="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+          class="border rounded-md p-4 hover:shadow-md transition-shadow cursor-pointer"
           @click="viewPathDetail(path)"
         >
           <div class="flex items-start justify-between">
@@ -129,7 +129,7 @@ function openResource(url: string) {
         <div 
           v-for="resource in myResources" 
           :key="resource.id"
-          class="border rounded-lg p-4 hover:shadow-md transition-shadow"
+          class="border rounded-md p-4 hover:shadow-md transition-shadow"
         >
           <div class="flex items-start gap-3">
             <span class="text-2xl">{{ getTypeIcon(resource.type) }}</span>

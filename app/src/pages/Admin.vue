@@ -22,7 +22,7 @@
     </div>
 
     <!-- Tabs -->
-    <div class="flex gap-1 mb-6 bg-stone-100 p-1 rounded-lg w-fit">
+    <div class="flex gap-1 mb-6 bg-stone-100 p-1 rounded-sm w-fit">
       <button
         v-for="tab in tabs"
         :key="tab.key"

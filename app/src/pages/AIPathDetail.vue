@@ -41,7 +41,7 @@
     </header>
 
     <main class="mx-auto max-w-7xl px-4 py-8 md:py-10">
-      <div v-if="!result" class="rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-20 text-center">
+      <div v-if="!result" class="rounded-md border border-dashed border-stone-300 bg-white px-6 py-20 text-center">
         <div class="mx-auto max-w-xl">
           <h2 class="text-2xl font-black tracking-tight text-stone-900">还没有 AI Path 结果</h2>
           <p class="mt-3 text-sm leading-7 text-stone-500">
@@ -57,7 +57,7 @@
       </div>
 
       <template v-else>
-        <section v-if="result.warnings?.length" class="mb-8 rounded-3xl border border-amber-200 bg-amber-50 px-5 py-5 md:px-6">
+        <section v-if="result.warnings?.length" class="mb-8 rounded-md border border-amber-200 bg-amber-50 px-5 py-5 md:px-6">
           <p class="text-[10px] font-bold uppercase tracking-[0.25em] text-amber-600">Reading Notes</p>
           <ul class="mt-3 space-y-2">
             <li v-for="warning in result.warnings" :key="warning" class="text-sm leading-6 text-amber-800">
@@ -68,7 +68,7 @@
 
         <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
           <article class="lg:col-span-8 space-y-8">
-            <section class="rounded-3xl border border-stone-200 bg-white px-6 py-6 shadow-sm md:px-8 md:py-8">
+            <section class="rounded-md border border-stone-200 bg-white px-6 py-6 shadow-sm md:px-8 md:py-8">
               <p class="text-[10px] font-bold uppercase tracking-[0.25em] text-stone-400">How to use this guide</p>
               <div class="mt-4 space-y-4 text-sm leading-7 text-stone-600">
                 <p>
@@ -84,7 +84,7 @@
               v-for="(node, idx) in result.data.nodes"
               :id="stageAnchor(node, idx)"
               :key="`${idx}-${node.title}`"
-              class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm"
+              class="overflow-hidden rounded-md border border-stone-200 bg-white shadow-sm"
             >
               <div class="border-b border-stone-100 bg-stone-50 px-6 py-5 md:px-8 md:py-6">
                 <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -103,11 +103,11 @@
                     </p>
                   </div>
                   <div class="grid grid-cols-2 gap-3 text-xs text-stone-500 md:min-w-48">
-                    <div class="rounded-2xl border border-stone-200 bg-white px-4 py-3">
+                    <div class="rounded-md border border-stone-200 bg-white px-4 py-3">
                       <div class="font-bold text-stone-900">{{ node.sub_nodes?.length || 0 }}</div>
                       <div class="mt-1">sub topics</div>
                     </div>
-                    <div class="rounded-2xl border border-stone-200 bg-white px-4 py-3">
+                    <div class="rounded-md border border-stone-200 bg-white px-4 py-3">
                       <div class="font-bold text-stone-900">{{ collectAllNodeResources(node).length }}</div>
                       <div class="mt-1">resources</div>
                     </div>
@@ -119,7 +119,7 @@
                 <div class="space-y-8">
                   <section v-if="node.explanation" class="space-y-3">
                     <p class="text-[10px] font-bold uppercase tracking-[0.25em] text-stone-400">Stage overview</p>
-                    <div class="rounded-2xl bg-stone-50 px-5 py-5 text-sm leading-8 text-stone-700 md:text-[15px]">
+                    <div class="rounded-md bg-stone-50 px-5 py-5 text-sm leading-8 text-stone-700 md:text-[15px]">
                       {{ node.explanation }}
                     </div>
                   </section>
@@ -130,7 +130,7 @@
                       <li
                         v-for="(step, stepIdx) in node.tutorial"
                         :key="`${node.title}-${stepIdx}`"
-                        class="flex gap-4 rounded-2xl border border-stone-200 bg-white px-4 py-4"
+                        class="flex gap-4 rounded-md border border-stone-200 bg-white px-4 py-4"
                       >
                         <span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-stone-900 text-[10px] font-black text-white">
                           {{ stepIdx + 1 }}
@@ -146,7 +146,7 @@
                       <article
                         v-for="(subNode, subIdx) in node.sub_nodes"
                         :key="`${node.title}-${subIdx}-${subNode.title}`"
-                        class="rounded-3xl border border-stone-200 bg-stone-50 px-5 py-5"
+                        class="rounded-md border border-stone-200 bg-stone-50 px-5 py-5"
                       >
                         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                           <div class="min-w-0 flex-1">
@@ -173,7 +173,7 @@
                           </div>
 
                           <aside v-if="subNode.resources?.length" class="w-full lg:w-80">
-                            <div class="rounded-2xl border border-stone-200 bg-white p-4">
+                            <div class="rounded-md border border-stone-200 bg-white p-4">
                               <p class="text-[10px] font-bold uppercase tracking-[0.25em] text-stone-400">Embedded resources</p>
                               <div class="mt-4 space-y-3">
                                 <a
@@ -211,7 +211,7 @@
                         :href="resource.url"
                         target="_blank"
                         rel="noreferrer"
-                        class="group block overflow-hidden rounded-2xl border border-stone-200 bg-white transition-all duration-200 hover:border-stone-300 hover:shadow-md"
+                        class="group block overflow-hidden rounded-md border border-stone-200 bg-white transition-all duration-200 hover:border-stone-300 hover:shadow-md"
                       >
                         <div class="relative h-40 bg-stone-100 bg-cover bg-center" :style="{ backgroundImage: `url(${resourceThumbnail(resource.url)})` }"></div>
                         <div class="p-4">
@@ -230,13 +230,13 @@
               </div>
             </section>
 
-            <section v-if="result.data.recommendations?.length" class="rounded-3xl border border-stone-200 bg-white px-6 py-6 shadow-sm md:px-8 md:py-8">
+            <section v-if="result.data.recommendations?.length" class="rounded-md border border-stone-200 bg-white px-6 py-6 shadow-sm md:px-8 md:py-8">
               <p class="text-[10px] font-bold uppercase tracking-[0.25em] text-stone-400">Final recommendations</p>
               <div class="mt-4 space-y-3">
                 <div
                   v-for="(item, idx) in result.data.recommendations"
                   :key="`${item}-${idx}`"
-                  class="flex gap-3 rounded-2xl bg-stone-50 px-4 py-4 text-sm leading-7 text-stone-700"
+                  class="flex gap-3 rounded-md bg-stone-50 px-4 py-4 text-sm leading-7 text-stone-700"
                 >
                   <span class="mt-2 inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500"></span>
                   <span>{{ item }}</span>
@@ -246,32 +246,32 @@
           </article>
 
           <aside class="lg:col-span-4 lg:sticky lg:top-24 space-y-5">
-            <section class="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+            <section class="rounded-md border border-stone-200 bg-white p-5 shadow-sm">
               <p class="text-[10px] font-bold uppercase tracking-[0.25em] text-stone-400">At a glance</p>
               <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                <div class="rounded-2xl bg-stone-50 px-4 py-4">
+                <div class="rounded-md bg-stone-50 px-4 py-4">
                   <div class="text-2xl font-black tracking-tight text-stone-900">{{ result.data.nodes.length }}</div>
                   <div class="mt-1 text-xs text-stone-500">stages</div>
                 </div>
-                <div class="rounded-2xl bg-stone-50 px-4 py-4">
+                <div class="rounded-md bg-stone-50 px-4 py-4">
                   <div class="text-2xl font-black tracking-tight text-stone-900">{{ totalSubNodes }}</div>
                   <div class="mt-1 text-xs text-stone-500">sub topics</div>
                 </div>
-                <div class="rounded-2xl bg-stone-50 px-4 py-4">
+                <div class="rounded-md bg-stone-50 px-4 py-4">
                   <div class="text-2xl font-black tracking-tight text-stone-900">{{ totalResources }}</div>
                   <div class="mt-1 text-xs text-stone-500">resources</div>
                 </div>
               </div>
             </section>
 
-            <section class="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+            <section class="rounded-md border border-stone-200 bg-white p-5 shadow-sm">
               <p class="text-[10px] font-bold uppercase tracking-[0.25em] text-stone-400">Outline</p>
               <nav class="mt-4 space-y-2">
                 <a
                   v-for="(node, idx) in result.data.nodes"
                   :key="`${idx}-${node.title}-outline`"
                   :href="`#${stageAnchor(node, idx)}`"
-                  class="block rounded-2xl border border-stone-100 bg-stone-50 px-4 py-3 transition-colors hover:border-stone-200 hover:bg-white"
+                  class="block rounded-md border border-stone-100 bg-stone-50 px-4 py-3 transition-colors hover:border-stone-200 hover:bg-white"
                 >
                   <div class="text-[10px] font-bold uppercase tracking-wider text-stone-400">Stage {{ idx + 1 }}</div>
                   <div class="mt-1 text-sm font-semibold leading-6 text-stone-800">{{ node.title }}</div>
@@ -279,7 +279,7 @@
               </nav>
             </section>
 
-            <section class="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+            <section class="rounded-md border border-stone-200 bg-white p-5 shadow-sm">
               <p class="text-[10px] font-bold uppercase tracking-[0.25em] text-stone-400">Reading strategy</p>
               <div class="mt-4 space-y-3 text-sm leading-7 text-stone-600">
                 <p>先通读每个阶段的 overview，再决定你要不要深入到 sub topics。</p>

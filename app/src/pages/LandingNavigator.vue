@@ -1,6 +1,6 @@
 <template>
   <div class="mx-auto max-w-7xl space-y-16 px-4 py-8">
-    <section class="relative overflow-hidden rounded-3xl border border-border bg-white shadow-sm">
+    <section class="relative overflow-hidden rounded-none border border-border bg-white shadow-sm">
       <div class="absolute inset-0 bg-[linear-gradient(120deg,#eef7ff_0%,#ffffff_45%,#f0fbff_100%)]" aria-hidden="true" />
       <div class="relative grid gap-6 px-6 py-8 md:grid-cols-12 md:items-stretch md:px-10 md:py-12">
         <div class="space-y-6 md:col-span-8">
@@ -49,19 +49,19 @@
     <section class="space-y-5">
       <h2 class="text-2xl font-semibold tracking-tight text-foreground">What problem you solve</h2>
       <div class="grid gap-4 md:grid-cols-3">
-        <Card as="article" :hoverable="false" className="rounded-xl border-border">
+        <Card as="article" :hoverable="false" className="rounded-md border-border">
           <div class="space-y-2 p-5">
             <h3 class="text-base font-semibold text-foreground">Unstructured learning</h3>
             <p class="text-sm text-muted-foreground">Random resources create confusion and slow progress.</p>
           </div>
         </Card>
-        <Card as="article" :hoverable="false" className="rounded-xl border-border">
+        <Card as="article" :hoverable="false" className="rounded-md border-border">
           <div class="space-y-2 p-5">
             <h3 class="text-base font-semibold text-foreground">No ownership</h3>
             <p class="text-sm text-muted-foreground">People need both AI guidance and manual control.</p>
           </div>
         </Card>
-        <Card as="article" :hoverable="false" className="rounded-xl border-border">
+        <Card as="article" :hoverable="false" className="rounded-md border-border">
           <div class="space-y-2 p-5">
             <h3 class="text-base font-semibold text-foreground">No feedback loop</h3>
             <p class="text-sm text-muted-foreground">Without visible checkpoints, it is hard to finish a path.</p>
@@ -74,7 +74,7 @@
       <h2 class="text-2xl font-semibold tracking-tight text-foreground">Example Learning Paths</h2>
 
       <div v-if="isLoadingPaths" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card v-for="idx in 4" :key="`navigator-loading-${idx}`" as="article" :hoverable="false" className="rounded-xl border-border overflow-hidden">
+        <Card v-for="idx in 4" :key="`navigator-loading-${idx}`" as="article" :hoverable="false" className="rounded-md border-border overflow-hidden">
           <div class="h-36 animate-pulse bg-slate-200" />
           <div class="space-y-2 p-4">
             <div class="h-4 w-3/4 animate-pulse rounded bg-slate-200" />
@@ -85,7 +85,7 @@
 
       <div v-else-if="hasPublicPaths" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <RouterLink v-for="card in exampleCards" :key="card.topic" :to="card.to" class="block">
-          <Card as="article" :hoverable="true" className="h-full rounded-xl border-border">
+          <Card as="article" :hoverable="true" className="h-full rounded-md border-border">
             <div class="relative h-36 bg-slate-100">
               <img :src="card.thumbnail" :alt="card.topic" class="h-full w-full object-cover" />
             </div>
@@ -97,7 +97,7 @@
         </RouterLink>
       </div>
 
-      <Card v-else as="article" :hoverable="false" className="rounded-xl border-border">
+      <Card v-else as="article" :hoverable="false" className="rounded-md border-border">
         <div class="space-y-3 p-8 text-center">
           <p class="text-xs font-semibold tracking-[0.14em] uppercase text-muted-foreground">Empty</p>
           <h3 class="text-lg font-semibold text-foreground">No public learning paths found</h3>
@@ -113,7 +113,7 @@
     <section class="space-y-5">
       <h2 class="text-2xl font-semibold tracking-tight text-foreground">How it works</h2>
       <div class="grid gap-4 md:grid-cols-3">
-        <Card v-for="step in howItWorks" :key="step.title" as="article" :hoverable="false" className="rounded-xl border-border">
+        <Card v-for="step in howItWorks" :key="step.title" as="article" :hoverable="false" className="rounded-md border-border">
           <div class="space-y-3 p-5">
             <div class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-sky-100 text-sky-700">
               <component :is="step.icon" class="h-5 w-5" />
@@ -128,9 +128,9 @@
     <section class="space-y-4 rounded-md border border-border bg-slate-950 p-6 text-white md:p-8">
       <h2 class="text-2xl font-semibold tracking-tight">Social proof</h2>
       <div class="grid gap-3 md:grid-cols-3">
-        <div class="rounded-xl border border-white/20 bg-white/5 p-4 text-sm text-white/85">{{ socialProofCount }}+ learning paths generated</div>
-        <div class="rounded-xl border border-white/20 bg-white/5 p-4 text-sm text-white/85">Used by developers and students</div>
-        <div class="rounded-xl border border-white/20 bg-white/5 p-4 text-sm text-white/85">Curated with high quality resources</div>
+        <div class="rounded-md border border-white/20 bg-white/5 p-4 text-sm text-white/85">{{ socialProofCount }}+ learning paths generated</div>
+        <div class="rounded-md border border-white/20 bg-white/5 p-4 text-sm text-white/85">Used by developers and students</div>
+        <div class="rounded-md border border-white/20 bg-white/5 p-4 text-sm text-white/85">Curated with high quality resources</div>
       </div>
     </section>
 

@@ -23,7 +23,7 @@
           </button>
           <div
             v-if="langMenuOpen"
-            class="absolute right-0 top-full mt-1 w-36 rounded-lg border border-slate-100 bg-white shadow-lg z-50 py-1"
+            class="absolute right-0 top-full mt-1 w-36 rounded-md border border-slate-100 bg-white shadow-lg z-50 py-1"
           >
             <button
               v-for="opt in languages"
@@ -216,7 +216,7 @@
           <!-- Mobile menu toggle -->
           <button
             type="button"
-            class="inline-flex md:hidden h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 transition-all"
+            class="inline-flex md:hidden h-9 w-9 items-center justify-center rounded-sm border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 transition-all"
             :aria-label="mobileMenuOpen ? 'Close menu' : 'Open menu'"
             @click="mobileMenuOpen = !mobileMenuOpen"
           >
@@ -234,7 +234,7 @@
           v-for="link in mainNavLinks"
           :key="link.to"
           :to="link.to"
-          class="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+          class="flex items-center justify-between px-3 py-2.5 rounded-sm text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
           :class="isActive(link.to) ? 'bg-slate-50 text-blue-600' : ''"
           @click="mobileMenuOpen = false"
         >
@@ -245,7 +245,7 @@
             v-for="item in createMenuItems"
             :key="item.to"
             :to="item.to"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-sm text-sm text-slate-600 hover:bg-slate-50 transition-colors"
             @click="mobileMenuOpen = false"
           >
             <component :is="item.icon" class="w-4 h-4 text-slate-400" />
@@ -253,10 +253,10 @@
           </RouterLink>
         </div>
         <div v-if="!isAuthed" class="border-t border-slate-100 pt-3 mt-3 space-y-1">
-          <RouterLink to="/login" class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors" @click="mobileMenuOpen = false">
+          <RouterLink to="/login" class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-sm text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors" @click="mobileMenuOpen = false">
             Login
           </RouterLink>
-          <RouterLink to="/register" class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800 transition-colors" @click="mobileMenuOpen = false">
+          <RouterLink to="/register" class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-sm text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800 transition-colors" @click="mobileMenuOpen = false">
             Get started
           </RouterLink>
         </div>

@@ -65,7 +65,7 @@
                   v-for="p in supportedPlatforms"
                   :key="p.key"
                   type="button"
-                  class="py-2 px-3 rounded-lg border text-[11px] font-semibold uppercase tracking-wider transition-all"
+                  class="py-2 px-3 rounded-sm border text-[11px] font-semibold uppercase tracking-wider transition-all"
                   :class="selectedPlatform === p.key
                     ? 'border-violet-600 bg-violet-50 text-violet-700'
                     : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300'"
@@ -84,7 +84,7 @@
                   v-model="urlInput"
                   type="url"
                   :placeholder="selectedPlatformPlaceholder"
-                  class="w-full h-11 px-4 border border-stone-200 rounded-lg bg-white text-sm text-stone-900 placeholder:text-stone-400 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition-colors"
+                  class="w-full h-11 px-4 border border-stone-200 rounded-sm bg-white text-sm text-stone-900 placeholder:text-stone-400 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition-colors"
                 />
                 <div v-if="extracting" class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                   <div class="h-3 w-3 rounded-full bg-violet-500 animate-pulse"></div>
@@ -105,7 +105,7 @@
             <!-- Thumbnail -->
             <div>
               <label class="block text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2">Thumbnail</label>
-              <div class="relative aspect-video w-full max-w-sm rounded-lg overflow-hidden bg-stone-100">
+              <div class="relative aspect-video w-full max-w-sm rounded-none overflow-hidden bg-stone-100">
                 <img
                   v-if="extractedMeta.thumbnail_url"
                   :src="extractedMeta.thumbnail_url"
@@ -157,7 +157,7 @@
                 <label class="block text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2">Category</label>
                 <select
                   v-model="categoryId"
-                  class="w-full h-10 px-3 border border-stone-200 rounded-lg bg-white text-sm text-stone-700 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 cursor-pointer"
+                  class="w-full h-10 px-3 border border-stone-200 rounded-sm bg-white text-sm text-stone-700 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 cursor-pointer"
                 >
                   <option value="">Select category</option>
                   <option v-for="c in dbCategories" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
@@ -200,7 +200,7 @@
                 </div>
                 <div
                   v-if="selectedWeight"
-                  class="ml-auto w-16 h-16 rounded-lg border-2 flex items-center justify-center text-[10px] font-black tracking-widest"
+                  class="ml-auto w-16 h-16 rounded-sm border-2 flex items-center justify-center text-[10px] font-black tracking-widest"
                   :class="weightPreviewClass"
                 >
                   <span :class="weightTextClass">{{ selectedWeight.toUpperCase() }}</span>
@@ -230,7 +230,7 @@
               <span class="text-[10px] font-bold uppercase tracking-widest text-stone-400">Live preview</span>
             </div>
             <div
-              :class="['w-full rounded-xl border-2 overflow-hidden transition-all duration-300', weightPreviewClass]"
+              :class="['w-full rounded-md border-2 overflow-hidden transition-all duration-300', weightPreviewClass]"
             >
               <div class="h-full flex flex-col">
                 <!-- Header -->
@@ -324,7 +324,7 @@
                   v-for="f in mdFiles"
                   :key="f.id"
                   type="button"
-                  class="w-full text-left px-3 py-2.5 rounded-lg border transition-all text-xs"
+                  class="w-full text-left px-3 py-2.5 rounded-sm border transition-all text-xs"
                   :class="selectedMdFile?.id === f.id
                     ? 'border-violet-300 bg-violet-50 border-l-2 border-l-violet-600'
                     : 'border-stone-100 bg-white hover:border-stone-200'"
@@ -341,7 +341,7 @@
               <label class="block text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2">
                 Content — {{ mdExtractedUrls.length }} URL(s) found
               </label>
-              <div class="rounded-lg border border-stone-100 bg-stone-50/50 p-4 max-h-48 overflow-auto mb-4">
+              <div class="rounded-md border border-stone-100 bg-stone-50/50 p-4 max-h-48 overflow-auto mb-4">
                 <pre class="text-xs text-stone-600 whitespace-pre-wrap leading-relaxed">{{ mdContentPreview }}</pre>
               </div>
               <p v-if="mdBulkAddSummary" class="text-sm mb-3" :class="mdBulkAddSummary.failed ? 'text-amber-600' : 'text-emerald-600'">

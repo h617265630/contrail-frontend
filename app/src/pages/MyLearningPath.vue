@@ -313,7 +313,7 @@
               class="group flex items-center gap-4 rounded-md bg-white border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all cursor-pointer p-3"
               @click="openDetail(path.id)"
             >
-              <div class="w-24 h-14 shrink-0 rounded-lg overflow-hidden bg-stone-100 relative">
+              <div class="w-24 h-14 shrink-0 rounded-none overflow-hidden bg-stone-100 relative">
                 <img
                   v-if="coverFor(path.id)"
                   :src="coverFor(path.id)"
@@ -364,7 +364,7 @@
               class="group flex items-center gap-4 rounded-md bg-white border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all cursor-pointer p-3"
               @click="openDetail(path.id)"
             >
-              <div class="w-24 h-14 shrink-0 rounded-lg overflow-hidden bg-stone-100 relative">
+              <div class="w-24 h-14 shrink-0 rounded-none overflow-hidden bg-stone-100 relative">
                 <img
                   v-if="coverFor(path.id)"
                   :src="coverFor(path.id)"
@@ -415,7 +415,7 @@
               class="group flex items-center gap-4 rounded-md bg-white border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all cursor-pointer p-3"
               @click="openDetail(path.id)"
             >
-              <div class="w-24 h-14 shrink-0 rounded-lg overflow-hidden bg-stone-100 relative">
+              <div class="w-24 h-14 shrink-0 rounded-none overflow-hidden bg-stone-100 relative">
                 <img
                   v-if="coverFor(path.id)"
                   :src="coverFor(path.id)"
@@ -462,7 +462,7 @@
           v-if="showDeleteConfirm"
           class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm"
         >
-          <div class="w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-stone-100 overflow-hidden">
+          <div class="w-full max-w-sm rounded-md bg-white shadow-2xl border border-stone-100 overflow-hidden">
             <div class="px-6 py-5 border-b border-stone-100 flex items-center justify-between">
               <h2 class="text-base font-bold text-stone-900">Delete learning path?</h2>
               <button

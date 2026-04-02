@@ -12,7 +12,7 @@
           v-for="item in navItems"
           :key="item.to"
           :to="item.to"
-          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-sm text-xs font-semibold transition-all duration-150 group"
           :class="isActive(item.to) ? 'bg-amber-500 text-stone-900' : 'text-stone-400 hover:text-stone-200 hover:bg-white/5'"
         >
           <component :is="item.icon" class="w-4 h-4 shrink-0" />

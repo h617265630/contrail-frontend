@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
     <div class="max-w-5xl mx-auto space-y-8">
-      <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+      <div class="bg-white rounded-md shadow-xl overflow-hidden">
         <div class="h-44 bg-gray-100">
           <img v-if="path" :src="path.thumbnail" :alt="path.title" class="w-full h-full object-cover" />
         </div>
@@ -17,10 +17,10 @@
               </div>
             </div>
             <div class="flex gap-2">
-              <RouterLink to="/learningpool" class="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm hover:bg-gray-50">
+              <RouterLink to="/learningpool" class="px-4 py-2 rounded-sm bg-white border border-gray-200 text-gray-700 text-sm hover:bg-gray-50">
                 返回 LearningPool
               </RouterLink>
-              <button class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">
+              <button class="px-4 py-2 rounded-sm bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">
                 Start
               </button>
             </div>
@@ -35,7 +35,7 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <article v-for="m in modules" :key="m.id" class="bg-white rounded-xl shadow-lg p-5">
+          <article v-for="m in modules" :key="m.id" class="bg-white rounded-md shadow-lg p-5">
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
                 <h3 class="text-gray-900 font-semibold line-clamp-1" :title="m.title">{{ m.title }}</h3>
@@ -59,7 +59,7 @@
         </div>
       </section>
 
-      <div v-if="!path" class="bg-white rounded-xl border border-gray-200 p-5 text-sm text-gray-700">
+      <div v-if="!path" class="bg-white rounded-md border border-gray-200 p-5 text-sm text-gray-700">
         未找到该 learning path（id: {{ id }}）。你可以先从 LearningPool 里选择一个已有的卡片进入。
       </div>
     </div>

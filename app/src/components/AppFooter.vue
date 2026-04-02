@@ -7,7 +7,7 @@
         <!-- Brand column -->
         <div class="col-span-12 md:col-span-4">
           <RouterLink to="/home" class="flex items-center gap-2.5 group mb-4">
-            <img src="/favicon.svg" alt="Learnpathly" class="h-8 w-8 rounded-lg" />
+            <img src="/favicon.svg" alt="Learnpathly" class="h-8 w-8 rounded-none" />
             <span class="text-base font-bold tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">
               Learnpathly
             </span>

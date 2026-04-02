@@ -1,6 +1,6 @@
 <template>
   <div class="mx-auto max-w-7xl space-y-16 px-4 py-8">
-    <section class="relative overflow-hidden rounded-3xl border border-border bg-slate-950 text-white shadow-2xl">
+    <section class="relative overflow-hidden rounded-md border border-border bg-slate-950 text-white shadow-2xl">
       <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(142,203,255,0.32),transparent_42%),radial-gradient(circle_at_82%_76%,rgba(56,189,248,0.28),transparent_38%)]" aria-hidden="true" />
       <div class="relative grid gap-8 px-6 py-8 md:grid-cols-12 md:items-center md:px-10 md:py-12">
         <div class="space-y-5 md:col-span-7">
@@ -37,7 +37,7 @@
         </div>
 
         <div class="md:col-span-5">
-          <Card as="article" :hoverable="false" className="rounded-2xl border-white/25 bg-white/10 backdrop-blur-md">
+          <Card as="article" :hoverable="false" className="rounded-md border-white/25 bg-white/10 backdrop-blur-md">
             <div class="space-y-4 p-5">
               <p class="text-xs font-semibold tracking-[0.14em] text-white/70 uppercase">Roadmap Preview</p>
               <h2 class="text-lg font-semibold text-white">{{ previewTitle }}</h2>
@@ -60,19 +60,19 @@
         </p>
       </div>
       <div class="grid gap-4 md:grid-cols-3">
-        <Card as="article" :hoverable="false" className="rounded-xl border-border">
+        <Card as="article" :hoverable="false" className="rounded-md border-border">
           <div class="space-y-2 p-5">
             <h3 class="text-sm font-semibold tracking-[0.14em] uppercase text-foreground">Scattered resources</h3>
             <p class="text-sm text-muted-foreground">Videos, docs, and articles are spread across tools and tabs.</p>
           </div>
         </Card>
-        <Card as="article" :hoverable="false" className="rounded-xl border-border">
+        <Card as="article" :hoverable="false" className="rounded-md border-border">
           <div class="space-y-2 p-5">
             <h3 class="text-sm font-semibold tracking-[0.14em] uppercase text-foreground">No learning sequence</h3>
             <p class="text-sm text-muted-foreground">Without order, it is hard to know what to learn next.</p>
           </div>
         </Card>
-        <Card as="article" :hoverable="false" className="rounded-xl border-border">
+        <Card as="article" :hoverable="false" className="rounded-md border-border">
           <div class="space-y-2 p-5">
             <h3 class="text-sm font-semibold tracking-[0.14em] uppercase text-foreground">Weak momentum</h3>
             <p class="text-sm text-muted-foreground">Progress is invisible, so motivation drops quickly.</p>
@@ -88,7 +88,7 @@
       </div>
 
       <div v-if="isLoadingPaths" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card v-for="idx in 4" :key="`studio-loading-${idx}`" as="article" :hoverable="false" className="rounded-xl border-border overflow-hidden">
+        <Card v-for="idx in 4" :key="`studio-loading-${idx}`" as="article" :hoverable="false" className="rounded-md border-border overflow-hidden">
           <div class="h-32 animate-pulse bg-slate-200" />
           <div class="space-y-2 p-4">
             <div class="h-4 w-2/3 animate-pulse rounded bg-slate-200" />
@@ -99,10 +99,10 @@
 
       <div v-else-if="hasPublicPaths" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <RouterLink v-for="card in exampleCards" :key="card.topic" :to="card.to" class="block">
-          <Card as="article" :hoverable="true" className="h-full rounded-xl border-border">
+          <Card as="article" :hoverable="true" className="h-full rounded-md border-border">
             <div class="relative h-32 bg-slate-100">
               <img :src="card.thumbnail" :alt="card.topic" class="h-full w-full object-cover" />
-              <span class="absolute right-3 top-3 rounded-full border border-border bg-white/95 px-2 py-1 text-[10px] font-semibold tracking-[0.14em] text-foreground uppercase">{{ card.badge }}</span>
+              <span class="absolute right-3 top-3 rounded-sm border border-border bg-white/95 px-2 py-1 text-[10px] font-semibold tracking-[0.14em] text-foreground uppercase">{{ card.badge }}</span>
             </div>
             <div class="space-y-2 p-4">
               <h3 class="text-sm font-semibold text-foreground">{{ card.topic }}</h3>
@@ -112,7 +112,7 @@
         </RouterLink>
       </div>
 
-      <Card v-else as="article" :hoverable="false" className="rounded-xl border-border">
+      <Card v-else as="article" :hoverable="false" className="rounded-md border-border">
         <div class="space-y-3 p-8 text-center">
           <p class="text-xs font-semibold tracking-[0.14em] uppercase text-muted-foreground">Empty</p>
           <h3 class="text-lg font-semibold text-foreground">No learning paths yet</h3>
@@ -129,9 +129,9 @@
         <h2 class="text-2xl font-semibold tracking-tight text-foreground">How it works</h2>
       </div>
       <div class="grid gap-4 md:grid-cols-3">
-        <Card v-for="step in howItWorks" :key="step.title" as="article" :hoverable="false" className="rounded-xl border-border">
+        <Card v-for="step in howItWorks" :key="step.title" as="article" :hoverable="false" className="rounded-md border-border">
           <div class="space-y-3 p-5">
-            <div class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+            <div class="inline-flex h-10 w-10 items-center justify-center rounded-sm bg-sky-100 text-sky-700">
               <component :is="step.icon" class="h-5 w-5" />
             </div>
             <h3 class="text-base font-semibold text-foreground">{{ step.title }}</h3>
@@ -141,12 +141,12 @@
       </div>
     </section>
 
-    <section class="rounded-2xl border border-border bg-[#f7fbff] p-6 md:p-8">
+    <section class="rounded-md border border-border bg-[#f7fbff] p-6 md:p-8">
       <h2 class="text-2xl font-semibold tracking-tight text-foreground">Social proof</h2>
       <div class="mt-4 grid gap-3 md:grid-cols-3">
-        <div class="rounded-xl border border-border bg-white p-4 text-sm text-muted-foreground">{{ socialProofCount }}+ learning paths generated</div>
-        <div class="rounded-xl border border-border bg-white p-4 text-sm text-muted-foreground">Used by developers and students</div>
-        <div class="rounded-xl border border-border bg-white p-4 text-sm text-muted-foreground">Curated with high quality resources</div>
+        <div class="rounded-md border border-border bg-white p-4 text-sm text-muted-foreground">{{ socialProofCount }}+ learning paths generated</div>
+        <div class="rounded-md border border-border bg-white p-4 text-sm text-muted-foreground">Used by developers and students</div>
+        <div class="rounded-md border border-border bg-white p-4 text-sm text-muted-foreground">Curated with high quality resources</div>
       </div>
     </section>
 

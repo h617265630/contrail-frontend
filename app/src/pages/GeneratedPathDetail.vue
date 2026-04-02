@@ -173,16 +173,16 @@ const prettyJson = computed(() => {
 
       <div v-if="isLoading">加载中...</div>
 
-      <div v-else-if="error" class="border rounded-lg p-4 bg-card">
+      <div v-else-if="error" class="border rounded-md p-4 bg-card">
         <div class="text-red-500 text-sm">{{ error }}</div>
       </div>
 
-      <div v-else-if="!pathData" class="border rounded-lg p-6 bg-card">
+      <div v-else-if="!pathData" class="border rounded-md p-6 bg-card">
         <div class="text-sm text-muted-foreground">暂无数据，请先生成学习路径。</div>
       </div>
 
       <div v-else class="space-y-6">
-        <div class="border rounded-lg p-6 bg-card">
+        <div class="border rounded-md p-6 bg-card">
           <h1 class="text-2xl font-semibold text-foreground">{{ title || '学习路径' }}</h1>
           <p v-if="description" class="mt-2 text-sm text-muted-foreground whitespace-pre-wrap">{{ description }}</p>
           <div class="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
@@ -192,7 +192,7 @@ const prettyJson = computed(() => {
           </div>
         </div>
 
-        <div v-if="outline.length" class="border rounded-lg p-6 bg-card">
+        <div v-if="outline.length" class="border rounded-md p-6 bg-card">
           <h2 class="text-lg font-semibold text-foreground">文章结构 / 大纲</h2>
           <div class="mt-4">
             <ul class="space-y-2">
@@ -224,7 +224,7 @@ const prettyJson = computed(() => {
             <div class="text-xs text-muted-foreground">共 {{ stages.length }} 个阶段</div>
           </div>
 
-          <div v-for="(s, i) in stages" :key="i" class="border rounded-lg p-5 bg-card">
+          <div v-for="(s, i) in stages" :key="i" class="border rounded-md p-5 bg-card">
             <div class="flex items-center gap-3">
               <div class="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm shrink-0">
                 {{ i + 1 }}
@@ -273,7 +273,7 @@ const prettyJson = computed(() => {
           </div>
         </div>
 
-        <details class="border rounded-lg p-4 bg-card">
+        <details class="border rounded-md p-4 bg-card">
           <summary class="cursor-pointer text-sm font-medium text-foreground">查看原始 JSON</summary>
           <pre class="mt-3 text-xs whitespace-pre-wrap bg-background border rounded p-3 overflow-auto">{{ prettyJson }}</pre>
         </details>

@@ -21,7 +21,7 @@
 
     <main class="mx-auto max-w-6xl px-4 py-8">
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <section class="lg:col-span-3 rounded-3xl border border-stone-200 bg-white p-6 shadow-sm md:p-8">
+        <section class="lg:col-span-3 rounded-md border border-stone-200 bg-white p-6 shadow-sm md:p-8">
           <div class="mb-6 flex items-center justify-between gap-4">
             <div>
               <p class="text-[10px] font-bold uppercase tracking-[0.25em] text-stone-400">Prompt</p>
@@ -39,7 +39,7 @@
             v-model="query"
             rows="10"
             placeholder="例如：我想系统学习 React 全栈开发，3 个月内做出一个可上线项目，希望路径里包含基础、状态管理、路由、Node.js、数据库和部署。"
-            class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-5 py-4 text-sm leading-7 text-stone-900 outline-none transition-colors placeholder:text-stone-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-50"
+            class="w-full rounded-sm border border-stone-200 bg-stone-50 px-5 py-4 text-sm leading-7 text-stone-900 outline-none transition-colors placeholder:text-stone-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-50"
           />
 
           <div class="mt-4 flex flex-wrap gap-2">
@@ -47,7 +47,7 @@
               v-for="prompt in presets"
               :key="prompt"
               type="button"
-              class="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-stone-500 transition-colors hover:border-sky-200 hover:text-sky-700"
+              class="rounded-sm border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-stone-500 transition-colors hover:border-sky-200 hover:text-sky-700"
               @click="query = prompt"
             >
               {{ prompt }}
@@ -60,7 +60,7 @@
             </p>
             <Button
               type="button"
-              class="rounded-full bg-sky-600 px-8 text-white hover:bg-sky-700"
+              class="rounded-sm bg-sky-600 px-8 text-white hover:bg-sky-700"
               :disabled="loading || !query.trim()"
               @click="submit"
             >
@@ -72,7 +72,7 @@
         </section>
 
         <aside class="lg:col-span-2 space-y-5">
-          <section class="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
+          <section class="rounded-md border border-stone-200 bg-white p-6 shadow-sm">
             <p class="text-[10px] font-bold uppercase tracking-[0.25em] text-stone-400">How it works</p>
             <div class="mt-4 space-y-4">
               <div v-for="(step, idx) in steps" :key="step.title" class="flex gap-3">
@@ -87,7 +87,7 @@
             </div>
           </section>
 
-          <section v-if="lastResult" class="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
+          <section v-if="lastResult" class="rounded-md border border-stone-200 bg-white p-6 shadow-sm">
             <div class="flex items-center justify-between gap-3">
               <div>
                 <p class="text-[10px] font-bold uppercase tracking-[0.25em] text-stone-400">Latest</p>

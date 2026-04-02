@@ -110,7 +110,7 @@
                 v-for="(resource, cardIndex) in deck.cards.slice(0, collapsedPreviewCount)"
                 :key="resource.id"
                 :class="[
-                  'shrink-0 w-52 rounded-xl overflow-hidden bg-white border border-stone-100 shadow-sm transition-all duration-300 cursor-pointer hover:shadow-xl flex flex-col',
+                  'shrink-0 w-52 rounded-md overflow-hidden bg-white border border-stone-100 shadow-sm transition-all duration-300 cursor-pointer hover:shadow-xl flex flex-col',
                   getWeightCardClass(resource),
                 ]"
                 :style="getCollapsedPreviewCardStyle(cardIndex, Math.min(deck.cards.length, collapsedPreviewCount))"
@@ -171,7 +171,7 @@
               v-for="(resource, i) in deck.cards"
               :key="resource.id"
               :class="[
-                'aspect-4/5 rounded-xl overflow-hidden bg-white border border-stone-100 hover:border-stone-200 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col',
+                'aspect-4/5 rounded-md overflow-hidden bg-white border border-stone-100 hover:border-stone-200 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col',
                 getWeightCardClass(resource),
               ]"
               @click="openCard(resource)"
@@ -235,7 +235,7 @@
           @click.self="closeActiveResource"
         >
           <div class="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"></div>
-          <div class="relative w-full max-w-md rounded-2xl overflow-hidden bg-white shadow-2xl border border-stone-100">
+          <div class="relative w-full max-w-md rounded-md overflow-hidden bg-white shadow-2xl border border-stone-100">
             <div class="relative bg-stone-100 overflow-hidden" style="aspect-ratio: 16/9; width: 100%;">
               <img
                 :src="activeResource.thumbnail || fallbackThumb"
@@ -324,7 +324,7 @@
 
     <!-- Delete confirm -->
     <div v-if="showDeleteConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4">
-      <div class="w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-stone-100 overflow-hidden">
+      <div class="w-full max-w-sm rounded-md bg-white shadow-2xl border border-stone-100 overflow-hidden">
         <div class="px-6 py-5 border-b border-stone-100 flex items-center justify-between">
           <h2 class="text-base font-bold text-stone-900">Delete resource?</h2>
           <button
@@ -337,7 +337,7 @@
         </div>
         <div class="p-6 space-y-3">
           <p class="text-sm text-stone-600">This will permanently delete the resource. This action cannot be undone.</p>
-          <div v-if="deleteTarget" class="rounded-lg border border-stone-100 bg-stone-50/50 p-3">
+          <div v-if="deleteTarget" class="rounded-md border border-stone-100 bg-stone-50/50 p-3">
             <div class="text-sm font-semibold text-stone-800 line-clamp-1">{{ deleteTarget.title }}</div>
             <div class="text-xs text-stone-400 mt-0.5">ID: {{ deleteTarget.id }}</div>
           </div>

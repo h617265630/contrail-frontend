@@ -25,10 +25,10 @@
 
       <!-- Billing toggle -->
       <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-12">
-        <div class="inline-flex rounded-full border border-stone-200 bg-white p-1 shadow-sm">
+        <div class="inline-flex rounded-sm border border-stone-200 bg-white p-1 shadow-sm">
           <button
             type="button"
-            class="px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all"
+            class="px-5 py-2 rounded-sm text-xs font-bold uppercase tracking-widest transition-all"
             :class="billingCycle === 'monthly' ? 'bg-stone-900 text-white shadow-sm' : 'text-stone-500 hover:text-stone-800'"
             @click="billingCycle = 'monthly'"
           >
@@ -36,12 +36,12 @@
           </button>
           <button
             type="button"
-            class="px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2"
+            class="px-5 py-2 rounded-sm text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2"
             :class="billingCycle === 'yearly' ? 'bg-stone-900 text-white shadow-sm' : 'text-stone-500 hover:text-stone-800'"
             @click="billingCycle = 'yearly'"
           >
             Yearly
-            <span v-if="billingCycle === 'yearly'" class="inline-flex items-center rounded-full bg-emerald-400 text-white px-1.5 py-0.5 text-[9px] font-black">-17%</span>
+            <span v-if="billingCycle === 'yearly'" class="inline-flex items-center rounded-sm bg-emerald-400 text-white px-1.5 py-0.5 text-[9px] font-black">-17%</span>
             <span v-else class="text-[10px] font-semibold text-amber-600">-17%</span>
           </button>
         </div>
@@ -82,7 +82,7 @@
 
             <button
               type="button"
-              class="w-full rounded-full border-2 py-2.5 text-sm font-bold transition-all"
+              class="w-full rounded-sm border-2 py-2.5 text-sm font-bold transition-all"
               :class="isCurrent('free')
                 ? 'border-blue-400 bg-blue-50 text-blue-600'
                 : 'border-stone-200 text-stone-600 hover:border-stone-400 hover:bg-stone-50'"
@@ -96,7 +96,7 @@
         <!-- Pro — 02 (dominant) -->
         <div class="col-span-12 lg:col-span-6 relative">
           <span class="absolute -top-4 -left-2 text-[100px] font-black leading-none text-blue-50 select-none pointer-events-none" aria-hidden="true">02</span>
-          <div class="relative pt-12 rounded-2xl border-2 border-blue-500 bg-white shadow-xl shadow-blue-500/5 overflow-hidden">
+          <div class="relative pt-12 rounded-md border-2 border-blue-500 bg-white shadow-xl shadow-blue-500/5 overflow-hidden">
             <!-- Decorative background -->
             <div class="absolute top-0 right-0 w-48 h-48 bg-linear-to-bl from-blue-50 to-transparent rounded-bl-full opacity-60 pointer-events-none"></div>
             <div class="absolute bottom-0 left-0 w-32 h-32 bg-linear-to-tr from-amber-50 to-transparent rounded-tr-full opacity-40 pointer-events-none"></div>
@@ -104,7 +104,7 @@
             <div class="relative p-8">
               <div class="flex items-start justify-between mb-6">
                 <div>
-                  <div class="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 mb-3">
+                  <div class="inline-flex items-center gap-1.5 rounded-sm border border-blue-200 bg-blue-50 px-2.5 py-1 mb-3">
                     <span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
                     <span class="text-[9px] font-bold uppercase tracking-widest text-blue-600">Recommended</span>
                   </div>
@@ -113,7 +113,7 @@
                     <span class="text-[10px] font-bold uppercase tracking-widest text-blue-600">Pro</span>
                   </div>
                 </div>
-                <div v-if="isCurrent('pro')" class="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-bold text-blue-600 uppercase tracking-widest">
+                <div v-if="isCurrent('pro')" class="rounded-sm border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-bold text-blue-600 uppercase tracking-widest">
                   Current
                 </div>
               </div>
@@ -144,7 +144,7 @@
 
               <button
                 type="button"
-                class="w-full rounded-full bg-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
+                class="w-full rounded-sm bg-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
                 @click="onAction('pro')"
               >
                 Subscribe to Pro →
@@ -184,7 +184,7 @@
 
             <button
               type="button"
-              class="w-full rounded-full border-2 py-2.5 text-sm font-bold transition-all"
+              class="w-full rounded-sm border-2 py-2.5 text-sm font-bold transition-all"
               :class="isCurrent('basic')
                 ? 'border-amber-400 bg-amber-50 text-amber-700'
                 : 'border-stone-200 text-stone-600 hover:border-stone-400 hover:bg-stone-50'"
@@ -207,7 +207,7 @@
           <div class="flex-1 h-px bg-stone-200"></div>
         </div>
 
-        <div class="rounded-2xl border border-stone-100 bg-white overflow-hidden">
+        <div class="rounded-md border border-stone-100 bg-white overflow-hidden">
           <!-- Header row -->
           <div class="grid grid-cols-12 gap-0 border-b border-stone-100 bg-stone-50/50">
             <div class="col-span-5 px-6 py-4">

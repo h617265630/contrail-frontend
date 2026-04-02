@@ -37,7 +37,7 @@
               v-for="item in navItems"
               :key="item.to"
               :to="item.to"
-              class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group"
+              class="flex items-center gap-3 px-3 py-2.5 rounded-sm text-xs font-semibold transition-all duration-150 group"
               :class="isActive(item.to) ? 'bg-amber-500 text-stone-900' : 'text-stone-400 hover:text-stone-200 hover:bg-white/5'"
             >
               <span class="w-1.5 h-1.5 rounded-full shrink-0 transition-all" :class="isActive(item.to) ? 'bg-stone-900' : 'bg-stone-600 group-hover:bg-stone-400'" />

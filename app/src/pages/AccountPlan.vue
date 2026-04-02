@@ -12,15 +12,15 @@
         </span>
       </div>
 
-      <p v-if="loadError" class="text-xs text-red-500 py-2 px-3 border border-red-100 bg-red-50 rounded-lg">{{ loadError }}</p>
+      <p v-if="loadError" class="text-xs text-red-500 py-2 px-3 border border-red-100 bg-red-50 rounded-sm">{{ loadError }}</p>
 
       <!-- Stats grid -->
       <div class="grid grid-cols-2 gap-3 mb-8">
-        <div class="px-4 py-3 bg-stone-50 rounded-lg border border-stone-100">
+        <div class="px-4 py-3 bg-stone-50 rounded-sm border border-stone-100">
           <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 mb-1">Plan</p>
           <p class="text-sm font-semibold text-stone-900">{{ purchasedText }}</p>
         </div>
-        <div class="px-4 py-3 bg-stone-50 rounded-lg border border-stone-100">
+        <div class="px-4 py-3 bg-stone-50 rounded-sm border border-stone-100">
           <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 mb-1">Expires</p>
           <p class="text-sm font-semibold text-stone-900">{{ expiresText || '—' }}</p>
         </div>

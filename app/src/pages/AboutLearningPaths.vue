@@ -126,7 +126,7 @@
     <section class="mx-auto max-w-7xl px-4 py-12">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <!-- Linear -->
-        <div class="border border-stone-200 rounded-lg p-6 hover:border-stone-300 transition-colors">
+        <div class="border border-stone-200 rounded-md p-6 hover:border-stone-300 transition-colors">
           <div class="flex items-center gap-3 mb-4">
             <div class="h-10 w-10 rounded-full bg-sky-50 flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -137,7 +137,7 @@
         </div>
 
         <!-- Structured -->
-        <div class="border border-stone-200 rounded-lg p-6 hover:border-stone-300 transition-colors">
+        <div class="border border-stone-200 rounded-md p-6 hover:border-stone-300 transition-colors">
           <div class="flex items-center gap-3 mb-4">
             <div class="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
@@ -148,7 +148,7 @@
         </div>
 
         <!-- Pool -->
-        <div class="border border-stone-200 rounded-lg p-6 hover:border-stone-300 transition-colors">
+        <div class="border border-stone-200 rounded-md p-6 hover:border-stone-300 transition-colors">
           <div class="flex items-center gap-3 mb-4">
             <div class="h-10 w-10 rounded-full bg-violet-50 flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-violet-600"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>

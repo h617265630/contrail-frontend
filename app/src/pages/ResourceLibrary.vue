@@ -50,7 +50,7 @@
             v-for="t in typeFilters"
             :key="t.value"
             type="button"
-            class="h-7 rounded-full border px-3 text-[11px] font-semibold uppercase tracking-wider transition-all"
+            class="h-7 rounded-sm border px-3 text-[11px] font-semibold uppercase tracking-wider transition-all"
             :class="activeType === t.value
               ? 'border-stone-900 bg-stone-900 text-white'
               : 'border-stone-200 bg-white text-stone-500 hover:border-stone-400'"
@@ -153,7 +153,7 @@
           @click.self="closeActiveResource"
         >
           <div class="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"></div>
-          <div class="relative w-full max-w-lg rounded-2xl overflow-hidden bg-white shadow-2xl border border-stone-100">
+          <div class="relative w-full max-w-lg rounded-md overflow-hidden bg-white shadow-2xl border border-stone-100">
             <!-- Image header -->
             <div class="relative bg-stone-100 overflow-hidden" style="aspect-ratio: 16/9; width: 100%;">
               <img
@@ -163,7 +163,7 @@
                 style="width: 100%; height: 100%; object-fit: contain;"
               />
               <button
-                class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-stone-500 hover:text-stone-900 hover:bg-white transition"
+                class="absolute top-3 right-3 w-8 h-8 rounded-sm bg-white/90 backdrop-blur-sm flex items-center justify-center text-stone-500 hover:text-stone-900 hover:bg-white transition"
                 @click="closeActiveResource"
                 aria-label="Close"
               >
@@ -172,7 +172,7 @@
               <!-- Category badge -->
               <div class="absolute bottom-3 left-3">
                 <span
-                  class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+                  class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-sm"
                   :style="{ backgroundColor: getCategoryColor(resourceCategoryLabel(activeResource)) + '18', color: getCategoryColor(resourceCategoryLabel(activeResource)) }"
                 >
                   {{ resourceCategoryLabel(activeResource) }}
@@ -201,7 +201,7 @@
             <div class="px-6 pb-6 flex flex-col gap-2">
               <Button
                 type="button"
-                class="w-full rounded-full bg-stone-900 text-white hover:bg-stone-800 font-semibold text-sm transition-all hover:-translate-y-px"
+                class="w-full rounded-sm bg-stone-900 text-white hover:bg-stone-800 font-semibold text-sm transition-all hover:-translate-y-px"
                 @click="seeDetail(activeResource)"
               >
                 View details
@@ -209,7 +209,7 @@
               <Button
                 type="button"
                 :disabled="addingToMy[activeResource.id] || addedToMy[activeResource.id]"
-                class="w-full rounded-full border border-stone-200 text-stone-600 hover:border-stone-900 hover:text-stone-900 font-semibold text-sm transition-all"
+                class="w-full rounded-sm border border-stone-200 text-stone-600 hover:border-stone-900 hover:text-stone-900 font-semibold text-sm transition-all"
                 @click="addToMyResources(activeResource)"
               >
                 {{ addedToMy[activeResource.id] ? 'Already saved' : (addingToMy[activeResource.id] ? 'Saving…' : '+ Save to my resources') }}
@@ -225,7 +225,7 @@
       <Transition name="toast">
         <div
           v-if="showAddResultModal"
-          class="fixed bottom-6 left-1/2 -translate-x-1/2 z-100 rounded-full bg-stone-900 text-white px-6 py-3 shadow-2xl flex items-center gap-3"
+          class="fixed bottom-6 left-1/2 -translate-x-1/2 z-100 rounded-sm bg-stone-900 text-white px-6 py-3 shadow-2xl flex items-center gap-3"
         >
           <div v-if="addResultTitle.includes('Success') || addResultTitle.includes('成功')" class="h-5 w-5 rounded-full bg-emerald-500 flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>

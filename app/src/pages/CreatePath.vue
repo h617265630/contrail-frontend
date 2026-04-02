@@ -71,7 +71,7 @@
                 v-model="pathMeta.title"
                 type="text"
                 placeholder="e.g. AI Engineer Starter"
-                class="w-full h-11 px-4 border border-stone-200 rounded-lg bg-white text-sm text-stone-900 placeholder:text-stone-400 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-colors"
+                class="w-full h-11 px-4 border border-stone-200 rounded-sm bg-white text-sm text-stone-900 placeholder:text-stone-400 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-colors"
               />
             </div>
 
@@ -82,7 +82,7 @@
                 v-model="pathMeta.description"
                 rows="3"
                 placeholder="Describe the goal and content of this learning path"
-                class="w-full px-4 py-3 border border-stone-200 rounded-lg bg-white text-sm text-stone-900 placeholder:text-stone-400 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 resize-none transition-colors"
+                class="w-full px-4 py-3 border border-stone-200 rounded-sm bg-white text-sm text-stone-900 placeholder:text-stone-400 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 resize-none transition-colors"
               />
             </div>
 
@@ -93,7 +93,7 @@
                 <div class="relative">
                   <select
                     v-model="pathMeta.type"
-                    class="w-full h-10 px-3 pr-8 border border-stone-200 rounded-lg bg-white text-sm text-stone-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 cursor-pointer appearance-none"
+                    class="w-full h-10 px-3 pr-8 border border-stone-200 rounded-sm bg-white text-sm text-stone-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 cursor-pointer appearance-none"
                   >
                     <option value="linear path">Linear path</option>
                     <option value="partical pool">Partical pool</option>
@@ -107,7 +107,7 @@
                 <div class="relative">
                   <select
                     v-model.number="pathMeta.categoryId"
-                    class="w-full h-10 px-3 pr-8 border border-stone-200 rounded-lg bg-white text-sm text-stone-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 cursor-pointer appearance-none disabled:opacity-50"
+                    class="w-full h-10 px-3 pr-8 border border-stone-200 rounded-sm bg-white text-sm text-stone-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 cursor-pointer appearance-none disabled:opacity-50"
                     :disabled="categoriesLoading || categories.length === 0"
                   >
                     <option :value="null">Select category</option>
@@ -120,7 +120,7 @@
             </div>
 
             <!-- Visibility -->
-            <div class="flex items-center justify-between rounded-lg border border-stone-100 bg-stone-50/50 px-4 py-3">
+            <div class="flex items-center justify-between rounded-sm border border-stone-100 bg-stone-50/50 px-4 py-3">
               <div>
                 <p class="text-xs font-semibold text-stone-700">Visibility</p>
                 <p class="text-[10px] text-stone-400 mt-0.5">Public: appears in LearningPool · Private: only visible to you</p>
@@ -144,7 +144,7 @@
             <label class="block text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2">Cover</label>
             <div class="grid grid-cols-2 gap-3">
               <!-- Preview -->
-              <div class="rounded-lg overflow-hidden border border-stone-100">
+              <div class="rounded-sm overflow-hidden border border-stone-100">
                 <div class="aspect-video bg-stone-100">
                   <img
                     v-if="pathMeta.coverImageUrl"
@@ -166,7 +166,7 @@
                 <div v-if="uploadedCoverUrl" class="grid grid-cols-1 gap-2">
                   <button
                     type="button"
-                    class="rounded-lg overflow-hidden border-2 transition-all"
+                    class="rounded-sm overflow-hidden border-2 transition-all"
                     :class="pathMeta.coverImageUrl === uploadedCoverUrl ? 'border-sky-500' : 'border-stone-200 hover:border-stone-300'"
                     @click="selectCover(uploadedCoverUrl)"
                   >
@@ -185,7 +185,7 @@
                     v-for="(u, idx) in defaultCoverUrls"
                     :key="idx"
                     type="button"
-                    class="rounded-lg overflow-hidden border-2 transition-all"
+                    class="rounded-sm overflow-hidden border-2 transition-all"
                     :class="pathMeta.coverImageUrl === u ? 'border-sky-500' : 'border-stone-200 hover:border-stone-300'"
                     @click="selectCover(u)"
                   >
@@ -241,19 +241,19 @@
                 v-model="searchQuery"
                 type="text"
                 placeholder="Search your resources..."
-                class="h-10 w-full pl-10 pr-4 border border-stone-200 rounded-lg bg-white text-sm text-stone-900 placeholder:text-stone-400 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-colors"
+                class="h-10 w-full pl-10 pr-4 border border-stone-200 rounded-sm bg-white text-sm text-stone-900 placeholder:text-stone-400 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-colors"
               />
             </div>
 
             <!-- Create resource from URL -->
-            <div class="rounded-lg border border-stone-100 bg-stone-50/50 p-3.5 mb-3">
+            <div class="rounded-sm border border-stone-100 bg-stone-50/50 p-3.5 mb-3">
               <p class="text-[11px] font-bold uppercase tracking-widest text-stone-500 mb-2">Create from URL</p>
               <div class="flex gap-2">
                 <input
                   v-model="newResourceUrl"
                   type="url"
                   placeholder="https://..."
-                  class="h-9 flex-1 px-3 border border-stone-200 rounded-lg bg-white text-xs text-stone-900 placeholder:text-stone-400 outline-none focus:border-emerald-400 transition-colors"
+                  class="h-9 flex-1 px-3 border border-stone-200 rounded-sm bg-white text-xs text-stone-900 placeholder:text-stone-400 outline-none focus:border-emerald-400 transition-colors"
                 />
                 <button
                   type="button"
@@ -272,7 +272,7 @@
               <div
                 v-for="r in filteredResources"
                 :key="r.id"
-                class="group rounded-lg border border-stone-100 bg-white hover:border-stone-200 hover:shadow-sm transition-all cursor-pointer overflow-hidden"
+                class="group rounded-sm border border-stone-100 bg-white hover:border-stone-200 hover:shadow-sm transition-all cursor-pointer overflow-hidden"
                 draggable="true"
                 @dragstart="handleDragStart($event, r)"
                 @click="addResource(r)"
@@ -334,7 +334,7 @@
               <div v-for="(r, idx) in selected" :key="r.id" class="space-y-1.5">
                 <!-- Resource card -->
                 <div
-                  class="flex gap-3 rounded-lg border border-stone-100 bg-white shadow-sm cursor-move transition-all hover:shadow-md"
+                  class="flex gap-3 rounded-sm border border-stone-100 bg-white shadow-sm cursor-move transition-all hover:shadow-md"
                   draggable="true"
                   @dragstart="onSelectedDragStart($event, r.id, idx)"
                   @dragend="onSelectedDragEnd"

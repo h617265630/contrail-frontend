@@ -222,7 +222,7 @@ async function handleGenerate() {
       </div>
       
       <!-- 输入卡片 -->
-      <div class="border rounded-lg p-6 mb-6 bg-card">
+      <div class="border rounded-md p-6 mb-6 bg-card">
         <h2 class="text-xl font-semibold mb-2">输入学习主题</h2>
         <p class="text-sm text-muted-foreground mb-4">
           例如：Python 编程、机器学习入门、React 开发等
@@ -249,7 +249,7 @@ async function handleGenerate() {
           <span v-else>🚀 生成学习路径</span>
         </button>
 
-        <div v-if="outlineTree.length" class="mt-6 border rounded-lg p-4 bg-background">
+        <div v-if="outlineTree.length" class="mt-6 border rounded-md p-4 bg-background">
           <div class="flex items-center justify-between gap-3">
             <h3 class="text-base font-semibold">文章结构（学习阶段）</h3>
             <button
@@ -285,7 +285,7 @@ async function handleGenerate() {
           </div>
         </div>
 
-        <div v-else-if="structureStages.length" class="mt-6 border rounded-lg p-4 bg-background">
+        <div v-else-if="structureStages.length" class="mt-6 border rounded-md p-4 bg-background">
           <div class="flex items-center justify-between gap-3">
             <h3 class="text-base font-semibold">文章结构（学习阶段）</h3>
             <button

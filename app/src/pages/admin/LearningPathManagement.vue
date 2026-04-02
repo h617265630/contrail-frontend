@@ -8,7 +8,7 @@
     </div>
 
     <!-- Learning Paths table -->
-    <div class="rounded-lg border bg-white">
+    <div class="rounded-md border bg-white">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b bg-stone-50">
