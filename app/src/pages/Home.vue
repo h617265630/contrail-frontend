@@ -140,8 +140,8 @@
               :alt="featuredPaths[0].title"
               loading="lazy"
               decoding="async"
-              class="block w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-              style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+              class="block w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+              style="width: 100%; height: 100%; object-fit: contain; background-color: #f7f7f7;"
             />
             <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
             <div class="absolute bottom-0 left-0 p-6 md:p-8">
@@ -165,7 +165,8 @@
                 :src="path.thumbnail || fallbackThumb"
                 :alt="path.title"
                 loading="lazy"
-                class="block w-full h-full object-cover object-center"
+                class="block w-full h-full object-contain"
+                style="width: 100%; height: 100%; object-fit: contain; background-color: #f7f7f7;"
               />
             </div>
             <div class="min-w-0">
@@ -222,8 +223,8 @@
                 :alt="path.title"
                 loading="lazy"
                 decoding="async"
-                class="block w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+                class="block w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                style="width: 100%; height: 100%; object-fit: contain; background-color: #f7f7f7;"
               />
               <!-- Type badge -->
               <div class="absolute top-2.5 left-2.5">

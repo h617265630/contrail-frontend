@@ -167,7 +167,12 @@
                   class="border border-border bg-background overflow-hidden rounded-none"
                 >
                   <div class="aspect-video bg-muted/30">
-                    <img :src="img.dataUrl" :alt="img.title || 'image'" class="h-full w-full object-cover" />
+                    <img
+                      :src="img.dataUrl"
+                      :alt="img.title || 'image'"
+                      class="h-full w-full object-contain"
+                      style="object-fit: contain; background-color: #f7f7f7;"
+                    />
                   </div>
                   <div class="p-3">
                     <p class="text-sm font-semibold text-foreground truncate" :title="img.title || 'Untitled'">

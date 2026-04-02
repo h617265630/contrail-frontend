@@ -103,96 +103,41 @@
               v-if="idx % 7 === 0 && idx > 0"
               class="col-span-5"
             >
-              <article
-                class="group relative flex gap-0 rounded-xl overflow-hidden bg-white border border-stone-100 hover:border-stone-200 hover:shadow-lg transition-all duration-300 cursor-pointer"
-                @click="openCard(resource)"
-              >
-                <div class="w-64 h-44 shrink-0 bg-stone-100 overflow-hidden relative transition-transform duration-500 group-hover:scale-105" style="width: 256px; height: 176px; flex-shrink: 0;">
-                  <img
-                    :src="resource.thumbnail || fallbackThumb"
-                    :alt="resource.title"
-                    loading="lazy"
-                    class="block w-full h-full object-cover object-center"
-                    style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
-                  />
-                </div>
-                <div class="flex-1 p-6 flex flex-col justify-between">
-                  <div>
-                    <div class="flex items-center gap-2 mb-2">
-                      <span
-                        class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
-                        :style="{ backgroundColor: getCategoryColor(resourceCategoryLabel(resource)) + '18', color: getCategoryColor(resourceCategoryLabel(resource)) }"
-                      >
-                        {{ resourceCategoryLabel(resource) }}
-                      </span>
-                      <span class="text-[10px] text-stone-400">#{{ String(resource.id).padStart(3, '0') }}</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-stone-900 leading-snug group-hover:text-amber-700 transition-colors">
-                      {{ resource.title }}
-                    </h3>
-                    <p class="text-sm text-stone-500 mt-2 line-clamp-2">{{ resource.summary || '' }}</p>
-                  </div>
-                  <div class="flex items-center justify-between mt-4">
-                    <span class="text-xs text-stone-400">{{ formatPlatform((resource as any).platform) }} · {{ displayResourceType(resource) }}</span>
-                    <button
-                      class="text-[11px] font-semibold uppercase tracking-wider text-stone-400 hover:text-amber-600 transition-colors"
-                      @click.stop="addToMyResources(resource)"
-                    >
-                      + Add to my resources
-                    </button>
-                  </div>
-                </div>
-              </article>
+              <ResourceCard
+                variant="hero"
+                :thumbnail="resource.thumbnail || fallbackThumb"
+                :title="resource.title"
+                :summary="resource.summary || ''"
+                :category-label="resourceCategoryLabel(resource)"
+                :category-color="getCategoryColor(resourceCategoryLabel(resource))"
+                :platform-label="formatPlatform((resource as any).platform)"
+                :type-label="displayResourceType(resource)"
+                :id-label="String(resource.id).padStart(3, '0')"
+                :saving="!!addingToMy[resource.id]"
+                :saved="!!addedToMy[resource.id]"
+                add-label="+ Add to my resources"
+                @open="openCard(resource)"
+                @add="addToMyResources(resource)"
+              />
             </div>
 
             <!-- Standard cards: 5 per row -->
             <div v-else class="col-span-1 group">
-              <article
-                class="h-full rounded-xl overflow-hidden bg-white border border-stone-100 hover:border-stone-200 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col"
-                @click="openCard(resource)"
-              >
-                <!-- Thumbnail -->
-                <div class="relative bg-stone-100 overflow-hidden transition-transform duration-500 group-hover:scale-105" style="aspect-ratio: 16/9; width: 100%;">
-                  <img
-                    :src="resource.thumbnail || fallbackThumb"
-                    :alt="resource.title"
-                    loading="lazy"
-                    class="block w-full h-full object-cover object-center"
-                    style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
-                  />
-                  <!-- Type badge -->
-                  <div class="absolute top-2 left-2">
-                    <span class="inline-flex items-center rounded-full bg-white/90 backdrop-blur-sm border border-white/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-stone-600">
-                      {{ displayResourceType(resource) }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Content -->
-                <div class="flex-1 p-3.5 flex flex-col">
-                  <span
-                    class="text-[10px] font-semibold uppercase tracking-wider mb-1.5"
-                    :style="{ color: getCategoryColor(resourceCategoryLabel(resource)) }"
-                  >
-                    {{ resourceCategoryLabel(resource) }}
-                  </span>
-                  <h3 class="text-sm font-semibold text-stone-800 leading-snug line-clamp-2 group-hover:text-amber-700 transition-colors" :title="resource.title">
-                    {{ resource.title }}
-                  </h3>
-                  <p class="text-xs text-stone-400 mt-1 line-clamp-2 flex-1">{{ resource.summary || '' }}</p>
-                  <div class="flex items-center justify-between mt-3 pt-2 border-t border-stone-50">
-                    <span class="text-[10px] text-stone-400">{{ formatPlatform((resource as any).platform) }}</span>
-                    <button
-                      v-if="!addedToMy[resource.id]"
-                      class="text-[10px] font-semibold text-stone-400 hover:text-amber-600 transition-colors"
-                      @click.stop="addToMyResources(resource)"
-                    >
-                      + Save
-                    </button>
-                    <span v-else class="text-[10px] font-semibold text-emerald-500">Saved</span>
-                  </div>
-                </div>
-              </article>
+              <ResourceCard
+                variant="standard"
+                :thumbnail="resource.thumbnail || fallbackThumb"
+                :title="resource.title"
+                :summary="resource.summary || ''"
+                :category-label="resourceCategoryLabel(resource)"
+                :category-color="getCategoryColor(resourceCategoryLabel(resource))"
+                :platform-label="formatPlatform((resource as any).platform)"
+                :type-label="displayResourceType(resource)"
+                :saving="!!addingToMy[resource.id]"
+                :saved="!!addedToMy[resource.id]"
+                add-label="+ Save"
+                @open="openCard(resource)"
+                @add="addToMyResources(resource)"
+              />
             </div>
           </template>
         </div>
@@ -214,8 +159,8 @@
               <img
                 :src="activeResource.thumbnail || fallbackThumb"
                 :alt="activeResource.title"
-                class="block w-full h-full object-cover object-center"
-                style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+                class="block w-full h-full object-contain"
+                style="width: 100%; height: 100%; object-fit: contain;"
               />
               <button
                 class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-stone-500 hover:text-stone-900 hover:bg-white transition"
@@ -301,6 +246,7 @@ import { computed, onMounted, ref } from 'vue'
 import { ChevronDown, Search, X } from 'lucide-vue-next'
 import { Button } from '../components/ui/button'
 import { formatPlatform } from '../utils/platform'
+import ResourceCard from '../components/ResourceCard.vue'
 import {
   addPublicResourceToMyResourcesWithStatusAndWeight,
   createMyResourceFromUrl,

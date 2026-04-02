@@ -239,7 +239,16 @@
           >
             <Card as="article" :hoverable="true">
               <div class="relative h-32 bg-muted">
-                <img :src="p.thumbnail" :alt="p.title" loading="lazy" decoding="async" width="320" height="128" class="w-full h-full object-cover" />
+                <img
+                  :src="p.thumbnail"
+                  :alt="p.title"
+                  loading="lazy"
+                  decoding="async"
+                  width="320"
+                  height="128"
+                  class="w-full h-full object-contain"
+                  style="object-fit: contain; background-color: #f7f7f7;"
+                />
                 <span
                   v-if="p.lpType"
                   class="absolute right-3 top-3 px-2 py-1 rounded-full border border-border bg-background text-[10px] font-semibold tracking-[0.14em] uppercase text-foreground"

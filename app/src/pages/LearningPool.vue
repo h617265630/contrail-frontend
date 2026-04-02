@@ -80,8 +80,8 @@
               :src="p.thumbnail || fallbackThumb"
               :alt="p.title"
               loading="lazy"
-              class="block w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
-              style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+              class="block w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+              style="width: 100%; height: 100%; object-fit: contain; background-color: #f7f7f7;"
             />
           </div>
           <div class="space-y-1">
@@ -137,8 +137,8 @@
                 :alt="p.title"
                 loading="lazy"
                 decoding="async"
-                class="block w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+                class="block w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                style="width: 100%; height: 100%; object-fit: contain; background-color: #f7f7f7;"
               />
               <div class="absolute top-2.5 left-2.5">
                 <span class="inline-flex items-center rounded-full border border-white/20 bg-black/30 backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
@@ -174,8 +174,8 @@
                 :alt="p.title"
                 loading="lazy"
                 decoding="async"
-                class="block w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+                class="block w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                style="width: 100%; height: 100%; object-fit: contain; background-color: #f7f7f7;"
               />
               <div class="absolute top-2.5 left-2.5">
                 <span class="inline-flex items-center rounded-full border border-white/20 bg-black/30 backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">

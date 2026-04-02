@@ -2,79 +2,20 @@ import type { Router, RouteLocationNormalizedLoaded } from 'vue-router'
 
 const SITE_NAME = 'Learnpathly'
 const SITE_URL = String(import.meta.env.VITE_SITE_URL || 'https://www.learnpathly.com').trim().replace(/\/$/, '')
-const DEFAULT_TITLE = 'Learnpathly'
 const DEFAULT_DESCRIPTION = 'Learnpathly helps you discover resources, build learning paths, and generate AI-guided study plans.'
 
-type SeoMeta = {
+interface SeoMeta {
   title: string
   description: string
-  canonicalPath?: string
   noindex?: boolean
+  type?: 'website' | 'article' | 'profile'
 }
 
-const ROUTE_META: Array<{ match: (path: string) => boolean; meta: SeoMeta }> = [
-  {
-    match: (path) => path === '/' || path === '/home',
-    meta: {
-      title: 'Learnpathly',
-      description: 'Discover learning resources, organize them into paths, and generate AI-guided study plans on Learnpathly.',
-      canonicalPath: '/',
-    },
-  },
-  {
-    match: (path) => path === '/resources',
-    meta: {
-      title: 'Resources - Learnpathly',
-      description: 'Browse curated learning resources across videos, documents, and articles on Learnpathly.',
-    },
-  },
-  {
-    match: (path) => path === '/learningpool',
-    meta: {
-      title: 'Learning Pool - Learnpathly',
-      description: 'Explore public learning paths and discover structured ways to study on Learnpathly.',
-    },
-  },
-  {
-    match: (path) => path === '/ai-path',
-    meta: {
-      title: 'AI Path Generator - Learnpathly',
-      description: 'Describe what you want to learn and generate an AI-guided learning path with structured stages and resources.',
-    },
-  },
-  {
-    match: (path) => path === '/ai-path-detail',
-    meta: {
-      title: 'AI Path Detail - Learnpathly',
-      description: 'Generated AI learning path details.',
-      noindex: true,
-    },
-  },
-  {
-    match: (path) => path === '/plan',
-    meta: {
-      title: 'Plan - Learnpathly',
-      description: 'Build and review your learning plans on Learnpathly.',
-    },
-  },
-  {
-    match: (path) => path === '/about' || path.startsWith('/about/'),
-    meta: {
-      title: 'About - Learnpathly',
-      description: 'Learn how Learnpathly helps you organize resources, learning paths, and progress.',
-    },
-  },
-  {
-    match: (path) => path === '/login' || path === '/register' || path.startsWith('/account') || path.startsWith('/my-') || path.includes('/edit') || path.includes('/add'),
-    meta: {
-      title: 'Learnpathly',
-      description: DEFAULT_DESCRIPTION,
-      noindex: true,
-    },
-  },
-]
+interface RouteSeoMeta {
+  seo?: SeoMeta
+}
 
-function ensureMetaTag(name: string) {
+function ensureMetaTag(name: string): HTMLMetaElement {
   let node = document.head.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null
   if (!node) {
     node = document.createElement('meta')
@@ -84,17 +25,7 @@ function ensureMetaTag(name: string) {
   return node
 }
 
-function ensureCanonicalTag() {
-  let node = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null
-  if (!node) {
-    node = document.createElement('link')
-    node.setAttribute('rel', 'canonical')
-    document.head.appendChild(node)
-  }
-  return node
-}
-
-function ensureOgTag(property: string) {
+function ensurePropertyMetaTag(property: string): HTMLMetaElement {
   let node = document.head.querySelector(`meta[property="${property}"]`) as HTMLMetaElement | null
   if (!node) {
     node = document.createElement('meta')
@@ -104,35 +35,132 @@ function ensureOgTag(property: string) {
   return node
 }
 
-function getSeoMeta(route: RouteLocationNormalizedLoaded): SeoMeta {
-  const path = String(route.path || '/home')
-  for (const entry of ROUTE_META) {
-    if (entry.match(path)) return entry.meta
+function ensureCanonicalTag(): HTMLLinkElement {
+  let node = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null
+  if (!node) {
+    node = document.createElement('link')
+    node.setAttribute('rel', 'canonical')
+    document.head.appendChild(node)
   }
-  return {
-    title: DEFAULT_TITLE,
-    description: DEFAULT_DESCRIPTION,
-    canonicalPath: path,
+  return node
+}
+
+function updateStructuredData(type: string, data: Record<string, any>) {
+  let script = document.head.querySelector(`script[data-seo-type="${type}"]`) as HTMLScriptElement | null
+  if (!script) {
+    script = document.createElement('script')
+    script.setAttribute('type', 'application/ld+json')
+    script.setAttribute('data-seo-type', type)
+    document.head.appendChild(script)
   }
+  script.textContent = JSON.stringify(data)
 }
 
 export function applySeo(route: RouteLocationNormalizedLoaded) {
   if (typeof document === 'undefined') return
 
-  const meta = getSeoMeta(route)
-  const title = meta.title.includes(SITE_NAME) ? meta.title : `${meta.title} - ${SITE_NAME}`
-  const description = meta.description || DEFAULT_DESCRIPTION
-  const canonicalPath = meta.canonicalPath || String(route.path || '/home')
-  const robots = meta.noindex ? 'noindex, nofollow' : 'index, follow'
+  const meta = (route.meta as RouteSeoMeta)?.seo
+  const title = meta?.title || SITE_NAME
+  const description = meta?.description || DEFAULT_DESCRIPTION
+  const noindex = meta?.noindex ?? false
+  const type = meta?.type || 'website'
+  const fullTitle = title.includes(SITE_NAME) ? title : `${title} - ${SITE_NAME}`
+  const canonicalPath = String(route.path || '/home')
+  const canonicalUrl = `${SITE_URL}${canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`}`
 
-  document.title = title
+  // Title
+  document.title = fullTitle
+
+  // Meta description
   ensureMetaTag('description').setAttribute('content', description)
-  ensureMetaTag('robots').setAttribute('content', robots)
-  ensureCanonicalTag().setAttribute('href', `${SITE_URL}${canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`}`)
-  ensureOgTag('og:title').setAttribute('content', title)
-  ensureOgTag('og:description').setAttribute('content', description)
-  ensureOgTag('og:type').setAttribute('content', 'website')
-  ensureOgTag('og:url').setAttribute('content', `${SITE_URL}${canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`}`)
+
+  // Robots
+  ensureMetaTag('robots').setAttribute('content', noindex ? 'noindex, nofollow' : 'index, follow')
+
+  // Canonical URL
+  ensureCanonicalTag().setAttribute('href', canonicalUrl)
+
+  // Open Graph tags
+  ensurePropertyMetaTag('og:type').setAttribute('content', type)
+  ensurePropertyMetaTag('og:title').setAttribute('content', fullTitle)
+  ensurePropertyMetaTag('og:description').setAttribute('content', description)
+  ensurePropertyMetaTag('og:url').setAttribute('content', canonicalUrl)
+  ensurePropertyMetaTag('og:site_name').setAttribute('content', SITE_NAME)
+
+  // Twitter Card tags
+  ensureMetaTag('twitter:card').setAttribute('content', 'summary_large_image')
+  ensureMetaTag('twitter:title').setAttribute('content', fullTitle)
+  ensureMetaTag('twitter:description').setAttribute('content', description)
+  ensureMetaTag('twitter:site').setAttribute('content', '@learnpathly')
+
+  // Route-specific structured data
+  const routeName = route.name as string
+
+  if (routeName === 'learningpath' || routeName === 'learningpath-detail') {
+    // LearningPath schema
+    updateStructuredData('learningpath', {
+      '@context': 'https://schema.org',
+      '@type': 'Course',
+      name: title,
+      description: description,
+      url: canonicalUrl,
+      provider: {
+        '@type': 'Organization',
+        name: SITE_NAME,
+        url: SITE_URL,
+      },
+    })
+  } else if (routeName === 'resource-video' || routeName === 'resource-article' || routeName === 'resource-document') {
+    // Resource schema
+    updateStructuredData('resource', {
+      '@context': 'https://schema.org',
+      '@type': 'LearningResource',
+      name: title,
+      description: description,
+      url: canonicalUrl,
+      provider: {
+        '@type': 'Organization',
+        name: SITE_NAME,
+        url: SITE_URL,
+      },
+    })
+  } else if (routeName === 'learningpool' || routeName === 'learningpool-category') {
+    // Collection page schema
+    updateStructuredData('collection', {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: fullTitle,
+      description: description,
+      url: canonicalUrl,
+    })
+  } else if (routeName === 'home') {
+    // WebSite schema for homepage
+    updateStructuredData('website', {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: SITE_NAME,
+      url: SITE_URL,
+      description: description,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${SITE_URL}/resources?q={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    })
+  } else {
+    // Clear any page-specific structured data for routes without specific schema
+    const existingScript = document.head.querySelector('script[data-seo-type]')
+    if (existingScript) {
+      // Only remove non-Organization scripts
+      const orgScript = document.head.querySelector('script[data-seo-type="organization"]')
+      if (!orgScript) {
+        existingScript.remove()
+      }
+    }
+  }
 }
 
 export function installSeo(router: Router) {

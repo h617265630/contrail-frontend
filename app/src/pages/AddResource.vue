@@ -110,7 +110,8 @@
                   v-if="extractedMeta.thumbnail_url"
                   :src="extractedMeta.thumbnail_url"
                   :alt="extractedMeta.title || 'thumbnail'"
-                  class="w-full h-full object-cover"
+                  class="w-full h-full object-contain"
+                  style="object-fit: contain; background-color: #f7f7f7;"
                 />
                 <div v-else class="absolute inset-0 flex items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-stone-300"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -248,7 +249,8 @@
                     v-if="extractedMeta?.thumbnail_url"
                     :src="extractedMeta.thumbnail_url"
                     :alt="extractedMeta?.title || 'thumbnail'"
-                    class="w-full h-full object-cover"
+                    class="w-full h-full object-contain"
+                    style="object-fit: contain; background-color: #f7f7f7;"
                   />
                   <div v-else class="absolute inset-0 flex items-center justify-center">
                     <div class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-black text-white" :style="{ backgroundColor: '#8b5cf6' }">
@@ -366,7 +368,8 @@
                 v-if="mdUrlMetaState[u]?.meta?.thumbnail_url"
                 :src="mdUrlMetaState[u].meta.thumbnail_url"
                 :alt="mdUrlMetaState[u]?.meta?.title || 'thumbnail'"
-                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                class="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                style="object-fit: contain; background-color: #f7f7f7;"
                 loading="lazy"
               />
               <div v-else class="absolute inset-0 flex items-center justify-center">

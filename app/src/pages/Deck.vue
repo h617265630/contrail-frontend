@@ -58,7 +58,8 @@
                       v-if="card.image"
                       :src="card.image"
                       :alt="card.title"
-                      class="w-full h-full object-cover"
+                      class="w-full h-full object-contain"
+                      style="object-fit: contain; background-color: #f7f7f7;"
                     />
                     <div v-else class="w-full h-full flex items-center justify-center">
                       <div
@@ -121,7 +122,8 @@
                 v-if="activeCard.image"
                 :src="activeCard.image"
                 :alt="activeCard.title"
-                class="w-full h-full object-cover"
+                class="w-full h-full object-contain"
+                style="object-fit: contain; background-color: #f7f7f7;"
               />
               <div v-else class="w-full h-full flex items-center justify-center">
                 <div

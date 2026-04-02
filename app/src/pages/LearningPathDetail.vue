@@ -86,25 +86,42 @@
           class="rounded-none cursor-pointer"
           @click="openResource(m.resourceId, m.type)"
         >
-          <div class="p-5">
-            <div class="flex items-start justify-between gap-3">
+          <div class="overflow-hidden">
+            <div class="relative bg-stone-100 overflow-hidden" style="aspect-ratio: 16/9; width: 100%;">
+              <img
+                v-if="moduleThumb(m)"
+                :src="moduleThumb(m)"
+                :alt="m.title"
+                loading="lazy"
+                class="block w-full h-full object-contain"
+                style="width: 100%; height: 100%; object-fit: contain; background-color: #f7f7f7;"
+              />
+              <div v-else class="absolute inset-0 flex items-center justify-center">
+                <BookOpen class="w-8 h-8 text-stone-300" />
+              </div>
+
+              <div class="absolute top-3 left-3">
+                <span class="px-2 py-1 text-xs font-semibold" :class="typeBadge(m.type)">
+                  {{ m.type }}
+                </span>
+              </div>
+            </div>
+
+            <div class="p-5">
               <div class="min-w-0">
-                <h3 class="text-foreground font-semibold line-clamp-1" :title="m.title">{{ m.title }}</h3>
+                <h3 class="text-foreground font-semibold line-clamp-2" :title="m.title">{{ m.title }}</h3>
                 <p class="text-muted-foreground text-sm mt-1 line-clamp-2" :title="m.summary">{{ m.summary }}</p>
               </div>
-              <span class="px-2 py-1 text-xs font-semibold" :class="typeBadge(m.type)">
-                {{ m.type }}
-              </span>
-            </div>
-            <div class="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-              <span class="inline-flex items-center gap-1">
-                <Clock class="w-4 h-4" />
-                {{ m.duration }}
-              </span>
-              <span class="inline-flex items-center gap-1">
-                <Layers class="w-4 h-4" />
-                {{ m.level }}
-              </span>
+              <div class="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+                <span class="inline-flex items-center gap-1">
+                  <Clock class="w-4 h-4" />
+                  {{ m.duration }}
+                </span>
+                <span class="inline-flex items-center gap-1">
+                  <Layers class="w-4 h-4" />
+                  {{ m.level }}
+                </span>
+              </div>
             </div>
           </div>
         </Card>
@@ -245,6 +262,15 @@ const loading = ref(false)
 const error = ref('')
 
 const resourceCache = ref<Record<string, DbResourceDetail>>({})
+
+const fallbackThumb = 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=900&h=506&fit=crop'
+
+function moduleThumb(m: Module) {
+  const rid = String(m.resourceId || '').trim()
+  const r = rid ? resourceCache.value[rid] : undefined
+  const url = String((r as any)?.thumbnail || '').trim()
+  return url || fallbackThumb
+}
 
 function _inferModuleType(item: any, r: any | null): Module['type'] {
   const presented = String(r?.resource_type || '').trim().toLowerCase()

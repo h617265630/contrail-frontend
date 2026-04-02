@@ -23,7 +23,13 @@
           class="overflow-hidden rounded-md border border-border bg-background"
         >
           <div class="aspect-video bg-muted/30">
-            <img :src="img.image_url" :alt="img.title || 'image'" class="h-full w-full object-cover" loading="lazy" />
+            <img
+              :src="img.image_url"
+              :alt="img.title || 'image'"
+              class="h-full w-full object-contain"
+              style="object-fit: contain; background-color: #f7f7f7;"
+              loading="lazy"
+            />
           </div>
           <div class="p-3">
             <p class="text-sm font-semibold text-foreground truncate" :title="img.title || '无标题'">

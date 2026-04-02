@@ -54,7 +54,12 @@
                   <div class="p-6">
                     <!-- 缩略图 -->
                     <div class="relative mb-4 rounded-lg overflow-hidden bg-gray-100 group">
-                      <img :src="item.thumbnail" :alt="item.title" class="w-full h-48 object-cover" />
+                      <img
+                        :src="item.thumbnail"
+                        :alt="item.title"
+                        class="w-full h-48 object-contain"
+                        style="object-fit: contain; background-color: #f7f7f7;"
+                      />
 
                       <!-- 视频播放图标覆盖层 -->
                       <div

@@ -91,13 +91,8 @@ request.interceptors.response.use(
       if (!isAuthRoute && isUnauthorized) {
         // clear local auth state so UI doesn't think we're logged in
         clearAuth()
-        // show a friendly message only for explicit expiration
         if (isTokenExpired) {
-          try {
-            alert('登录已过期，请重新登录')
-          } catch {
-            // ignore
-          }
+          console.warn('Token expired. Redirecting to login.')
         }
         redirectToLogin()
       }
@@ -105,7 +100,6 @@ request.interceptors.response.use(
       // CORS-related errors
       if (error.message.includes('CORS') || error.message.includes('Access-Control')) {
         console.error('CORS error! Please check the backend configuration.')
-        alert('CORS request error. Please check the backend CORS configuration.')
       }
     } else if (error.request) {
       console.error('No response:', error.request)

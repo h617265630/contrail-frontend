@@ -150,7 +150,8 @@
                     v-if="pathMeta.coverImageUrl"
                     :src="pathMeta.coverImageUrl"
                     alt="Cover preview"
-                    class="w-full h-full object-cover"
+                    class="w-full h-full object-contain"
+                    style="object-fit: contain; background-color: #f7f7f7;"
                   />
                   <div v-else class="w-full h-full flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-stone-300"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -170,7 +171,12 @@
                     @click="selectCover(uploadedCoverUrl)"
                   >
                     <div class="aspect-video bg-stone-100">
-                      <img :src="uploadedCoverUrl" alt="Uploaded" class="w-full h-full object-cover" />
+                      <img
+                        :src="uploadedCoverUrl"
+                        alt="Uploaded"
+                        class="w-full h-full object-contain"
+                        style="object-fit: contain; background-color: #f7f7f7;"
+                      />
                     </div>
                   </button>
                 </div>
@@ -184,7 +190,12 @@
                     @click="selectCover(u)"
                   >
                     <div class="aspect-video bg-stone-100">
-                      <img :src="u" :alt="`Cover ${idx + 1}`" class="w-full h-full object-cover" />
+                      <img
+                        :src="u"
+                        :alt="`Cover ${idx + 1}`"
+                        class="w-full h-full object-contain"
+                        style="object-fit: contain; background-color: #f7f7f7;"
+                      />
                     </div>
                   </button>
                 </div>
@@ -268,7 +279,13 @@
               >
                 <div class="flex gap-3 p-3">
                   <div class="w-20 h-14 shrink-0 rounded-lg overflow-hidden bg-stone-100">
-                    <img :src="r.thumbnail" :alt="r.title" class="w-full h-full object-cover" loading="lazy" />
+                    <img
+                      :src="r.thumbnail"
+                      :alt="r.title"
+                      class="w-full h-full object-contain"
+                      style="object-fit: contain; background-color: #f7f7f7;"
+                      loading="lazy"
+                    />
                   </div>
                   <div class="flex-1 min-w-0">
                     <div class="flex items-start justify-between gap-2">
@@ -309,7 +326,7 @@
             </div>
 
             <div v-if="selected.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-stone-200 mb-3"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
               <p class="text-sm text-stone-400">Click a resource or drag it here</p>
             </div>
 
@@ -329,7 +346,12 @@
                     <span class="text-xs font-black text-stone-400">{{ idx + 1 }}</span>
                   </div>
                   <div class="w-16 h-14 shrink-0 rounded-lg overflow-hidden bg-stone-100 my-2">
-                    <img :src="r.thumbnail" :alt="r.title" class="w-full h-full object-cover" />
+                    <img
+                      :src="r.thumbnail"
+                      :alt="r.title"
+                      class="w-full h-full object-contain"
+                      style="object-fit: contain; background-color: #f7f7f7;"
+                    />
                   </div>
                   <div class="flex-1 min-w-0 py-2.5 pr-3">
                     <h3 class="text-xs font-bold text-stone-800 line-clamp-1 leading-snug">{{ r.title }}</h3>

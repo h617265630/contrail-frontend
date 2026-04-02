@@ -45,7 +45,12 @@
               @dragstart="handleDragStart($event, r)"
             >
               <div class="flex gap-3 p-3">
-                <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-md bg-muted shrink-0" />
+                <img
+                  :src="r.thumbnail"
+                  :alt="r.title"
+                  class="w-24 h-16 object-contain rounded-md bg-muted shrink-0"
+                  style="object-fit: contain; background-color: #f7f7f7;"
+                />
                 <div class="min-w-0 flex-1">
                   <div class="flex items-start justify-between gap-2">
                     <h3 class="text-foreground font-semibold text-sm line-clamp-1" :title="r.title">{{ r.title }}</h3>
@@ -113,7 +118,8 @@
                       v-if="meta.coverImageUrl"
                       :src="meta.coverImageUrl"
                       alt="Selected cover"
-                      class="w-full h-full object-cover"
+                      class="w-full h-full object-contain"
+                      style="object-fit: contain; background-color: #f7f7f7;"
                     />
                     <div v-else class="w-full h-full flex items-center justify-center text-sm text-muted-foreground">
                       未选择封面
@@ -133,7 +139,12 @@
                       @click="selectCover(uploadedCoverUrl)"
                     >
                       <div class="aspect-video bg-muted">
-                        <img :src="uploadedCoverUrl" alt="Uploaded cover" class="w-full h-full object-cover" />
+                        <img
+                          :src="uploadedCoverUrl"
+                          alt="Uploaded cover"
+                          class="w-full h-full object-contain"
+                          style="object-fit: contain; background-color: #f7f7f7;"
+                        />
                       </div>
                     </button>
                   </div>
@@ -148,7 +159,12 @@
                       @click="selectCover(u)"
                     >
                       <div class="aspect-video bg-muted">
-                        <img :src="u" :alt="`Cover ${idx + 1}`" class="w-full h-full object-cover" />
+                        <img
+                          :src="u"
+                          :alt="`Cover ${idx + 1}`"
+                          class="w-full h-full object-contain"
+                          style="object-fit: contain; background-color: #f7f7f7;"
+                        />
                       </div>
                     </button>
                   </div>
@@ -230,7 +246,12 @@
                   >
                     {{ idx + 1 }}
                   </div>
-                  <img :src="r.thumbnail" :alt="r.title" class="w-24 h-16 object-cover rounded-md bg-muted shrink-0" />
+                  <img
+                    :src="r.thumbnail"
+                    :alt="r.title"
+                    class="w-24 h-16 object-contain rounded-md bg-muted shrink-0"
+                    style="object-fit: contain; background-color: #f7f7f7;"
+                  />
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center justify-between gap-2">
                       <h3 class="text-foreground font-semibold text-sm line-clamp-1">{{ r.title }}</h3>

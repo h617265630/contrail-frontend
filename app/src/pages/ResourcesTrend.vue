@@ -95,8 +95,23 @@
                 <span class="text-xs text-muted-foreground">{{ formatStats(resource) }}</span>
               </div>
 
-              <div class="relative h-28 bg-white overflow-hidden px-2">
-                <img :src="resource.thumbnail || fallbackThumb" :alt="resource.title" class="w-full h-full object-cover" />
+              <div class="relative bg-slate-100 overflow-hidden" style="aspect-ratio: 16/9; width: 100%;">
+                <img
+                  :src="resource.thumbnail || fallbackThumb"
+                  :alt="resource.title"
+                  loading="lazy"
+                  decoding="async"
+                  :class="[
+                    'block w-full h-full',
+                    String(resource.platform || '').toLowerCase() === 'github' ? 'object-cover' : 'object-contain',
+                    String(resource.platform || '').toLowerCase() === 'youtube' ? 'scale-[1.12]' : '',
+                  ]"
+                  :style="{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: String(resource.platform || '').toLowerCase() === 'github' ? 'cover' : 'contain',
+                  }"
+                />
               </div>
 
               <div class="px-3 py-2 border-b border-border bg-white">
@@ -145,7 +160,12 @@
               <img
                 :src="activeResource.thumbnail || fallbackThumb"
                 :alt="activeResource.title"
-                class="w-full h-full object-cover"
+                :class="[
+                  'w-full h-full',
+                  String(activeResource.platform || '').toLowerCase() === 'github' ? 'object-cover' : 'object-contain',
+                  String(activeResource.platform || '').toLowerCase() === 'youtube' ? 'scale-[1.12]' : '',
+                ]"
+                :style="{ objectFit: String(activeResource.platform || '').toLowerCase() === 'github' ? 'cover' : 'contain' }"
               />
               <button
                 class="absolute top-3 right-3 w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white hover:bg-red-600 transition"

@@ -122,8 +122,8 @@
                     v-if="resource.thumbnail"
                     :src="resource.thumbnail"
                     :alt="resource.title"
-                    class="block w-full h-full object-cover object-center"
-                    style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+                    class="block w-full h-full object-contain"
+                    style="width: 100%; height: 100%; object-fit: contain; background-color: #f7f7f7;"
                   />
                   <div v-else class="w-full h-full flex items-center justify-center">
                     <div
@@ -182,8 +182,8 @@
                   v-if="resource.thumbnail"
                   :src="resource.thumbnail"
                   :alt="resource.title"
-                  class="block w-full h-full object-cover object-center"
-                  style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+                  class="block w-full h-full object-contain"
+                  style="width: 100%; height: 100%; object-fit: contain; background-color: #f7f7f7;"
                 />
                 <div v-else class="w-full h-full flex items-center justify-center">
                   <div
@@ -240,8 +240,8 @@
               <img
                 :src="activeResource.thumbnail || fallbackThumb"
                 :alt="activeResource.title"
-                class="block w-full h-full object-cover object-center"
-                style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+                class="block w-full h-full object-contain"
+                style="width: 100%; height: 100%; object-fit: contain; background-color: #f7f7f7;"
               />
               <button
                 class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-stone-500 hover:text-stone-900 transition"
